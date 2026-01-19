@@ -3,54 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apertura in Brave...</title>
+    <title>Redirect Brave</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        .btn { display: inline-block; padding: 10px 20px; background-color: #ff3300; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #1a1a1a; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .card { background: #2d2d2d; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-width: 90%; width: 400px; }
+        h2 { margin-top: 0; color: #ff5500; }
+        p { color: #cccccc; margin-bottom: 20px; }
+        .btn { display: inline-block; padding: 12px 24px; background-color: #ff5500; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background 0.2s; }
+        .btn:hover { background-color: #e04b00; }
+        .url-display { font-size: 0.8rem; color: #888; word-break: break-all; margin-bottom: 1rem; }
     </style>
 </head>
 <body>
-    <h3>Reindirizzamento a Brave Browser in corso...</h3>
-    <p>Se non succede nulla, clicca il pulsante qui sotto.</p>
-    <a href="#" id="manualLink" class="btn">Apri manualmente</a>
+
+    <div class="card">
+        <h2>Apertura in Brave</h2>
+        <p id="status">Rilevamento dispositivo in corso...</p>
+        <div id="targetUrlDisplay" class="url-display"></div>
+        <a href="#" id="manualLink" class="btn">Apri Manualmente</a>
+    </div>
 
     <script>
-        // L'URL di destinazione
-        var targetUrl = "vixsrc.to/movie/27205?lang=it";
-        var fullUrl = "https://" + targetUrl;
+        // 1. RECUPERO IL PARAMETRO DALL'URL
+        // Mi aspetto un formato tipo: miosito.com/?link=https://vixsrc.to/movie/27205
+        const params = new URLSearchParams(window.location.search);
+        let targetLink = params.get('link');
 
-        // Rilevamento User Agent
-        var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        var manualLink = document.getElementById('manualLink');
+        // Elementi DOM
+        const statusText = document.getElementById('status');
+        const manualBtn = document.getElementById('manualLink');
+        const urlDisplay = document.getElementById('targetUrlDisplay');
 
-        // Logica per iOS (iPhone/iPad)
-        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-            // Brave su iOS usa lo schema brave://
-            // Sostituiamo https:// con brave://
-            var iosDeepLink = "brave://" + targetUrl;
+        if (!targetLink) {
+            statusText.textContent = "Errore: Nessun link specificato.";
+            statusText.style.color = "#ff4444";
+            manualBtn.style.display = "none";
+        } else {
+            // Se l'utente non ha messo http/https, lo aggiungiamo per sicurezza per il fallback
+            if (!/^https?:\/\//i.test(targetLink)) {
+                targetLink = 'https://' + targetLink;
+            }
+
+            urlDisplay.textContent = targetLink;
             
-            manualLink.href = iosDeepLink;
-            window.location.href = iosDeepLink;
+            // Creiamo la versione "pulita" senza protocollo per gli schemi deep link
+            // Esempio: da "https://vixsrc.to/..." a "vixsrc.to/..."
+            const cleanLink = targetLink.replace(/^https?:\/\//, '');
+
+            // Rilevamento User Agent
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+            // --- LOGICA IOS ---
+            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                statusText.textContent = "Tentativo apertura Brave su iOS...";
+                
+                // Schema iOS: brave://dominio.com/path
+                const iosDeepLink = "brave://" + cleanLink;
+                
+                manualBtn.href = iosDeepLink;
+                window.location.href = iosDeepLink;
+            } 
             
-            // Fallback: Se Brave non è installato, dopo un po' potresti voler rimandare all'App Store o al link normale
-            setTimeout(function() {
-                // window.location.href = fullUrl; // Decommenta per aprire nel browser default se fallisce
-            }, 2500);
-        } 
-        
-        // Logica per Android
-        else if (/android/i.test(userAgent)) {
-            // Android usa gli Intent. Questo è il metodo più robusto.
-            // Dice al sistema: "Apri questo URL (scheme=https) ma SOLO col pacchetto com.brave.browser"
-            var androidIntent = "intent://" + targetUrl + "#Intent;scheme=https;package=com.brave.browser;S.browser_fallback_url=" + encodeURIComponent(fullUrl) + ";end";
+            // --- LOGICA ANDROID ---
+            else if (/android/i.test(userAgent)) {
+                statusText.textContent = "Tentativo apertura Brave su Android...";
+
+                // Schema Android Intent
+                // package=com.brave.browser forza l'apertura di quell'app
+                const androidIntent = "intent://" + cleanLink + "#Intent;scheme=https;package=com.brave.browser;S.browser_fallback_url=" + encodeURIComponent(targetLink) + ";end";
+
+                manualBtn.href = androidIntent;
+                window.location.href = androidIntent;
+            } 
             
-            manualLink.href = androidIntent;
-            window.location.href = androidIntent;
-        } 
-        
-        // Desktop o altri OS
-        else {
-            window.location.href = fullUrl;
+            // --- LOGICA PC / ALTRO ---
+            else {
+                statusText.textContent = "Reindirizzamento standard...";
+                manualBtn.href = targetLink;
+                window.location.href = targetLink;
+            }
         }
     </script>
 </body>
