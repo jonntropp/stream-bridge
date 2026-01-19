@@ -3,26 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reindirizzamento...</title>
+    <title>Avvio Player...</title>
     <style>
-        body { background-color: #000; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .loader { border: 4px solid #333; border-top: 4px solid #e50914; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        body { background-color: #000; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; }
+        .loader { border: 4px solid #333; border-top: 4px solid #ff3e00; border-radius: 50%; width: 50px; height: 50px; animation: spin 0.8s linear infinite; margin-bottom: 30px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .btn { background: #333; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; display: none; }
+        
+        h3 { margin-bottom: 10px; color: #fff; }
+        p { color: #aaa; font-size: 14px; margin-bottom: 30px; }
+
+        .btn { background: #333; color: white; padding: 15px 0; width: 100%; max-width: 300px; text-decoration: none; border-radius: 8px; margin-top: 10px; display: inline-block; font-weight: bold; border: 1px solid #444; }
+        .btn-primary { background-color: #e50914; border: none; }
+        .btn-copy { background-color: #2196F3; border: none; }
+        
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <div class="loader"></div>
-    <h3>Apertura App in corso...</h3>
-    <p id="status">Attendi un istante.</p>
+    <h3 id="title">Apertura App...</h3>
+    <p id="status">Attendi il reindirizzamento.</p>
     
-    <a id="fallbackBtn" href="#" class="btn">CLICCA QUI PER APRIRE</a>
+    <div id="manualActions" class="hidden">
+        <a id="retryBtn" href="#" class="btn btn-primary">🔄 Riprova ad Aprire</a>
+        <button onclick="copyLink()" class="btn btn-copy">📋 Copia Link Video</button>
+        <p style="margin-top: 15px; font-size: 12px;">Se non si apre, copia il link e incollalo nel browser.</p>
+    </div>
+
+    <input type="text" id="copyInput" style="position: absolute; left: -9999px;">
 
     <script>
         const params = new URLSearchParams(window.location.search);
         const videoUrl = decodeURIComponent(params.get('url'));
-        const type = params.get('type'); // 'brave' oppure 'wvc'
+        const type = params.get('type'); 
 
         function getMobileOS() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -31,40 +45,53 @@
             return "Desktop";
         }
 
+        function copyLink() {
+            const copyText = document.getElementById("copyInput");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); /* Per mobile */
+            navigator.clipboard.writeText(copyText.value);
+            alert("Link Copiato! Incollalo su Brave.");
+        }
+
         if (videoUrl && type) {
+            // Prepariamo l'input per la copia (backup)
+            document.getElementById('copyInput').value = videoUrl;
+            
             let finalLink = "#";
             const os = getMobileOS();
 
-            // --- CALCOLO DEL LINK ---
             if (type === 'wvc') {
-                // Link Web Video Caster
                 finalLink = "wvc-x-callback://open?url=" + encodeURIComponent(videoUrl) + "&secure_uri=true";
             } 
             else if (type === 'brave') {
-                // Link Brave
                 let cleanUrl = videoUrl.replace(/^https?:\/\//, '');
                 
                 if (os === "Android") {
-                    finalLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.brave.browser;end";
+                    // FIX: Aggiunti action e category per forzare la navigazione
+                    finalLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.brave.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
                 } else if (os === "iOS") {
                     finalLink = "brave://" + cleanUrl;
                 } else {
-                    finalLink = videoUrl; // Desktop
+                    finalLink = videoUrl;
                 }
             }
 
-            // --- TENTATIVO DI APERTURA IMMEDIATA ---
-            document.getElementById('fallbackBtn').href = finalLink;
-            document.getElementById('fallbackBtn').style.display = "inline-block"; // Mostra bottone per sicurezza
+            // Imposta il link al pulsante di riprova
+            document.getElementById('retryBtn').href = finalLink;
+
+            // Mostra i pulsanti dopo 2 secondi se l'app non si è aperta
+            setTimeout(() => {
+                document.getElementById('manualActions').classList.remove('hidden');
+                document.getElementById('title').innerText = "Non si è aperto?";
+                document.querySelector('.loader').style.display = "none";
+                document.getElementById('status').style.display = "none";
+            }, 2500);
             
-            // Redirect Automatico
+            // Prova il redirect automatico
             window.location.href = finalLink;
-            
-            // Feedback visivo
-            document.getElementById('status').innerText = "Se non si apre, clicca il pulsante qui sotto.";
 
         } else {
-            document.querySelector('h3').innerText = "❌ Link non valido";
+            document.querySelector('h3').innerText = "❌ Errore Link";
             document.querySelector('.loader').style.display = "none";
         }
     </script>
