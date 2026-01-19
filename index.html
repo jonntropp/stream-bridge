@@ -68,13 +68,21 @@
             else if (/android/i.test(userAgent)) {
                 statusText.textContent = "Tentativo apertura Brave su Android...";
 
-                // Schema Android Intent
-                // package=com.brave.browser forza l'apertura di quell'app
-                const androidIntent = "intent://" + cleanLink + "#Intent;scheme=https;package=com.brave.browser;S.browser_fallback_url=" + encodeURIComponent(targetLink) + ";end";
+                // FIX: Aggiunto 'action=android.intent.action.VIEW' e 'category=BROWSABLE'
+                // Questo dice a Brave non solo di aprirsi, ma di navigare all'URL specifico.
+                const androidIntent = 
+                    "intent://" + cleanLink + 
+                    "#Intent;" + 
+                    "scheme=https;" + 
+                    "package=com.brave.browser;" + 
+                    "action=android.intent.action.VIEW;" + 
+                    "category=android.intent.category.BROWSABLE;" + 
+                    "S.browser_fallback_url=" + encodeURIComponent(targetLink) + ";" + 
+                    "end";
 
                 manualBtn.href = androidIntent;
                 window.location.href = androidIntent;
-            } 
+            }
             
             // --- LOGICA PC / ALTRO ---
             else {
