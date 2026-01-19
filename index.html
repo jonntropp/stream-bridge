@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avvio Streaming...</title>
+    <style>
+        body { background-color: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .btn { background-color: #e50914; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-size: 18px; display: inline-block; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>🚀 Sto aprendo l'App...</h2>
+    <p>Se non succede nulla, clicca il pulsante qui sotto:</p>
+    <a id="linkBtn" href="#" class="btn">APRI STREAMING</a>
+
+    <script>
+        // Legge il parametro 'link' dall'URL
+        const params = new URLSearchParams(window.location.search);
+        const targetLink = params.get('link');
+
+        if (targetLink) {
+            // Imposta il link del pulsante (backup)
+            document.getElementById('linkBtn').href = targetLink;
+            
+            // Tenta l'apertura automatica dopo mezzo secondo
+            setTimeout(function() {
+                window.location.href = targetLink;
+            }, 500);
+        } else {
+            document.body.innerHTML = "<h2>❌ Errore: Nessun link specificato.</h2>";
+        }
+    </script>
+</body>
+</html>
