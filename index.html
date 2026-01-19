@@ -3,121 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Bridge</title>
+    <title>Apertura in Brave...</title>
     <style>
-        body { background-color: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; }
-        
-        .card { background: #1e1e1e; padding: 30px 20px; border-radius: 15px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        h2 { margin: 0 0 10px 0; color: #fff; }
-        p { color: #aaa; font-size: 14px; margin-bottom: 25px; line-height: 1.4; }
-        
-        .btn { display: block; width: 100%; padding: 15px 0; margin-top: 15px; text-decoration: none; border-radius: 50px; font-size: 18px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.1s; }
-        .btn:active { transform: scale(0.95); }
-
-        /* Colori Brand */
-        .bg-brave { background: linear-gradient(45deg, #ff3e00, #ff8c00); color: white; }
-        .bg-wvc { background: #ff9800; color: #121212; }
-        .bg-aloha { background: #2d9cdb; color: white; }
-        .bg-bubble { background: #fdd835; color: #121212; }
-        
-        .loader { border: 4px solid #333; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        .btn { display: inline-block; padding: 10px 20px; background-color: #ff3300; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
     </style>
 </head>
 <body>
-
-    <div class="card" id="mainCard">
-        <div class="loader" id="spinner"></div>
-        <h2 id="appName">Apertura App...</h2>
-        <p id="desc">Clicca il pulsante se non si apre.</p>
-        
-        <button onclick="executeRedirect()" id="actionBtn" class="btn">🚀 APRI ORA</button>
-        <button onclick="copyAndOpen()" id="copyBtn" class="btn" style="background:#333; font-size:14px; display:none;">📋 Copia Link e Apri</button>
-    </div>
+    <h3>Reindirizzamento a Brave Browser in corso...</h3>
+    <p>Se non succede nulla, clicca il pulsante qui sotto.</p>
+    <a href="#" id="manualLink" class="btn">Apri manualmente</a>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const videoUrl = decodeURIComponent(params.get('url'));
-        const appType = params.get('app'); // 'brave', 'wvc', 'aloha', 'bubble'
+        // L'URL di destinazione
+        var targetUrl = "vixsrc.to/movie/27205?lang=it";
+        var fullUrl = "https://" + targetUrl;
+
+        // Rilevamento User Agent
+        var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        var manualLink = document.getElementById('manualLink');
+
+        // Logica per iOS (iPhone/iPad)
+        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+            // Brave su iOS usa lo schema brave://
+            // Sostituiamo https:// con brave://
+            var iosDeepLink = "brave://" + targetUrl;
+            
+            manualLink.href = iosDeepLink;
+            window.location.href = iosDeepLink;
+            
+            // Fallback: Se Brave non è installato, dopo un po' potresti voler rimandare all'App Store o al link normale
+            setTimeout(function() {
+                // window.location.href = fullUrl; // Decommenta per aprire nel browser default se fallisce
+            }, 2500);
+        } 
         
-        let finalLink = "#";
-        let autoRedirect = false;
-
-        function getOS() {
-            const ua = navigator.userAgent || navigator.vendor || window.opera;
-            if (/android/i.test(ua)) return "Android";
-            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
-            return "Desktop";
+        // Logica per Android
+        else if (/android/i.test(userAgent)) {
+            // Android usa gli Intent. Questo è il metodo più robusto.
+            // Dice al sistema: "Apri questo URL (scheme=https) ma SOLO col pacchetto com.brave.browser"
+            var androidIntent = "intent://" + targetUrl + "#Intent;scheme=https;package=com.brave.browser;S.browser_fallback_url=" + encodeURIComponent(fullUrl) + ";end";
+            
+            manualLink.href = androidIntent;
+            window.location.href = androidIntent;
+        } 
+        
+        // Desktop o altri OS
+        else {
+            window.location.href = fullUrl;
         }
-
-        // Configurazione Logica
-        if (videoUrl && appType) {
-            const os = getOS();
-            const cleanUrl = videoUrl.replace(/^https?:\/\//, '');
-
-            // --- 1. BRAVE (No Ads) ---
-            if (appType === 'brave') {
-                document.getElementById('appName').innerText = "🦁 Brave Browser";
-                document.getElementById('actionBtn').classList.add('bg-brave');
-                document.getElementById('copyBtn').style.display = 'block'; // Mostra tasto copia per sicurezza
-                
-                if (os === "Android") {
-                    finalLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.brave.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
-                } else if (os === "iOS") {
-                    finalLink = "brave://" + cleanUrl;
-                } else { finalLink = videoUrl; }
-            }
-
-            // --- 2. WEB VIDEO CASTER (TV) ---
-            else if (appType === 'wvc') {
-                document.getElementById('appName').innerText = "📺 Web Video Caster";
-                document.getElementById('actionBtn').classList.add('bg-wvc');
-                finalLink = "wvc-x-callback://open?url=" + encodeURIComponent(videoUrl) + "&secure_uri=true";
-                autoRedirect = true;
-            }
-
-            // --- 3. ALOHA BROWSER (Ottimo per iOS) ---
-            else if (appType === 'aloha') {
-                document.getElementById('appName').innerText = "🛡️ Aloha Browser";
-                document.getElementById('actionBtn').classList.add('bg-aloha');
-                // Aloha usa lo schema alohabrowser:// per rimpiazzare https://
-                finalLink = "alohabrowser://" + cleanUrl; 
-                autoRedirect = true;
-            }
-
-            // --- 4. BUBBLE UPnP (Alternative Android) ---
-            else if (appType === 'bubble') {
-                document.getElementById('appName').innerText = "🫧 BubbleUPnP";
-                document.getElementById('actionBtn').classList.add('bg-bubble');
-                // BubbleUPnP accetta l'URL completo dopo lo schema
-                finalLink = "bubbleupnp://" + videoUrl;
-                autoRedirect = true;
-            }
-
-        } else {
-            document.querySelector('.card').innerHTML = "<h3>❌ Errore Parametri</h3>";
-        }
-
-        // Funzione Esecuzione
-        function executeRedirect() {
-            window.location.href = finalLink;
-        }
-
-        function copyAndOpen() {
-            navigator.clipboard.writeText(videoUrl);
-            setTimeout(() => { window.location.href = finalLink; }, 100);
-        }
-
-        // Auto-Start se previsto (WVC, Aloha, Bubble)
-        if (autoRedirect) {
-            document.getElementById('spinner').style.display = 'block';
-            document.getElementById('spinner').style.borderTopColor = getComputedStyle(document.getElementById('actionBtn')).backgroundColor;
-            setTimeout(executeRedirect, 500);
-        }
-
-    </script>
-</body>
-</html>
     </script>
 </body>
 </html>
