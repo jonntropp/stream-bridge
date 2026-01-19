@@ -3,32 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avvio Streaming...</title>
+    <title>Reindirizzamento...</title>
     <style>
-        body { background-color: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .btn { background-color: #e50914; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-size: 18px; display: inline-block; margin-top: 20px; }
+        body { background-color: #000; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .loader { border: 4px solid #333; border-top: 4px solid #e50914; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn { background: #333; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; display: none; }
     </style>
 </head>
 <body>
-    <h2>🚀 Sto aprendo l'App...</h2>
-    <p>Se non succede nulla, clicca il pulsante qui sotto:</p>
-    <a id="linkBtn" href="#" class="btn">APRI STREAMING</a>
+
+    <div class="loader"></div>
+    <h3>Apertura App in corso...</h3>
+    <p id="status">Attendi un istante.</p>
+    
+    <a id="fallbackBtn" href="#" class="btn">CLICCA QUI PER APRIRE</a>
 
     <script>
-        // Legge il parametro 'link' dall'URL
         const params = new URLSearchParams(window.location.search);
-        const targetLink = params.get('link');
+        const videoUrl = decodeURIComponent(params.get('url'));
+        const type = params.get('type'); // 'brave' oppure 'wvc'
 
-        if (targetLink) {
-            // Imposta il link del pulsante (backup)
-            document.getElementById('linkBtn').href = targetLink;
+        function getMobileOS() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/android/i.test(ua)) return "Android";
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
+            return "Desktop";
+        }
+
+        if (videoUrl && type) {
+            let finalLink = "#";
+            const os = getMobileOS();
+
+            // --- CALCOLO DEL LINK ---
+            if (type === 'wvc') {
+                // Link Web Video Caster
+                finalLink = "wvc-x-callback://open?url=" + encodeURIComponent(videoUrl) + "&secure_uri=true";
+            } 
+            else if (type === 'brave') {
+                // Link Brave
+                let cleanUrl = videoUrl.replace(/^https?:\/\//, '');
+                
+                if (os === "Android") {
+                    finalLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.brave.browser;end";
+                } else if (os === "iOS") {
+                    finalLink = "brave://" + cleanUrl;
+                } else {
+                    finalLink = videoUrl; // Desktop
+                }
+            }
+
+            // --- TENTATIVO DI APERTURA IMMEDIATA ---
+            document.getElementById('fallbackBtn').href = finalLink;
+            document.getElementById('fallbackBtn').style.display = "inline-block"; // Mostra bottone per sicurezza
             
-            // Tenta l'apertura automatica dopo mezzo secondo
-            setTimeout(function() {
-                window.location.href = targetLink;
-            }, 500);
+            // Redirect Automatico
+            window.location.href = finalLink;
+            
+            // Feedback visivo
+            document.getElementById('status').innerText = "Se non si apre, clicca il pulsante qui sotto.";
+
         } else {
-            document.body.innerHTML = "<h2>❌ Errore: Nessun link specificato.</h2>";
+            document.querySelector('h3').innerText = "❌ Link non valido";
+            document.querySelector('.loader').style.display = "none";
         }
     </script>
 </body>
