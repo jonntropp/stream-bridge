@@ -20,33 +20,46 @@
             box-sizing: border-box; 
         }
         
-        .container { max-width: 460px; width: 100%; text-align: center; }
+        .container { max-width: 480px; width: 100%; text-align: center; }
 
-        /* --- CARD DESIGN --- */
+        /* --- CARD --- */
         .card { 
             background: #1a1a1a; 
             padding: 40px 30px; 
             border-radius: 20px; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.7); 
             border: 1px solid #333;
-            display: none; /* Nascosto di default */
-            animation: fadeIn 0.5s ease-out;
+            display: none; 
+            animation: fadeIn 0.4s ease-out;
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h2 { color: #fff; margin: 0 0 15px 0; font-weight: 700; font-size: 24px; letter-spacing: -0.5px; }
-        p { color: #aaa; line-height: 1.6; margin-bottom: 30px; font-size: 15px; }
+        /* --- TIPOGRAFIA --- */
+        h2 { color: #fff; margin: 0 0 15px 0; font-weight: 700; font-size: 24px; }
         
+        /* Testo fluido senza spezzature forzate */
+        p { 
+            color: #aaa; 
+            line-height: 1.6; 
+            margin-bottom: 30px; 
+            font-size: 15px; 
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .highlight { color: #4caf50; font-weight: bold; } /* Verde speranza */
+
         /* --- PULSANTI --- */
-        .btn-group { display: flex; flex-direction: column; gap: 12px; }
+        .btn-group { display: flex; flex-direction: column; gap: 15px; }
 
         .btn { 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             width: 100%; 
-            padding: 16px 0; 
+            padding: 18px 0; 
             text-decoration: none; 
             border-radius: 12px; 
             font-size: 16px; 
@@ -58,30 +71,38 @@
         }
         .btn:active { transform: scale(0.98); }
 
-        /* Stili specifici */
-        .btn-confirm { background: #fff; color: #000; } /* Tasto principale */
-        .btn-confirm:hover { background: #e0e0e0; }
+        /* Tasto Installa (Verde/Accento) */
+        .btn-install { background: #fff; color: #000; }
+        .btn-install:hover { background: #e0e0e0; }
 
-        .btn-store { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #444; }
-        .btn-store:hover { background: rgba(255, 255, 255, 0.15); border-color: #666; }
+        /* Tasto Conferma (Secondario ma evidente) */
+        .btn-confirm { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #444; }
+        .btn-confirm:hover { background: rgba(255, 255, 255, 0.2); border-color: #666; }
 
+        /* Tasto Aloha Mobile */
         .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #1e88e5); color: white; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
 
-        /* --- TIMER E LINK SECONDARI --- */
-        .timer-container { margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; }
-        .timer-text { font-size: 13px; color: #666; display: block; margin-bottom: 10px; }
-        .timer-bar { width: 100%; height: 3px; background: #333; border-radius: 2px; overflow: hidden; }
-        .timer-fill { height: 100%; background: #666; width: 100%; transition: width 1s linear; }
+        /* --- LINK E TIMER (PENALITÀ) --- */
+        .skip-link { 
+            color: #666; 
+            font-size: 13px; 
+            text-decoration: underline; 
+            margin-top: 25px; 
+            display: inline-block; 
+            cursor: pointer; 
+            transition: color 0.2s; 
+        }
+        .skip-link:hover { color: #999; }
 
-        .skip-link { color: #555; font-size: 12px; text-decoration: none; margin-top: 15px; display: inline-block; transition: color 0.2s; }
-        .skip-link:hover { color: #888; }
+        /* Schermata Attesa (Nascosta inizialmente) */
+        #penaltyView { display: none; margin-top: 20px; }
+        
+        .timer-bar { width: 100%; height: 4px; background: #333; margin-top: 15px; border-radius: 2px; overflow: hidden; }
+        .timer-fill { height: 100%; background: #666; width: 0%; transition: width 0.1s linear; }
 
         /* --- LOADER --- */
         .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Highlight text */
-        .highlight { color: #ffca28; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -90,28 +111,32 @@
         
         <div id="loaderView">
             <div class="loader"></div>
-            <p style="font-size: 12px; color: #444;">Accesso sicuro in corso...</p>
+            <p style="font-size: 12px; color: #555;">Accesso rapido...</p>
         </div>
 
         <div id="pcView" class="card">
-            <h2>⚠️ Attenzione ai Popup</h2>
-            <p>
-                Il video che stai per aprire contiene molte pubblicità invasive.<br>
-                Per una visione pulita, ti consigliamo di usare <span class="highlight">uBlock Origin Lite</span>.
-            </p>
             
-            <div class="btn-group">
-                <a href="#" id="btnInstall" target="_blank" class="btn btn-store">⬇️ Installa uBlock (Consigliato)</a>
+            <div id="choiceContent">
+                <h2>Esperienza senza interruzioni</h2>
+                <p>
+                    Il video contiene molte finestre popup. Se installi <b>uBlock Origin Lite</b> potrai guardare il contenuto immediatamente e con <span class="highlight">zero pubblicità</span>.
+                </p>
                 
-                <button onclick="setProtectedAndGo()" class="btn btn-confirm">🛡️ Ho installato la protezione</button>
+                <div class="btn-group">
+                    <a href="#" id="btnInstall" target="_blank" class="btn btn-install">🛡️ Installa blocco pubblicità</a>
+                    
+                    <button onclick="setProtectedAndGo()" class="btn btn-confirm">✅ Ho già la protezione</button>
+                </div>
+
+                <a onclick="triggerPenalty()" class="skip-link">Non installare e continua con le pubblicità &rarr;</a>
             </div>
 
-            <div class="timer-container">
-                <span class="timer-text">Reindirizzamento automatico in <b id="countdown">8</b>s...</span>
+            <div id="penaltyView">
+                <div class="loader" style="width:30px; height:30px; border-width:2px;"></div>
+                <p style="margin-bottom: 10px;">Attendi il caricamento del video...</p>
                 <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
-                
-                <a href="#" onclick="skipWait()" class="skip-link">Non mi interessa, continua a mio rischio &rarr;</a>
             </div>
+
         </div>
 
         <div id="mobileView" class="card">
@@ -124,13 +149,11 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURAZIONE & DATI ---
+        // --- CONFIGURAZIONE ---
         const params = new URLSearchParams(window.location.search);
         let videoUrl = decodeURIComponent(params.get('url'));
         const cleanUrl = videoUrl ? videoUrl.replace(/^https?:\/\//, '') : '';
-        
-        // Chiave per i Cookie (LocalStorage)
-        const STORAGE_KEY = 'stream_bridge_status';
+        const STORAGE_KEY = 'stream_bridge_consent'; // Nome del cookie
 
         // Link Store
         const LINKS = {
@@ -144,7 +167,7 @@
             ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682"
         };
 
-        // --- 2. UTILITÀ ---
+        // --- UTILITÀ ---
         function getOS() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
             if (/android/i.test(ua)) return "Android";
@@ -160,59 +183,50 @@
             return "unknown";
         }
 
-        // --- 3. LOGICA COOKIE E REDIRECT ---
+        // --- AZIONI UTENTE ---
         
-        // Funzione chiamata quando l'utente clicca "Ho installato"
+        // 1. Utente dice di aver installato -> Salva e vai
         function setProtectedAndGo() {
-            localStorage.setItem(STORAGE_KEY, 'protected'); // Memorizza la scelta
-            window.location.href = videoUrl; // Va al video
-        }
-
-        // Funzione per saltare (senza memorizzare protezione)
-        function skipWait() {
+            localStorage.setItem(STORAGE_KEY, 'true'); 
             window.location.href = videoUrl;
         }
 
-        // Timer Logic
-        function startTimer(duration) {
-            let seconds = duration;
-            const countElem = document.getElementById('countdown');
-            const fillElem = document.getElementById('timerFill');
+        // 2. Utente salta -> Nasconde scelta, mostra timer 5s, poi vai (senza salvare)
+        function triggerPenalty() {
+            document.getElementById('choiceContent').style.display = 'none';
+            document.getElementById('penaltyView').style.display = 'block';
             
-            // Imposta testo iniziale
-            countElem.innerText = seconds;
+            let duration = 5000; // 5 secondi
+            let start = Date.now();
+            let bar = document.getElementById('timerFill');
 
-            const interval = setInterval(() => {
-                seconds--;
-                countElem.innerText = seconds;
+            let timer = setInterval(() => {
+                let timePassed = Date.now() - start;
+                let progress = (timePassed / duration) * 100;
                 
-                // Calcola larghezza barra
-                const percentage = (seconds / duration) * 100;
-                fillElem.style.width = percentage + "%";
+                if (progress >= 100) progress = 100;
+                bar.style.width = progress + "%";
 
-                if (seconds <= 0) {
-                    clearInterval(interval);
-                    window.location.href = videoUrl; // Auto-redirect
+                if (timePassed >= duration) {
+                    clearInterval(timer);
+                    window.location.href = videoUrl;
                 }
-            }, 1000);
+            }, 50);
         }
 
-        // --- 4. MAIN FLOW ---
+        // --- FLUSSO PRINCIPALE ---
         const os = getOS();
 
         if (os === "Desktop") {
-            // Controlla se l'utente è già "protetto"
-            const userStatus = localStorage.getItem(STORAGE_KEY);
-
-            if (userStatus === 'protected') {
-                // UTENTE CONOSCIUTO -> Redirect Immediato (senza UI)
-                window.location.href = videoUrl;
+            // Controlla Cookie
+            if (localStorage.getItem(STORAGE_KEY) === 'true') {
+                window.location.href = videoUrl; // Redirect immediato
             } else {
-                // PRIMO ACCESSO o UTENTE NON PROTETTO
+                // Primo accesso: Mostra interfaccia
                 document.getElementById('loaderView').style.display = 'none';
                 document.getElementById('pcView').style.display = 'block';
 
-                // Configura link store in base al browser
+                // Configura Link
                 const browser = getBrowserType();
                 const btnInstall = document.getElementById('btnInstall');
                 
@@ -223,13 +237,10 @@
                     btnInstall.href = LINKS.chromeDownload;
                     btnInstall.innerText = "Scarica Google Chrome";
                 }
-
-                // Avvia il timer di 8 secondi (tempo di lettura)
-                startTimer(8);
             }
         } 
         
-        // --- MOBILE FLOW (Force Aloha) ---
+        // --- MOBILE FLOW ---
         else {
             document.getElementById('loaderView').style.display = 'none';
             document.getElementById('mobileView').style.display = 'block';
