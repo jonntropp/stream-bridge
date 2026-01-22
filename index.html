@@ -6,55 +6,59 @@
     <title>Stream Bridge</title>
     <style>
         /* STILI BASE */
-        body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
+        body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
         
-        .container { max-width: 420px; width: 100%; }
-        h2 { color: #fff; margin-bottom: 10px; }
-        p { color: #aaa; line-height: 1.5; margin-bottom: 25px; }
+        .container { max-width: 450px; width: 100%; }
+        h2 { color: #fff; margin-bottom: 15px; font-weight: 600; }
+        p { color: #b0b0b0; line-height: 1.6; margin-bottom: 25px; font-size: 15px; }
         
         /* CARD */
-        .card { background: #1e1e1e; padding: 30px 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; }
+        .card { background: #1e1e1e; padding: 40px 30px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: none; }
         
         /* BOTTONI */
-        .btn { display: block; width: 100%; padding: 16px 0; margin-top: 15px; text-decoration: none; border-radius: 50px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.1s; }
+        .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 16px 0; margin-top: 15px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
         .btn:active { transform: scale(0.98); }
+        .btn:hover { opacity: 0.9; }
 
-        .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #007cc3); color: white; }
-        .btn-ublock { background: #b72626; color: white; }
+        .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #1e88e5); color: white; }
+        .btn-store { background: #4caf50; color: white; } /* Verde per installazione */
+        .btn-chrome { background: #4285f4; color: white; } /* Blu Chrome */
         
-        .link-secondary { display: inline-block; margin-top: 20px; color: #666; font-size: 13px; text-decoration: none; border-bottom: 1px solid transparent; }
-        
+        .link-secondary { display: inline-block; margin-top: 25px; color: #666; font-size: 13px; text-decoration: none; border-bottom: 1px solid transparent; }
+        .link-secondary:hover { color: #999; border-bottom-color: #999; }
+
         /* Loader */
-        .loader { border: 3px solid #333; border-top: 3px solid #2d9cdb; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
+        .loader { border: 3px solid #333; border-top: 3px solid #777; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 30px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Esca CSS per AdBlock (Metodo 1) */
-        .ads-banner-box { height: 1px; width: 1px; position: absolute; top: -1000px; left: -1000px; }
+        /* TRAPPOLA ADBLOCK (Classi famose che vengono bloccate) */
+        .adsbox { position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; }
     </style>
 </head>
 <body>
-
-    <div class="ads-banner-box" id="css-bait"></div>
 
     <div class="container">
         
         <div id="loaderView">
             <div class="loader"></div>
-            <p>Controllo sicurezza in corso...</p>
+            <p>Ottimizzazione player...</p>
         </div>
 
         <div id="pcView" class="card">
-            <h2 style="color: #ffcc00;">💡 Pubblicità Rilevata</h2>
-            <p>Il player video contiene finestre popup.<br>Per una visione pulita su PC, ti consigliamo <b>uBlock Origin</b>.</p>
+            <h2 style="color: #ffca28;">💡 Consiglio per la visione</h2>
+            <p id="pcText">Il video contiene molte pubblicità fastidiose.</p>
             
-            <a href="https://ublockorigin.com/" target="_blank" class="btn btn-ublock">🛡️ Installa uBlock (Consigliato)</a>
-            <a href="#" id="pcLinkContinue" class="link-secondary">Ho capito, vai al video (con pubblicità) &rarr;</a>
+            <a href="#" id="btnInstallExtension" target="_blank" class="btn btn-store">🛡️ Installa uBlock Lite</a>
+            
+            <a href="https://www.google.com/chrome/" target="_blank" id="btnGetChrome" class="btn btn-chrome" style="display:none;">🌍 Scarica Google Chrome</a>
+
+            <a href="#" id="pcLinkContinue" class="link-secondary">No grazie, continua con le pubblicità &rarr;</a>
         </div>
 
         <div id="mobileView" class="card">
             <div class="loader"></div>
-            <h2>Apertura Aloha...</h2>
-            <p>Stiamo usando Aloha Browser per bloccare le pubblicità.</p>
+            <h2>Apertura App...</h2>
+            <p>Stiamo avviando <b>Aloha Browser</b> per bloccare le pubblicità.</p>
             <a href="#" id="btnManualAloha" class="btn btn-aloha">🚀 Clicca qui se non si apre</a>
         </div>
 
@@ -63,12 +67,33 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         let videoUrl = decodeURIComponent(params.get('url'));
-        
-        const ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.alohamobile.browser";
-        const IOS_STORE = "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682";
+        const cleanUrl = videoUrl ? videoUrl.replace(/^https?:\/\//, '') : '';
 
-        // Prepara i link di fallback
-        document.getElementById('pcLinkContinue').href = videoUrl;
+        // Imposta link "Continua comunque"
+        if(videoUrl) document.getElementById('pcLinkContinue').href = videoUrl;
+
+        // --- LINKS STORE ESTENSIONI (uBlock Origin Lite) ---
+        // Usiamo la versione "Lite" (MV3) che è il futuro standard per Chrome/Edge
+        const LINKS = {
+            chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbmpkglijbekcfotoj",
+            edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp",
+            firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", // Su Firefox usiamo ancora l'Origin classico che è più potente
+            chromeDownload: "https://www.google.com/chrome/"
+        };
+
+        const MOBILE_STORES = {
+            android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser",
+            ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682"
+        };
+
+        // --- 1. RILEVAMENTO BROWSER PC ---
+        function getBrowserType() {
+            const ua = navigator.userAgent;
+            if (ua.indexOf("Firefox") > -1) return "firefox";
+            if (ua.indexOf("Edg") > -1) return "edge"; 
+            if (ua.indexOf("Chrome") > -1) return "chrome";
+            return "unknown";
+        }
 
         function getOS() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -77,73 +102,98 @@
             return "Desktop";
         }
 
-        // --- RILEVAMENTO ADBLOCK IBRIDO (CSS + NETWORK) ---
-        async function detectAdBlock() {
-            let blocked = false;
+        // --- 2. RILEVAMENTO ADBLOCK (HoneyPot Method) ---
+        // Creiamo un elemento che si chiama "adsbox". Gli AdBlocker lo nascondono o lo rimuovono.
+        function checkAdBlock(callback) {
+            const bait = document.createElement('div');
+            bait.innerHTML = '&nbsp;';
+            bait.className = 'adsbox pub_300x250 ad-placement doubleclick'; // Classi che attirano gli AdBlock
+            bait.style.position = 'absolute';
+            bait.style.top = '-1000px';
+            document.body.appendChild(bait);
 
-            // 1. Controllo CSS (Bait)
-            const bait = document.getElementById('css-bait');
-            const styles = window.getComputedStyle(bait);
-            if (bait.offsetParent === null || styles.display === 'none' || styles.visibility === 'hidden') {
-                blocked = true;
-            }
-
-            // 2. Controllo Network (Fetch a un file che non esiste ma ha un nome da Ad)
-            // Molti adblocker bloccano le richieste che contengono "ads.js" o "prebid"
-            if (!blocked) {
-                try {
-                    const req = new Request("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { method: 'HEAD', mode: 'no-cors' });
-                    await fetch(req).catch(() => { blocked = true; });
-                } catch (e) {
-                    blocked = true; // Se fetch fallisce per errore di rete generato dal blocker
-                }
-            }
-            
-            return blocked;
+            setTimeout(() => {
+                // Se l'elemento ha altezza 0, è stato schiacciato dall'AdBlock
+                // Se display è none, è stato nascosto
+                // Se offsetParent è null, è stato rimosso dal DOM
+                const isBlocked = (bait.offsetHeight === 0 || 
+                                   window.getComputedStyle(bait).display === 'none' || 
+                                   bait.offsetParent === null);
+                
+                document.body.removeChild(bait); // Pulizia
+                callback(isBlocked);
+            }, 200);
         }
 
+        // --- 3. LOGICA PRINCIPALE ---
         const os = getOS();
-        const cleanUrl = videoUrl.replace(/^https?:\/\//, '');
 
         if (os === "Desktop") {
-            // Esegue il test AdBlock
-            detectAdBlock().then(isBlocked => {
+            // ESEGUI TEST ADBLOCK
+            checkAdBlock((hasAdBlock) => {
                 document.getElementById('loaderView').style.display = 'none';
-                
-                if (isBlocked) {
-                    // AdBlock ATTIVO -> Redirect Immediato
+
+                if (hasAdBlock) {
+                    // UTENTE PROTETTO -> Redirect Immediato
                     window.location.href = videoUrl;
                 } else {
-                    // AdBlock NON ATTIVO -> Mostra Avviso
-                    document.getElementById('pcView').style.display = 'block';
+                    // UTENTE NON PROTETTO -> Mostra Consiglio
+                    const browser = getBrowserType();
+                    const btn = document.getElementById('btnInstallExtension');
+                    const pcText = document.getElementById('pcText');
+                    const view = document.getElementById('pcView');
+
+                    view.style.display = 'block';
+
+                    if (browser === 'chrome') {
+                        pcText.innerHTML += "<br>Per <b>Google Chrome</b>, ti consigliamo questa estensione gratuita:";
+                        btn.href = LINKS.chrome;
+                        btn.innerText = "🛡️ Aggiungi a Chrome (uBlock Lite)";
+                    } else if (browser === 'edge') {
+                        pcText.innerHTML += "<br>Per <b>Microsoft Edge</b>, ti consigliamo questa estensione gratuita:";
+                        btn.href = LINKS.edge;
+                        btn.innerText = "🛡️ Aggiungi a Edge (uBlock Lite)";
+                    } else if (browser === 'firefox') {
+                        pcText.innerHTML += "<br>Per <b>Firefox</b>, ti consigliamo questa estensione gratuita:";
+                        btn.href = LINKS.firefox;
+                        btn.innerText = "🛡️ Aggiungi a Firefox";
+                    } else {
+                        // BROWSER SCONOSCIUTO (Safari, Opera, Vecchi IE)
+                        pcText.innerHTML += "<br>Il tuo browser attuale non supporta una protezione efficace.<br>Ti consigliamo di passare a <b>Google Chrome</b>.";
+                        btn.style.display = 'none'; // Nasconde tasto estensione
+                        const btnChrome = document.getElementById('btnGetChrome');
+                        btnChrome.style.display = 'flex'; // Mostra tasto Chrome
+                    }
                 }
             });
         } 
+        
+        // --- MOBILE (ALOHA FORCE) ---
         else {
-            // --- MOBILE LOGIC ---
             document.getElementById('loaderView').style.display = 'none';
             document.getElementById('mobileView').style.display = 'block';
-            const btn = document.getElementById('btnManualAloha');
+            const btnManual = document.getElementById('btnManualAloha');
 
             if (os === "Android") {
-                // Intent con fallback automatico allo Store
-                const fallback = encodeURIComponent(ANDROID_STORE);
+                // FALLBACK AUTOMATICO SU PLAY STORE
+                const fallback = encodeURIComponent(MOBILE_STORES.android);
                 const intent = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=" + fallback + ";end";
                 
-                btn.href = intent;
+                btnManual.href = intent;
                 setTimeout(() => { window.location.href = intent; }, 500);
             } 
             else {
                 // iOS
                 const iosScheme = "alohabrowser://" + cleanUrl;
-                btn.href = iosScheme;
-                btn.innerText = "Apri in Aloha";
+                btnManual.href = iosScheme;
+                btnManual.innerText = "Apri in Aloha";
                 window.location.href = iosScheme;
                 
                 setTimeout(() => {
-                    btn.innerText = "⬇️ Scarica Aloha (Gratis)";
-                    btn.href = IOS_STORE;
-                    btn.style.background = "#333";
+                    btnManual.innerText = "⬇️ Installa Aloha (Gratis)";
+                    btnManual.href = MOBILE_STORES.ios;
+                    btnManual.classList.remove('btn-aloha');
+                    btnManual.classList.add('btn-store'); // Diventa verde
                 }, 2500);
             }
         }
