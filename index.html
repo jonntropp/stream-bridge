@@ -146,7 +146,7 @@
             <div id="mobileLoading">
                 <div class="loader"></div>
                 <h2 id="mobileStatus">Apertura App...</h2>
-                <p>Stiamo provando ad aprire <b>Aloha Browser</b> per togliere le pubblicità.</p>
+                <p>Tentativo apertura <b>Aloha Browser</b> per bloccare le pubblicità.</p>
                 <a href="#" id="btnRetryAloha" class="btn btn-aloha">🚀 Riprova ad aprire</a>
             </div>
 
@@ -155,11 +155,11 @@
                 
                 <div class="btn-group">
                     <a href="#" id="btnMobileInstall" class="btn btn-install">
-                        ⬇️ Installa Aloha (Zero Pubblicità)
+                        ⬇️ Installa Aloha (Consigliato)
                     </a>
                     
                     <a href="#" id="btnMobileContinue" class="btn btn-fallback">
-                        Continua col browser (Con Pubblicità)
+                        Continua col browser normale
                     </a>
                 </div>
             </div>
@@ -260,35 +260,31 @@
             const btnInstall = document.getElementById('btnMobileInstall');
             const btnContinue = document.getElementById('btnMobileContinue');
             
-            // Imposta link "Continua"
             btnContinue.href = videoUrl;
-
-            // Determina URL Store e Intent in base all'OS
-            let intentLink, storeLink;
-
+            
+            let intentLink;
+            
             if (os === "Android") {
-                storeLink = MOBILE_STORES.android;
-                // Intent Android Standard (Senza fallback automatico allo store, gestiamo noi)
+                // Imposta il link dello store per il pulsante
+                btnInstall.href = MOBILE_STORES.android;
+                
+                // Intent PULITO (Senza fallback S.browser_fallback_url)
+                // Se l'app non c'è, non succede nulla (rimane sulla pagina)
                 intentLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
             } else {
-                storeLink = MOBILE_STORES.ios;
+                // iOS
+                btnInstall.href = MOBILE_STORES.ios;
                 intentLink = "alohabrowser://" + cleanUrl;
             }
 
-            // Imposta i link
             btnRetry.href = intentLink;
-            btnInstall.href = storeLink;
 
             // Tenta l'apertura automatica
             window.location.href = intentLink;
 
-            // TIMEOUT INTELLIGENTE
-            // Se dopo 2.5 secondi l'utente vede ancora la pagina, significa che l'app non si è aperta
+            // Se dopo 2.5 secondi siamo ancora qui, mostra le opzioni
             setTimeout(() => {
-                // Nascondi il loader e il titolo "Apertura..."
                 document.getElementById('mobileLoading').style.display = 'none';
-                
-                // Mostra le opzioni
                 document.getElementById('mobileOptions').style.display = 'block';
             }, 2500);
         }
