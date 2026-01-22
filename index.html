@@ -35,7 +35,6 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- TIPOGRAFIA --- */
         h2 { color: #fff; margin: 0 0 15px 0; font-weight: 700; font-size: 24px; }
         
         p { 
@@ -70,19 +69,14 @@
         }
         .btn:active { transform: scale(0.98); }
 
-        /* Stili Varianti */
+        /* Varianti Colore */
         .btn-install { background: #fff; color: #000; }
         .btn-install:hover { background: #e0e0e0; }
 
         .btn-confirm { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #444; }
         .btn-confirm:hover { background: rgba(255, 255, 255, 0.2); border-color: #666; }
 
-        .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #1e88e5); color: white; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
-
-        .btn-fallback { background: transparent; color: #888; border: 1px solid #333; font-size: 14px; }
-        .btn-fallback:hover { border-color: #555; color: #aaa; }
-
-        /* --- PENALITÀ & LINK --- */
+        /* --- LINK E TIMER --- */
         .skip-link { 
             color: #666; 
             font-size: 13px; 
@@ -102,10 +96,6 @@
         /* --- LOADER --- */
         .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Mobile Options (Nascoste inizialmente) */
-        #mobileOptions { display: none; margin-top: 20px; animation: fadeIn 0.5s; }
-        #mobileStatus { font-weight: bold; margin-bottom: 5px; color: #fff; }
     </style>
 </head>
 <body>
@@ -114,19 +104,20 @@
         
         <div id="loaderView">
             <div class="loader"></div>
-            <p style="font-size: 12px; color: #555;">Accesso sicuro...</p>
+            <p style="font-size: 12px; color: #555;">Verifica sicurezza...</p>
         </div>
 
-        <div id="pcView" class="card">
+        <div id="mainView" class="card">
             
             <div id="choiceContent">
-                <h2>Visione senza interruzioni</h2>
-                <p>
-                    Il video contiene molte finestre popup. Se installi <b>uBlock Origin Lite</b> potrai guardare il contenuto immediatamente e con <span class="highlight">zero pubblicità</span>.
+                <h2 id="titleText">Visione senza interruzioni</h2>
+                <p id="descText">
+                    Il video contiene finestre popup. Installa la protezione consigliata per guardare con <span class="highlight">zero pubblicità</span>.
                 </p>
                 
                 <div class="btn-group">
-                    <a href="#" id="btnInstall" target="_blank" class="btn btn-install">🛡️ Installa blocco pubblicità</a>
+                    <a href="#" id="btnInstall" target="_blank" class="btn btn-install">🛡️ Installa Protezione</a>
+                    
                     <button onclick="setProtectedAndGo()" class="btn btn-confirm">✅ Ho già la protezione</button>
                 </div>
 
@@ -141,31 +132,6 @@
 
         </div>
 
-        <div id="mobileView" class="card">
-            
-            <div id="mobileLoading">
-                <div class="loader"></div>
-                <h2 id="mobileStatus">Apertura App...</h2>
-                <p>Tentativo apertura <b>Aloha Browser</b> per bloccare le pubblicità.</p>
-                <a href="#" id="btnRetryAloha" class="btn btn-aloha">🚀 Riprova ad aprire</a>
-            </div>
-
-            <div id="mobileOptions">
-                <p style="margin-bottom: 20px; color: #ffca28;">⚠️ L'app non sembra installata.</p>
-                
-                <div class="btn-group">
-                    <a href="#" id="btnMobileInstall" class="btn btn-install">
-                        ⬇️ Installa Aloha (Consigliato)
-                    </a>
-                    
-                    <a href="#" id="btnMobileContinue" class="btn btn-fallback">
-                        Continua col browser normale
-                    </a>
-                </div>
-            </div>
-
-        </div>
-
     </div>
 
     <script>
@@ -173,21 +139,19 @@
         const params = new URLSearchParams(window.location.search);
         let videoUrl = decodeURIComponent(params.get('url'));
         const cleanUrl = videoUrl ? videoUrl.replace(/^https?:\/\//, '') : '';
-        const STORAGE_KEY = 'stream_bridge_consent';
+        const STORAGE_KEY = 'stream_bridge_consent_v2'; // Aggiornato key per reset
 
-        // Links
+        // Links Store
         const LINKS = {
             chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh",
             edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp",
             firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/",
-            chromeDownload: "https://www.google.com/chrome/"
-        };
-        const MOBILE_STORES = {
+            chromeDownload: "https://www.google.com/chrome/",
             android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser",
             ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682"
         };
 
-        // --- UTILITÀ ---
+        // --- RILEVAMENTO SISTEMA ---
         function getOS() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
             if (/android/i.test(ua)) return "Android";
@@ -203,91 +167,109 @@
             return "unknown";
         }
 
-        // --- AZIONI PC ---
-        function setProtectedAndGo() {
-            localStorage.setItem(STORAGE_KEY, 'true'); 
-            window.location.href = videoUrl;
+        const os = getOS();
+
+        // --- CALCOLO URL DI DESTINAZIONE ---
+        
+        // URL "Protetto" (Se l'utente ha installato l'app/estensione)
+        function getProtectedUrl() {
+            if (os === "Android") {
+                // Prova ad aprire Aloha direttamente
+                return "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
+            } else if (os === "iOS") {
+                return "alohabrowser://" + cleanUrl;
+            } else {
+                // PC: Redirect diretto
+                return videoUrl;
+            }
         }
 
+        // URL "Normale" (Se l'utente salta, usa il browser corrente)
+        function getNormalUrl() {
+            return videoUrl;
+        }
+
+        // --- LOGICA INTERAZIONE ---
+
+        // 1. Utente dice "Ho la protezione"
+        function setProtectedAndGo() {
+            localStorage.setItem(STORAGE_KEY, 'true');
+            window.location.href = getProtectedUrl();
+        }
+
+        // 2. Utente dice "Salta" (Penalità 5s)
         function triggerPenalty() {
             document.getElementById('choiceContent').style.display = 'none';
             document.getElementById('penaltyView').style.display = 'block';
+            
             let duration = 5000; 
             let start = Date.now();
             let bar = document.getElementById('timerFill');
+            
             let timer = setInterval(() => {
                 let timePassed = Date.now() - start;
                 let progress = (timePassed / duration) * 100;
                 if (progress >= 100) progress = 100;
                 bar.style.width = progress + "%";
+                
                 if (timePassed >= duration) {
                     clearInterval(timer);
-                    window.location.href = videoUrl;
+                    // Qui usiamo l'URL normale perché l'utente ha rifiutato l'app
+                    window.location.href = getNormalUrl();
                 }
             }, 50);
         }
 
-        // --- FLUSSO PRINCIPALE ---
-        const os = getOS();
+        // --- INIZIALIZZAZIONE ---
+        window.onload = function() {
+            const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
+            
+            // SE UTENTE GIÀ PROTETTO -> REDIRECT IMMEDIATO
+            if (isProtected) {
+                window.location.href = getProtectedUrl();
+                return;
+            }
 
-        // 1. DESKTOP FLOW
-        if (os === "Desktop") {
-            if (localStorage.getItem(STORAGE_KEY) === 'true') {
-                window.location.href = videoUrl;
-            } else {
-                document.getElementById('loaderView').style.display = 'none';
-                document.getElementById('pcView').style.display = 'block';
+            // SE NO -> MOSTRA INTERFACCIA
+            document.getElementById('loaderView').style.display = 'none';
+            document.getElementById('mainView').style.display = 'block';
 
-                const browser = getBrowserType();
-                const btnInstall = document.getElementById('btnInstall');
+            // Configurazione Dinamica Testi e Link
+            const btnInstall = document.getElementById('btnInstall');
+            const descText = document.getElementById('descText');
+
+            if (os === "Desktop") {
+                // LOGICA PC
+                descText.innerHTML = 'Il video contiene molte finestre popup. Se installi <b>uBlock Origin Lite</b> potrai guardare il contenuto immediatamente e con <span class="highlight">zero pubblicità</span>.';
                 
-                if (browser === 'chrome') btnInstall.href = LINKS.chrome;
-                else if (browser === 'edge') btnInstall.href = LINKS.edge;
-                else if (browser === 'firefox') btnInstall.href = LINKS.firefox;
-                else {
+                const browser = getBrowserType();
+                if (browser === 'chrome') {
+                    btnInstall.href = LINKS.chrome;
+                    btnInstall.innerText = "🛡️ Installa su Chrome";
+                } else if (browser === 'edge') {
+                    btnInstall.href = LINKS.edge;
+                    btnInstall.innerText = "🛡️ Installa su Edge";
+                } else if (browser === 'firefox') {
+                    btnInstall.href = LINKS.firefox;
+                    btnInstall.innerText = "🛡️ Installa su Firefox";
+                } else {
                     btnInstall.href = LINKS.chromeDownload;
                     btnInstall.innerText = "Scarica Google Chrome";
                 }
-            }
-        } 
-        
-        // 2. MOBILE FLOW
-        else {
-            document.getElementById('loaderView').style.display = 'none';
-            document.getElementById('mobileView').style.display = 'block';
-            
-            const btnRetry = document.getElementById('btnRetryAloha');
-            const btnInstall = document.getElementById('btnMobileInstall');
-            const btnContinue = document.getElementById('btnMobileContinue');
-            
-            btnContinue.href = videoUrl;
-            
-            let intentLink;
-            
-            if (os === "Android") {
-                // Imposta il link dello store per il pulsante
-                btnInstall.href = MOBILE_STORES.android;
-                
-                // Intent PULITO (Senza fallback S.browser_fallback_url)
-                // Se l'app non c'è, non succede nulla (rimane sulla pagina)
-                intentLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
+
             } else {
-                // iOS
-                btnInstall.href = MOBILE_STORES.ios;
-                intentLink = "alohabrowser://" + cleanUrl;
+                // LOGICA MOBILE
+                descText.innerHTML = 'Per guardare questo video senza interruzioni pubblicitarie, ti consigliamo di usare l\'app gratuita <b>Aloha Browser</b>.';
+                
+                if (os === "Android") {
+                    btnInstall.href = LINKS.android;
+                    btnInstall.innerText = "⬇️ Installa Aloha (Play Store)";
+                } else {
+                    btnInstall.href = LINKS.ios;
+                    btnInstall.innerText = "⬇️ Installa Aloha (App Store)";
+                }
             }
-
-            btnRetry.href = intentLink;
-
-            // Tenta l'apertura automatica
-            window.location.href = intentLink;
-
-            // Se dopo 2.5 secondi siamo ancora qui, mostra le opzioni
-            setTimeout(() => {
-                document.getElementById('mobileLoading').style.display = 'none';
-                document.getElementById('mobileOptions').style.display = 'block';
-            }, 2500);
-        }
+        };
     </script>
 </body>
 </html>
