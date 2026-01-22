@@ -91,7 +91,7 @@
 
         #penaltyView { display: none; margin-top: 20px; }
         
-        /* FIX BARRA VISIBILE: Sfondo nero, riempimento Blu acceso */
+        /* FIX BARRA VISIBILE */
         .timer-bar { width: 100%; height: 6px; background: #000; margin-top: 15px; border-radius: 3px; overflow: hidden; }
         .timer-fill { height: 100%; background: #2d9cdb; width: 0%; transition: width 0.1s linear; }
 
@@ -139,13 +139,18 @@
     <script>
         // --- CONFIGURAZIONE ---
         const params = new URLSearchParams(window.location.search);
-        let videoUrl = decodeURIComponent(params.get('url'));
+        
+        // Lettura URL sicura
+        let rawUrl = params.get('url');
+        let videoUrl = (rawUrl && rawUrl !== 'null') ? decodeURIComponent(rawUrl) : null;
 
         // --- MODIFICA URL AGGIUNTA PARAMETRI ---
-        if (videoUrl && videoUrl !== 'null') {
-            // Controlla se c'è già un punto di domanda per decidere il separatore
+        if (videoUrl) {
             const separator = videoUrl.includes('?') ? '&' : '?';
-            videoUrl += separator + "primaryColor=E50914&autoplay=true&secondaryColor=221F1F";
+            // Aggiungiamo i parametri solo se non ci sono già per evitare duplicati
+            if (!videoUrl.includes('primaryColor=')) {
+                videoUrl += separator + "primaryColor=E50914&autoplay=true&secondaryColor=221F1F";
+            }
         }
         // ----------------------------------------
 
@@ -155,7 +160,7 @@
         // Links Store
         const LINKS = {
             chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh",
-            edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/cimighlppcgcoapaliogpjjdehbnofhn",
+            edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp",
             firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/",
             chromeDownload: "https://www.google.com/chrome/",
             android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser",
@@ -181,35 +186,38 @@
         const os = getOS();
 
         // --- CALCOLO URL DI DESTINAZIONE ---
-        
-        // URL "Protetto" (Se l'utente ha installato l'app/estensione)
         function getProtectedUrl() {
+            if (!videoUrl) return "#";
+
             if (os === "Android") {
-                // Prova ad aprire Aloha direttamente
+                // Intent per Android (Fallback automatico gestito dal sistema)
                 return "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
             } else if (os === "iOS") {
+                // Scheme per iOS
                 return "alohabrowser://" + cleanUrl;
             } else {
-                // PC: Redirect diretto
+                // PC Desktop
                 return videoUrl;
             }
         }
 
-        // URL "Normale" (Se l'utente salta, usa il browser corrente)
         function getNormalUrl() {
-            return videoUrl;
+            return videoUrl || "#";
         }
 
         // --- LOGICA INTERAZIONE ---
-
+        
         // 1. Utente dice "Ho la protezione"
         function setProtectedAndGo() {
+            if (!videoUrl) { alert("Errore: URL video mancante."); return; }
             localStorage.setItem(STORAGE_KEY, 'true');
             window.location.href = getProtectedUrl();
         }
 
         // 2. Utente dice "Salta" (Penalità 5s)
         function triggerPenalty() {
+            if (!videoUrl) { alert("Nessun video da caricare."); return; }
+
             document.getElementById('choiceContent').style.display = 'none';
             document.getElementById('penaltyView').style.display = 'block';
             
@@ -232,35 +240,25 @@
 
         // --- INIZIALIZZAZIONE ---
         window.onload = function() {
-            // 1. GESTIONE RESET (COMMANDO /configuration)
+            // SICUREZZA ANTI-LOOP: Resetta se richiesto nell'URL
             if (params.get('reset') === 'true') {
-                localStorage.removeItem(STORAGE_KEY); // Cancella la memoria
-                
+                localStorage.removeItem(STORAGE_KEY);
+                alert("✅ RESET COMPLETATO: Memoria cancellata. Il loop è stato interrotto.");
+                // Mostra l'interfaccia pulita
                 document.getElementById('loaderView').style.display = 'none';
                 document.getElementById('mainView').style.display = 'block';
-                
-                // Mostra messaggio di successo
-                document.getElementById('titleText').innerText = "✅ Reset Completato";
-                document.getElementById('titleText').style.color = "#4caf50";
-                
-                document.getElementById('descText').innerHTML = "La memoria del browser è stata cancellata.<br><br>Al prossimo link che aprirai, potrai selezionare nuovamente la tua app o estensione preferita.";
-                
-                // Nasconde i tasti normali e mostra solo un avviso
-                document.querySelector('.btn-group').style.display = 'none';
-                document.querySelector('.skip-link').style.display = 'none';
-                return; // Ferma tutto il resto
+                return; // Ferma qualsiasi altro codice
             }
 
-            // 2. LOGICA NORMALE (STREAMING)
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
             
-            // SE UTENTE GIÀ PROTETTO -> REDIRECT IMMEDIATO
+            // REDIRECT AUTOMATICO (Solo se c'è un videoUrl valido)
             if (isProtected && videoUrl) {
                 window.location.href = getProtectedUrl();
                 return;
             }
 
-            // SE NO -> MOSTRA INTERFACCIA
+            // SE SIAMO QUI: Mostra l'interfaccia
             document.getElementById('loaderView').style.display = 'none';
             document.getElementById('mainView').style.display = 'block';
 
@@ -268,7 +266,11 @@
             const btnInstall = document.getElementById('btnInstall');
             const descText = document.getElementById('descText');
 
-            if (os === "Desktop") {
+            // Avviso se URL mancante (Modalità Test)
+            if (!videoUrl) {
+                descText.innerHTML = "⚠️ <b>Modalità Test</b>: Aggiungi <code>?url=...</code> all'indirizzo per provare il redirect.";
+                document.querySelector('.skip-link').style.display = 'none';
+            } else if (os === "Desktop") {
                 // LOGICA PC
                 descText.innerHTML = 'Il video contiene molte finestre popup. Se installi <b>uBlock Origin Lite</b> potrai guardare il contenuto immediatamente e con <span class="highlight">zero pubblicità</span>.';
                 
@@ -286,7 +288,6 @@
                     btnInstall.href = LINKS.chromeDownload;
                     btnInstall.innerText = "Scarica Google Chrome";
                 }
-
             } else {
                 // LOGICA MOBILE
                 descText.innerHTML = 'Per guardare questo video senza interruzioni pubblicitarie, ti consigliamo di usare l\'app gratuita <b>Aloha Browser</b>.';
@@ -300,3 +301,6 @@
                 }
             }
         };
+    </script>
+</body>
+</html>
