@@ -3,73 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Secure Bridge</title>
+    <title>Stream Bridge</title>
     <style>
-        /* STILI GENERALI */
-        body { background-color: #121212; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
+        /* STILE DARK MODE PULITO */
+        body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
         
-        h2 { margin-bottom: 15px; }
-        p { color: #ccc; line-height: 1.5; margin-bottom: 25px; font-size: 15px; }
+        .container { max-width: 420px; width: 100%; }
         
-        .card { background: #1e1e1e; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; /* Nascosto di default */ }
+        h2 { color: #fff; margin-bottom: 10px; font-weight: 600; }
+        p { color: #aaa; line-height: 1.6; margin-bottom: 30px; font-size: 16px; }
         
-        .btn { display: block; width: 100%; padding: 16px 0; margin-top: 15px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.8; }
+        /* CARD */
+        .card { background: #1e1e1e; padding: 40px 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); display: none; }
+        
+        /* BOTTONI */
+        .btn { display: block; width: 100%; padding: 18px 0; margin-top: 15px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.98); }
 
-        /* Colori */
-        .btn-aloha { background: #2d9cdb; color: white; }
-        .btn-store { background: #333; color: white; border: 1px solid #555; }
-        .btn-ublock { background: #b72626; color: white; } /* Rosso uBlock */
-        .btn-continue { background: transparent; color: #777; font-size: 13px; margin-top: 20px; }
+        .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #1e88e5); color: white; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
+        .btn-ublock { background: #b72626; color: white; }
+        
+        /* Link Secondario (Continua comunque) */
+        .link-secondary { display: inline-block; margin-top: 25px; color: #666; font-size: 14px; text-decoration: none; border-bottom: 1px solid transparent; transition: 0.3s; }
+        .link-secondary:hover { color: #999; border-bottom-color: #999; }
 
         /* Loader */
-        .loader { border: 4px solid #333; border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        .loader { border: 3px solid #333; border-top: 3px solid #2d9cdb; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 30px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Finto Banner Pubblicitario per rilevare AdBlock */
-        .adsbox { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; }
+        /* TRAPPOLA PER ADBLOCK */
+        .ad-banner { position: absolute; top: -999px; left: -999px; width: 1px; height: 1px; }
     </style>
 </head>
 <body>
 
-    <div class="adsbox" id="detect-ad-block"></div>
+    <div class="ad-banner" id="ads-check"></div>
 
-    <div id="loadingView">
-        <div class="loader"></div>
-        <p>Analisi dispositivo in corso...</p>
-    </div>
+    <div class="container">
+        
+        <div id="loaderView">
+            <div class="loader"></div>
+            <p>Caricamento player...</p>
+        </div>
 
-    <div id="mobileView" class="card">
-        <h2 style="color: #2d9cdb;">🛡️ Sicurezza Streaming</h2>
-        <p id="mobileText">Stiamo aprendo <b>Aloha Browser</b> per bloccare le pubblicità.</p>
-        
-        <a id="btnOpenAloha" href="#" class="btn btn-aloha">🚀 APRI ALOHA</a>
-        <a id="btnInstallAloha" href="#" class="btn btn-store" style="display:none;">⬇️ Installa Aloha (Gratis)</a>
-        
-        <a id="btnFallback" href="#" class="btn btn-continue">Continua col browser normale (Pieno di pubblicità)</a>
-    </div>
+        <div id="pcView" class="card">
+            <h2>💡 Consiglio utile</h2>
+            <p>Il sito di streaming contiene molte finestre pubblicitarie fastidiose.<br><br>Per una visione rilassata, ti consigliamo di installare l'estensione gratuita <b>uBlock Origin</b>.</p>
+            
+            <a href="https://ublockorigin.com/" target="_blank" class="btn btn-ublock">🛡️ Installa Protezione (Consigliato)</a>
+            
+            <a href="#" id="pcLinkContinue" class="link-secondary">No grazie, continua con le pubblicità &rarr;</a>
+        </div>
 
-    <div id="pcWarningView" class="card">
-        <h2 style="color: #e50914;">⚠️ FERMO!</h2>
-        <p>Stai usando un browser PC <b>senza protezione</b>.<br>Il sito di streaming ti aprirà decine di pubblicità e finestre a rischio.</p>
-        
-        <a href="https://ublockorigin.com/" target="_blank" class="btn btn-ublock">🛡️ INSTALLA uBLOCK ORIGIN</a>
-        
-        <button onclick="forceRedirectPC()" class="btn btn-continue" style="border:none; cursor:pointer;">
-            Ho capito, continua a mio rischio &rarr;
-        </button>
+        <div id="mobileView" class="card">
+            <div class="loader"></div>
+            <h2>Apertura App...</h2>
+            <p>Stiamo avviando <b>Aloha Browser</b> per bloccare le pubblicità.</p>
+            
+            <a href="#" id="btnManualAloha" class="btn btn-aloha">🚀 Clicca se non si apre</a>
+            
+            <a href="#" id="mobileLinkContinue" class="link-secondary" style="font-size: 12px; margin-top:30px;">Apri col browser normale</a>
+        </div>
+
     </div>
 
     <script>
-        // --- 1. CONFIGURAZIONE ---
+        // --- 1. RECUPERO URL ---
         const params = new URLSearchParams(window.location.search);
+        // Recupera l'URL e pulisce eventuali "http" doppi se presenti
         let videoUrl = decodeURIComponent(params.get('url'));
         
-        // Link Store
-        const ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.alohamobile.browser";
-        const IOS_STORE = "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682";
+        // Link agli Store
+        const ANDROID_STORE_URL = "https://play.google.com/store/apps/details?id=com.alohamobile.browser";
+        const IOS_STORE_URL = "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682";
 
-        // --- 2. RILEVAMENTO DISPOSITIVO ---
+        // --- 2. RILEVAMENTO SISTEMA ---
         function getOS() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
             if (/android/i.test(ua)) return "Android";
@@ -77,91 +85,78 @@
             return "Desktop";
         }
 
-        // --- 3. RILEVAMENTO ADBLOCK (Solo PC) ---
+        // --- 3. RILEVAMENTO ADBLOCK (PC) ---
         function checkAdBlock(callback) {
-            // Piccolo ritardo per dare tempo all'estensione di agire
             setTimeout(() => {
-                const adElement = document.getElementById('detect-ad-block');
-                // Se l'elemento è nullo, ha altezza 0 o display none -> AdBlock è attivo (BENE)
-                const isBlocked = !adElement || adElement.offsetHeight === 0 || getComputedStyle(adElement).display === 'none';
+                const ad = document.getElementById('ads-check');
+                // Se il div è sparito o ha altezza 0, AdBlock è attivo
+                const isBlocked = !ad || ad.offsetHeight === 0 || getComputedStyle(ad).display === 'none';
                 callback(isBlocked);
-            }, 200);
+            }, 150);
         }
 
-        // --- 4. LOGICA PRINCIPALE ---
+        // --- 4. LOGICA DI REINDIRIZZAMENTO ---
         const os = getOS();
-        const loading = document.getElementById('loadingView');
-        const mobileCard = document.getElementById('mobileView');
-        const pcCard = document.getElementById('pcWarningView');
+        const cleanUrl = videoUrl.replace(/^https?:\/\//, '');
 
-        if (!videoUrl || videoUrl === 'null') {
-            document.body.innerHTML = "<h2>❌ Errore Link</h2>";
-        } else {
-            const cleanUrl = videoUrl.replace(/^https?:\/\//, '');
+        // Imposta i link di "Continua comunque"
+        document.getElementById('pcLinkContinue').href = videoUrl;
+        document.getElementById('mobileLinkContinue').href = videoUrl;
 
-            // ================== LOGICA DESKTOP ==================
-            if (os === "Desktop") {
-                checkAdBlock((hasAdBlock) => {
-                    loading.style.display = 'none';
-                    if (hasAdBlock) {
-                        // Utente protetto: vai diretto
-                        window.location.href = videoUrl;
-                    } else {
-                        // Utente a rischio: mostra avviso
-                        pcCard.style.display = 'block';
-                    }
-                });
-            }
-
-            // ================== LOGICA MOBILE ==================
-            else {
-                loading.style.display = 'none';
-                mobileCard.style.display = 'block';
-                
-                // Configurazione Pulsanti
-                const btnOpen = document.getElementById('btnOpenAloha');
-                const btnInstall = document.getElementById('btnInstallAloha');
-                const btnFallback = document.getElementById('btnFallback');
-                btnFallback.href = videoUrl; // Fallback al browser standard
-
-                // --- ANDROID (Intent Magico) ---
-                if (os === "Android") {
-                    // Creiamo un Intent che:
-                    // 1. Cerca di aprire com.alohamobile.browser
-                    // 2. Se non lo trova, usa S.browser_fallback_url per aprire il Play Store
-                    const fallbackEncoded = encodeURIComponent(ANDROID_STORE);
-                    const intentLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=" + fallbackEncoded + ";end";
-                    
-                    btnOpen.href = intentLink;
-                    
-                    // Proviamo redirect automatico
-                    setTimeout(() => { window.location.href = intentLink; }, 500);
-                } 
-                
-                // --- iOS (Timer Fallback) ---
-                else if (os === "iOS") {
-                    const alohaScheme = "alohabrowser://" + cleanUrl;
-                    btnOpen.href = alohaScheme;
-                    btnInstall.href = IOS_STORE;
-
-                    // Prova ad aprire
-                    window.location.href = alohaScheme;
-
-                    // Se l'utente è ancora qui dopo 2.5 secondi, probabilmente non ha l'app
-                    setTimeout(() => {
-                        document.getElementById('mobileText').innerHTML = "⚠️ <b>Aloha non sembra installato.</b><br>Per vedere il film senza pubblicità, scaricalo ora.";
-                        btnOpen.style.display = 'none'; // Nascondi tasto apri
-                        btnInstall.style.display = 'block'; // Mostra tasto installa
-                    }, 2500);
+        // == DESKTOP ==
+        if (os === "Desktop") {
+            checkAdBlock((hasAdBlock) => {
+                document.getElementById('loaderView').style.display = 'none';
+                if (hasAdBlock) {
+                    // Utente protetto -> Vai subito
+                    window.location.href = videoUrl;
+                } else {
+                    // Utente non protetto -> Mostra consiglio gentile
+                    document.getElementById('pcView').style.display = 'block';
                 }
+            });
+        }
+
+        // == MOBILE (Aloha Force) ==
+        else {
+            document.getElementById('loaderView').style.display = 'none';
+            document.getElementById('mobileView').style.display = 'block';
+            
+            const btnManual = document.getElementById('btnManualAloha');
+
+            // --- ANDROID ---
+            if (os === "Android") {
+                // INTENT "FORCE": Prova ad aprire Aloha.
+                // Se fallisce, 'S.browser_fallback_url' apre AUTOMATICAMENTE il Play Store.
+                const fallback = encodeURIComponent(ANDROID_STORE_URL);
+                const intent = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=" + fallback + ";end";
+                
+                btnManual.href = intent;
+                
+                // Avvio automatico
+                setTimeout(() => { window.location.href = intent; }, 500);
+            }
+
+            // --- iOS ---
+            else {
+                // Su iOS non c'è fallback automatico allo store nello stesso link.
+                // Proviamo ad aprire l'app, se l'utente rimane sulla pagina, offriamo lo store.
+                const alohaScheme = "alohabrowser://" + cleanUrl;
+                
+                btnManual.href = alohaScheme;
+                btnManual.innerText = "🚀 Apri in Aloha";
+
+                // Prova apertura
+                window.location.href = alohaScheme;
+                
+                // Se dopo 2 secondi l'utente è ancora qui, cambia il tasto in "Scarica"
+                setTimeout(() => {
+                    btnManual.innerText = "⬇️ Scarica Aloha (Gratis)";
+                    btnManual.href = IOS_STORE_URL;
+                    btnManual.style.background = "#333"; // Cambio colore per evidenziare
+                }, 2500);
             }
         }
-
-        // Funzione per PC se l'utente ignora l'avviso
-        function forceRedirectPC() {
-            window.location.href = videoUrl;
-        }
-
     </script>
 </body>
 </html>
