@@ -38,18 +38,17 @@
         /* --- TIPOGRAFIA --- */
         h2 { color: #fff; margin: 0 0 15px 0; font-weight: 700; font-size: 24px; }
         
-        /* Testo fluido senza spezzature forzate */
         p { 
             color: #aaa; 
             line-height: 1.6; 
             margin-bottom: 30px; 
             font-size: 15px; 
-            max-width: 90%;
+            max-width: 95%;
             margin-left: auto;
             margin-right: auto;
         }
 
-        .highlight { color: #4caf50; font-weight: bold; } /* Verde speranza */
+        .highlight { color: #4caf50; font-weight: bold; } 
 
         /* --- PULSANTI --- */
         .btn-group { display: flex; flex-direction: column; gap: 15px; }
@@ -71,18 +70,19 @@
         }
         .btn:active { transform: scale(0.98); }
 
-        /* Tasto Installa (Verde/Accento) */
+        /* Stili Varianti */
         .btn-install { background: #fff; color: #000; }
         .btn-install:hover { background: #e0e0e0; }
 
-        /* Tasto Conferma (Secondario ma evidente) */
         .btn-confirm { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #444; }
         .btn-confirm:hover { background: rgba(255, 255, 255, 0.2); border-color: #666; }
 
-        /* Tasto Aloha Mobile */
         .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #1e88e5); color: white; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
 
-        /* --- LINK E TIMER (PENALITÀ) --- */
+        .btn-fallback { background: transparent; color: #888; border: 1px solid #333; font-size: 14px; }
+        .btn-fallback:hover { border-color: #555; color: #aaa; }
+
+        /* --- PENALITÀ & LINK --- */
         .skip-link { 
             color: #666; 
             font-size: 13px; 
@@ -94,7 +94,6 @@
         }
         .skip-link:hover { color: #999; }
 
-        /* Schermata Attesa (Nascosta inizialmente) */
         #penaltyView { display: none; margin-top: 20px; }
         
         .timer-bar { width: 100%; height: 4px; background: #333; margin-top: 15px; border-radius: 2px; overflow: hidden; }
@@ -103,6 +102,10 @@
         /* --- LOADER --- */
         .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Mobile Options (Nascoste inizialmente) */
+        #mobileOptions { display: none; margin-top: 20px; animation: fadeIn 0.5s; }
+        #mobileStatus { font-weight: bold; margin-bottom: 5px; color: #fff; }
     </style>
 </head>
 <body>
@@ -111,20 +114,19 @@
         
         <div id="loaderView">
             <div class="loader"></div>
-            <p style="font-size: 12px; color: #555;">Accesso rapido...</p>
+            <p style="font-size: 12px; color: #555;">Accesso sicuro...</p>
         </div>
 
         <div id="pcView" class="card">
             
             <div id="choiceContent">
-                <h2>Esperienza senza interruzioni</h2>
+                <h2>Visione senza interruzioni</h2>
                 <p>
                     Il video contiene molte finestre popup. Se installi <b>uBlock Origin Lite</b> potrai guardare il contenuto immediatamente e con <span class="highlight">zero pubblicità</span>.
                 </p>
                 
                 <div class="btn-group">
                     <a href="#" id="btnInstall" target="_blank" class="btn btn-install">🛡️ Installa blocco pubblicità</a>
-                    
                     <button onclick="setProtectedAndGo()" class="btn btn-confirm">✅ Ho già la protezione</button>
                 </div>
 
@@ -140,10 +142,28 @@
         </div>
 
         <div id="mobileView" class="card">
-            <div class="loader"></div>
-            <h2>Avvio Player...</h2>
-            <p>Stiamo aprendo <b>Aloha Browser</b> per bloccare le pubblicità.</p>
-            <a href="#" id="btnManualAloha" class="btn btn-aloha">🚀 Clicca se non si apre</a>
+            
+            <div id="mobileLoading">
+                <div class="loader"></div>
+                <h2 id="mobileStatus">Apertura App...</h2>
+                <p>Stiamo provando ad aprire <b>Aloha Browser</b> per togliere le pubblicità.</p>
+                <a href="#" id="btnRetryAloha" class="btn btn-aloha">🚀 Riprova ad aprire</a>
+            </div>
+
+            <div id="mobileOptions">
+                <p style="margin-bottom: 20px; color: #ffca28;">⚠️ L'app non sembra installata.</p>
+                
+                <div class="btn-group">
+                    <a href="#" id="btnMobileInstall" class="btn btn-install">
+                        ⬇️ Installa Aloha (Zero Pubblicità)
+                    </a>
+                    
+                    <a href="#" id="btnMobileContinue" class="btn btn-fallback">
+                        Continua col browser (Con Pubblicità)
+                    </a>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -153,9 +173,9 @@
         const params = new URLSearchParams(window.location.search);
         let videoUrl = decodeURIComponent(params.get('url'));
         const cleanUrl = videoUrl ? videoUrl.replace(/^https?:\/\//, '') : '';
-        const STORAGE_KEY = 'stream_bridge_consent'; // Nome del cookie
+        const STORAGE_KEY = 'stream_bridge_consent';
 
-        // Link Store
+        // Links
         const LINKS = {
             chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh",
             edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp",
@@ -183,30 +203,23 @@
             return "unknown";
         }
 
-        // --- AZIONI UTENTE ---
-        
-        // 1. Utente dice di aver installato -> Salva e vai
+        // --- AZIONI PC ---
         function setProtectedAndGo() {
             localStorage.setItem(STORAGE_KEY, 'true'); 
             window.location.href = videoUrl;
         }
 
-        // 2. Utente salta -> Nasconde scelta, mostra timer 5s, poi vai (senza salvare)
         function triggerPenalty() {
             document.getElementById('choiceContent').style.display = 'none';
             document.getElementById('penaltyView').style.display = 'block';
-            
-            let duration = 5000; // 5 secondi
+            let duration = 5000; 
             let start = Date.now();
             let bar = document.getElementById('timerFill');
-
             let timer = setInterval(() => {
                 let timePassed = Date.now() - start;
                 let progress = (timePassed / duration) * 100;
-                
                 if (progress >= 100) progress = 100;
                 bar.style.width = progress + "%";
-
                 if (timePassed >= duration) {
                     clearInterval(timer);
                     window.location.href = videoUrl;
@@ -217,16 +230,14 @@
         // --- FLUSSO PRINCIPALE ---
         const os = getOS();
 
+        // 1. DESKTOP FLOW
         if (os === "Desktop") {
-            // Controlla Cookie
             if (localStorage.getItem(STORAGE_KEY) === 'true') {
-                window.location.href = videoUrl; // Redirect immediato
+                window.location.href = videoUrl;
             } else {
-                // Primo accesso: Mostra interfaccia
                 document.getElementById('loaderView').style.display = 'none';
                 document.getElementById('pcView').style.display = 'block';
 
-                // Configura Link
                 const browser = getBrowserType();
                 const btnInstall = document.getElementById('btnInstall');
                 
@@ -240,29 +251,46 @@
             }
         } 
         
-        // --- MOBILE FLOW ---
+        // 2. MOBILE FLOW
         else {
             document.getElementById('loaderView').style.display = 'none';
             document.getElementById('mobileView').style.display = 'block';
-            const btnManual = document.getElementById('btnManualAloha');
+            
+            const btnRetry = document.getElementById('btnRetryAloha');
+            const btnInstall = document.getElementById('btnMobileInstall');
+            const btnContinue = document.getElementById('btnMobileContinue');
+            
+            // Imposta link "Continua"
+            btnContinue.href = videoUrl;
+
+            // Determina URL Store e Intent in base all'OS
+            let intentLink, storeLink;
 
             if (os === "Android") {
-                const fallback = encodeURIComponent(MOBILE_STORES.android);
-                const intent = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=" + fallback + ";end";
-                btnManual.href = intent;
-                setTimeout(() => { window.location.href = intent; }, 500);
+                storeLink = MOBILE_STORES.android;
+                // Intent Android Standard (Senza fallback automatico allo store, gestiamo noi)
+                intentLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
             } else {
-                const iosScheme = "alohabrowser://" + cleanUrl;
-                btnManual.href = iosScheme;
-                btnManual.innerText = "Apri in Aloha";
-                window.location.href = iosScheme;
-                setTimeout(() => {
-                    btnManual.innerText = "⬇️ Installa Aloha (Gratis)";
-                    btnManual.href = MOBILE_STORES.ios;
-                    btnManual.classList.remove('btn-aloha');
-                    btnManual.classList.add('btn-store');
-                }, 2500);
+                storeLink = MOBILE_STORES.ios;
+                intentLink = "alohabrowser://" + cleanUrl;
             }
+
+            // Imposta i link
+            btnRetry.href = intentLink;
+            btnInstall.href = storeLink;
+
+            // Tenta l'apertura automatica
+            window.location.href = intentLink;
+
+            // TIMEOUT INTELLIGENTE
+            // Se dopo 2.5 secondi l'utente vede ancora la pagina, significa che l'app non si è aperta
+            setTimeout(() => {
+                // Nascondi il loader e il titolo "Apertura..."
+                document.getElementById('mobileLoading').style.display = 'none';
+                
+                // Mostra le opzioni
+                document.getElementById('mobileOptions').style.display = 'block';
+            }, 2500);
         }
     </script>
 </body>
