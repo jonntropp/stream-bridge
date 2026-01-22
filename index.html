@@ -21,8 +21,8 @@
         .btn:hover { opacity: 0.9; }
 
         .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #1e88e5); color: white; }
-        .btn-store { background: #4caf50; color: white; } /* Verde per installazione */
-        .btn-chrome { background: #4285f4; color: white; } /* Blu Chrome */
+        .btn-store { background: #4caf50; color: white; } 
+        .btn-chrome { background: #4285f4; color: white; } 
         
         .link-secondary { display: inline-block; margin-top: 25px; color: #666; font-size: 13px; text-decoration: none; border-bottom: 1px solid transparent; }
         .link-secondary:hover { color: #999; border-bottom-color: #999; }
@@ -31,7 +31,7 @@
         .loader { border: 3px solid #333; border-top: 3px solid #777; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 30px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* TRAPPOLA ADBLOCK (Classi famose che vengono bloccate) */
+        /* TRAPPOLA CSS (Backup) */
         .adsbox { position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; }
     </style>
 </head>
@@ -72,12 +72,12 @@
         // Imposta link "Continua comunque"
         if(videoUrl) document.getElementById('pcLinkContinue').href = videoUrl;
 
-        // --- LINKS STORE ESTENSIONI (uBlock Origin Lite) ---
-        // Usiamo la versione "Lite" (MV3) che è il futuro standard per Chrome/Edge
+        // --- LINKS STORE AGGIORNATI ---
+        // Ho inserito il link specifico che mi hai chiesto per Chrome
         const LINKS = {
-            chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbmpkglijbekcfotoj",
+            chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh",
             edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp",
-            firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", // Su Firefox usiamo ancora l'Origin classico che è più potente
+            firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", 
             chromeDownload: "https://www.google.com/chrome/"
         };
 
@@ -102,42 +102,66 @@
             return "Desktop";
         }
 
-        // --- 2. RILEVAMENTO ADBLOCK (HoneyPot Method) ---
-        // Creiamo un elemento che si chiama "adsbox". Gli AdBlocker lo nascondono o lo rimuovono.
-        function checkAdBlock(callback) {
-            const bait = document.createElement('div');
-            bait.innerHTML = '&nbsp;';
-            bait.className = 'adsbox pub_300x250 ad-placement doubleclick'; // Classi che attirano gli AdBlock
-            bait.style.position = 'absolute';
-            bait.style.top = '-1000px';
-            document.body.appendChild(bait);
+        // --- 2. RILEVAMENTO ADBLOCK (NETWORK + CSS) ---
+        async function detectAdBlock() {
+            let adBlockDetected = false;
 
-            setTimeout(() => {
-                // Se l'elemento ha altezza 0, è stato schiacciato dall'AdBlock
-                // Se display è none, è stato nascosto
-                // Se offsetParent è null, è stato rimosso dal DOM
-                const isBlocked = (bait.offsetHeight === 0 || 
-                                   window.getComputedStyle(bait).display === 'none' || 
-                                   bait.offsetParent === null);
+            // METODO A: Network Check (Più affidabile per uBlock Lite)
+            // Proviamo a chiamare uno script di Google Ads.
+            // Se la fetch fallisce (catch), è probabile che un AdBlocker abbia bloccato la richiesta.
+            try {
+                const request = new Request("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", {
+                    method: 'HEAD', 
+                    mode: 'no-cors' // Importante per evitare errori CORS reali
+                });
                 
-                document.body.removeChild(bait); // Pulizia
-                callback(isBlocked);
-            }, 200);
+                await fetch(request).then(() => {
+                    // Se entra qui, la richiesta è partita. Niente AdBlock di rete.
+                    console.log("Ads allowed");
+                }).catch(() => {
+                    // Se entra qui, la richiesta è stata bloccata dal client (AdBlock).
+                    console.log("Ads blocked by network filter");
+                    adBlockDetected = true;
+                });
+            } catch (e) {
+                adBlockDetected = true;
+            }
+
+            // METODO B: CSS Check (Backup)
+            if (!adBlockDetected) {
+                const bait = document.createElement('div');
+                bait.className = 'adsbox pub_300x250 ad-placement';
+                bait.style.position = 'absolute';
+                bait.style.top = '-1000px';
+                bait.innerHTML = '&nbsp;';
+                document.body.appendChild(bait);
+                
+                // Ritardo minimo per permettere l'applicazione dello stile
+                await new Promise(r => setTimeout(r, 100));
+
+                if (bait.offsetHeight === 0 || window.getComputedStyle(bait).display === 'none') {
+                    console.log("Ads blocked by cosmetic filter");
+                    adBlockDetected = true;
+                }
+                document.body.removeChild(bait);
+            }
+
+            return adBlockDetected;
         }
 
         // --- 3. LOGICA PRINCIPALE ---
         const os = getOS();
 
         if (os === "Desktop") {
-            // ESEGUI TEST ADBLOCK
-            checkAdBlock((hasAdBlock) => {
+            // ESEGUI TEST
+            detectAdBlock().then((hasAdBlock) => {
                 document.getElementById('loaderView').style.display = 'none';
 
                 if (hasAdBlock) {
-                    // UTENTE PROTETTO -> Redirect Immediato
+                    // PROTETTO -> Vai al video
                     window.location.href = videoUrl;
                 } else {
-                    // UTENTE NON PROTETTO -> Mostra Consiglio
+                    // NON PROTETTO -> Mostra Consiglio
                     const browser = getBrowserType();
                     const btn = document.getElementById('btnInstallExtension');
                     const pcText = document.getElementById('pcText');
@@ -148,21 +172,21 @@
                     if (browser === 'chrome') {
                         pcText.innerHTML += "<br>Per <b>Google Chrome</b>, ti consigliamo questa estensione gratuita:";
                         btn.href = LINKS.chrome;
-                        btn.innerText = "🛡️ Aggiungi a Chrome (uBlock Lite)";
+                        btn.innerText = "🛡️ Aggiungi uBlock Lite";
                     } else if (browser === 'edge') {
-                        pcText.innerHTML += "<br>Per <b>Microsoft Edge</b>, ti consigliamo questa estensione gratuita:";
+                        pcText.innerHTML += "<br>Per <b>Edge</b>, ti consigliamo questa estensione gratuita:";
                         btn.href = LINKS.edge;
-                        btn.innerText = "🛡️ Aggiungi a Edge (uBlock Lite)";
+                        btn.innerText = "🛡️ Aggiungi uBlock Lite";
                     } else if (browser === 'firefox') {
                         pcText.innerHTML += "<br>Per <b>Firefox</b>, ti consigliamo questa estensione gratuita:";
                         btn.href = LINKS.firefox;
-                        btn.innerText = "🛡️ Aggiungi a Firefox";
+                        btn.innerText = "🛡️ Aggiungi uBlock Origin";
                     } else {
-                        // BROWSER SCONOSCIUTO (Safari, Opera, Vecchi IE)
-                        pcText.innerHTML += "<br>Il tuo browser attuale non supporta una protezione efficace.<br>Ti consigliamo di passare a <b>Google Chrome</b>.";
-                        btn.style.display = 'none'; // Nasconde tasto estensione
+                        // Browser non supportato
+                        pcText.innerHTML += "<br>Il tuo browser non supporta la protezione ottimale.<br>Ti consigliamo <b>Google Chrome</b>.";
+                        btn.style.display = 'none';
                         const btnChrome = document.getElementById('btnGetChrome');
-                        btnChrome.style.display = 'flex'; // Mostra tasto Chrome
+                        btnChrome.style.display = 'flex';
                     }
                 }
             });
@@ -175,7 +199,6 @@
             const btnManual = document.getElementById('btnManualAloha');
 
             if (os === "Android") {
-                // FALLBACK AUTOMATICO SU PLAY STORE
                 const fallback = encodeURIComponent(MOBILE_STORES.android);
                 const intent = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=" + fallback + ";end";
                 
@@ -193,7 +216,7 @@
                     btnManual.innerText = "⬇️ Installa Aloha (Gratis)";
                     btnManual.href = MOBILE_STORES.ios;
                     btnManual.classList.remove('btn-aloha');
-                    btnManual.classList.add('btn-store'); // Diventa verde
+                    btnManual.classList.add('btn-store');
                 }, 2500);
             }
         }
