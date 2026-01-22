@@ -232,10 +232,30 @@
 
         // --- INIZIALIZZAZIONE ---
         window.onload = function() {
+            // 1. GESTIONE RESET (COMMANDO /configuration)
+            if (params.get('reset') === 'true') {
+                localStorage.removeItem(STORAGE_KEY); // Cancella la memoria
+                
+                document.getElementById('loaderView').style.display = 'none';
+                document.getElementById('mainView').style.display = 'block';
+                
+                // Mostra messaggio di successo
+                document.getElementById('titleText').innerText = "✅ Reset Completato";
+                document.getElementById('titleText').style.color = "#4caf50";
+                
+                document.getElementById('descText').innerHTML = "La memoria del browser è stata cancellata.<br><br>Al prossimo link che aprirai, potrai selezionare nuovamente la tua app o estensione preferita.";
+                
+                // Nasconde i tasti normali e mostra solo un avviso
+                document.querySelector('.btn-group').style.display = 'none';
+                document.querySelector('.skip-link').style.display = 'none';
+                return; // Ferma tutto il resto
+            }
+
+            // 2. LOGICA NORMALE (STREAMING)
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
             
             // SE UTENTE GIÀ PROTETTO -> REDIRECT IMMEDIATO
-            if (isProtected) {
+            if (isProtected && videoUrl) {
                 window.location.href = getProtectedUrl();
                 return;
             }
@@ -280,6 +300,3 @@
                 }
             }
         };
-    </script>
-</body>
-</html>
