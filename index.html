@@ -3,94 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirect Brave</title>
+    <title>Stream Secure Bridge</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #1a1a1a; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .card { background: #2d2d2d; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-width: 90%; width: 400px; }
-        h2 { margin-top: 0; color: #ff5500; }
-        p { color: #cccccc; margin-bottom: 20px; }
-        .btn { display: inline-block; padding: 12px 24px; background-color: #ff5500; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background 0.2s; }
-        .btn:hover { background-color: #e04b00; }
-        .url-display { font-size: 0.8rem; color: #888; word-break: break-all; margin-bottom: 1rem; }
+        /* STILI GENERALI */
+        body { background-color: #121212; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
+        
+        h2 { margin-bottom: 15px; }
+        p { color: #ccc; line-height: 1.5; margin-bottom: 25px; font-size: 15px; }
+        
+        .card { background: #1e1e1e; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; /* Nascosto di default */ }
+        
+        .btn { display: block; width: 100%; padding: 16px 0; margin-top: 15px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
+
+        /* Colori */
+        .btn-aloha { background: #2d9cdb; color: white; }
+        .btn-store { background: #333; color: white; border: 1px solid #555; }
+        .btn-ublock { background: #b72626; color: white; } /* Rosso uBlock */
+        .btn-continue { background: transparent; color: #777; font-size: 13px; margin-top: 20px; }
+
+        /* Loader */
+        .loader { border: 4px solid #333; border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Finto Banner Pubblicitario per rilevare AdBlock */
+        .adsbox { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>Apertura in Brave</h2>
-        <p id="status">Rilevamento dispositivo in corso...</p>
-        <div id="targetUrlDisplay" class="url-display"></div>
-        <a href="#" id="manualLink" class="btn">Apri Manualmente</a>
+    <div class="adsbox" id="detect-ad-block"></div>
+
+    <div id="loadingView">
+        <div class="loader"></div>
+        <p>Analisi dispositivo in corso...</p>
+    </div>
+
+    <div id="mobileView" class="card">
+        <h2 style="color: #2d9cdb;">🛡️ Sicurezza Streaming</h2>
+        <p id="mobileText">Stiamo aprendo <b>Aloha Browser</b> per bloccare le pubblicità.</p>
+        
+        <a id="btnOpenAloha" href="#" class="btn btn-aloha">🚀 APRI ALOHA</a>
+        <a id="btnInstallAloha" href="#" class="btn btn-store" style="display:none;">⬇️ Installa Aloha (Gratis)</a>
+        
+        <a id="btnFallback" href="#" class="btn btn-continue">Continua col browser normale (Pieno di pubblicità)</a>
+    </div>
+
+    <div id="pcWarningView" class="card">
+        <h2 style="color: #e50914;">⚠️ FERMO!</h2>
+        <p>Stai usando un browser PC <b>senza protezione</b>.<br>Il sito di streaming ti aprirà decine di pubblicità e finestre a rischio.</p>
+        
+        <a href="https://ublockorigin.com/" target="_blank" class="btn btn-ublock">🛡️ INSTALLA uBLOCK ORIGIN</a>
+        
+        <button onclick="forceRedirectPC()" class="btn btn-continue" style="border:none; cursor:pointer;">
+            Ho capito, continua a mio rischio &rarr;
+        </button>
     </div>
 
     <script>
-        // 1. RECUPERO IL PARAMETRO DALL'URL
-        // Mi aspetto un formato tipo: miosito.com/?link=https://vixsrc.to/movie/27205
+        // --- 1. CONFIGURAZIONE ---
         const params = new URLSearchParams(window.location.search);
-        let targetLink = params.get('link');
+        let videoUrl = decodeURIComponent(params.get('url'));
+        
+        // Link Store
+        const ANDROID_STORE = "https://play.google.com/store/apps/details?id=com.alohamobile.browser";
+        const IOS_STORE = "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682";
 
-        // Elementi DOM
-        const statusText = document.getElementById('status');
-        const manualBtn = document.getElementById('manualLink');
-        const urlDisplay = document.getElementById('targetUrlDisplay');
+        // --- 2. RILEVAMENTO DISPOSITIVO ---
+        function getOS() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/android/i.test(ua)) return "Android";
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
+            return "Desktop";
+        }
 
-        if (!targetLink) {
-            statusText.textContent = "Errore: Nessun link specificato.";
-            statusText.style.color = "#ff4444";
-            manualBtn.style.display = "none";
+        // --- 3. RILEVAMENTO ADBLOCK (Solo PC) ---
+        function checkAdBlock(callback) {
+            // Piccolo ritardo per dare tempo all'estensione di agire
+            setTimeout(() => {
+                const adElement = document.getElementById('detect-ad-block');
+                // Se l'elemento è nullo, ha altezza 0 o display none -> AdBlock è attivo (BENE)
+                const isBlocked = !adElement || adElement.offsetHeight === 0 || getComputedStyle(adElement).display === 'none';
+                callback(isBlocked);
+            }, 200);
+        }
+
+        // --- 4. LOGICA PRINCIPALE ---
+        const os = getOS();
+        const loading = document.getElementById('loadingView');
+        const mobileCard = document.getElementById('mobileView');
+        const pcCard = document.getElementById('pcWarningView');
+
+        if (!videoUrl || videoUrl === 'null') {
+            document.body.innerHTML = "<h2>❌ Errore Link</h2>";
         } else {
-            // Se l'utente non ha messo http/https, lo aggiungiamo per sicurezza per il fallback
-            if (!/^https?:\/\//i.test(targetLink)) {
-                targetLink = 'https://' + targetLink;
+            const cleanUrl = videoUrl.replace(/^https?:\/\//, '');
+
+            // ================== LOGICA DESKTOP ==================
+            if (os === "Desktop") {
+                checkAdBlock((hasAdBlock) => {
+                    loading.style.display = 'none';
+                    if (hasAdBlock) {
+                        // Utente protetto: vai diretto
+                        window.location.href = videoUrl;
+                    } else {
+                        // Utente a rischio: mostra avviso
+                        pcCard.style.display = 'block';
+                    }
+                });
             }
 
-            urlDisplay.textContent = targetLink;
-            
-            // Creiamo la versione "pulita" senza protocollo per gli schemi deep link
-            // Esempio: da "https://vixsrc.to/..." a "vixsrc.to/..."
-            const cleanLink = targetLink.replace(/^https?:\/\//, '');
-
-            // Rilevamento User Agent
-            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-
-            // --- LOGICA IOS ---
-            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                statusText.textContent = "Tentativo apertura Brave su iOS...";
-                
-                // Schema iOS: brave://dominio.com/path
-                const iosDeepLink = "brave://" + cleanLink;
-                
-                manualBtn.href = iosDeepLink;
-                window.location.href = iosDeepLink;
-            } 
-            
-            // --- LOGICA ANDROID ---
-            else if (/android/i.test(userAgent)) {
-                statusText.textContent = "Tentativo apertura Brave su Android...";
-
-                // FIX: Aggiunto 'action=android.intent.action.VIEW' e 'category=BROWSABLE'
-                // Questo dice a Brave non solo di aprirsi, ma di navigare all'URL specifico.
-                const androidIntent = 
-                    "intent://" + cleanLink + 
-                    "#Intent;" + 
-                    "scheme=https;" + 
-                    "package=com.brave.browser;" + 
-                    "action=android.intent.action.VIEW;" + 
-                    "category=android.intent.category.BROWSABLE;" + 
-                    "S.browser_fallback_url=" + encodeURIComponent(targetLink) + ";" + 
-                    "end";
-
-                manualBtn.href = androidIntent;
-                window.location.href = androidIntent;
-            }
-            
-            // --- LOGICA PC / ALTRO ---
+            // ================== LOGICA MOBILE ==================
             else {
-                statusText.textContent = "Reindirizzamento standard...";
-                manualBtn.href = targetLink;
-                window.location.href = targetLink;
+                loading.style.display = 'none';
+                mobileCard.style.display = 'block';
+                
+                // Configurazione Pulsanti
+                const btnOpen = document.getElementById('btnOpenAloha');
+                const btnInstall = document.getElementById('btnInstallAloha');
+                const btnFallback = document.getElementById('btnFallback');
+                btnFallback.href = videoUrl; // Fallback al browser standard
+
+                // --- ANDROID (Intent Magico) ---
+                if (os === "Android") {
+                    // Creiamo un Intent che:
+                    // 1. Cerca di aprire com.alohamobile.browser
+                    // 2. Se non lo trova, usa S.browser_fallback_url per aprire il Play Store
+                    const fallbackEncoded = encodeURIComponent(ANDROID_STORE);
+                    const intentLink = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=" + fallbackEncoded + ";end";
+                    
+                    btnOpen.href = intentLink;
+                    
+                    // Proviamo redirect automatico
+                    setTimeout(() => { window.location.href = intentLink; }, 500);
+                } 
+                
+                // --- iOS (Timer Fallback) ---
+                else if (os === "iOS") {
+                    const alohaScheme = "alohabrowser://" + cleanUrl;
+                    btnOpen.href = alohaScheme;
+                    btnInstall.href = IOS_STORE;
+
+                    // Prova ad aprire
+                    window.location.href = alohaScheme;
+
+                    // Se l'utente è ancora qui dopo 2.5 secondi, probabilmente non ha l'app
+                    setTimeout(() => {
+                        document.getElementById('mobileText').innerHTML = "⚠️ <b>Aloha non sembra installato.</b><br>Per vedere il film senza pubblicità, scaricalo ora.";
+                        btnOpen.style.display = 'none'; // Nascondi tasto apri
+                        btnInstall.style.display = 'block'; // Mostra tasto installa
+                    }, 2500);
+                }
             }
         }
+
+        // Funzione per PC se l'utente ignora l'avviso
+        function forceRedirectPC() {
+            window.location.href = videoUrl;
+        }
+
     </script>
 </body>
 </html>
