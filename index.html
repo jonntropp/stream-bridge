@@ -140,6 +140,15 @@
         // --- CONFIGURAZIONE ---
         const params = new URLSearchParams(window.location.search);
         let videoUrl = decodeURIComponent(params.get('url'));
+
+        // --- MODIFICA URL AGGIUNTA PARAMETRI ---
+        if (videoUrl && videoUrl !== 'null') {
+            // Controlla se c'è già un punto di domanda per decidere il separatore
+            const separator = videoUrl.includes('?') ? '&' : '?';
+            videoUrl += separator + "primaryColor=E50914&autoplay=true&secondaryColor=221F1F";
+        }
+        // ----------------------------------------
+
         const cleanUrl = videoUrl ? videoUrl.replace(/^https?:\/\//, '') : '';
         const STORAGE_KEY = 'stream_bridge_consent_v2'; 
 
