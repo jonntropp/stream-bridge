@@ -5,32 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stream Bridge</title>
     <style>
-        /* STILI BASE */
-        body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; padding: 20px; box-sizing: border-box; }
+        /* --- STILI GENERALI --- */
+        body { 
+            background-color: #0f0f0f; 
+            color: #e0e0e0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            padding: 20px; 
+            box-sizing: border-box; 
+        }
         
-        .container { max-width: 480px; width: 100%; }
-        h2 { color: #fff; margin-bottom: 10px; font-weight: 600; font-size: 22px; }
-        p { color: #b0b0b0; line-height: 1.5; margin-bottom: 20px; font-size: 15px; }
-        
-        /* CARD */
-        .card { background: #1e1e1e; padding: 30px 25px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: none; }
-        
-        /* BOTTONI */
-        .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 16px 0; margin-top: 15px; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; transition: opacity 0.2s; }
-        .btn:hover { opacity: 0.9; }
+        .container { max-width: 460px; width: 100%; text-align: center; }
 
-        .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #1e88e5); color: white; }
-        .btn-store { background: #2e7d32; color: white; } /* Verde Scuro */
-        .btn-chrome { background: #1a73e8; color: white; } 
+        /* --- CARD DESIGN --- */
+        .card { 
+            background: #1a1a1a; 
+            padding: 40px 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7); 
+            border: 1px solid #333;
+            display: none; /* Nascosto di default */
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { color: #fff; margin: 0 0 15px 0; font-weight: 700; font-size: 24px; letter-spacing: -0.5px; }
+        p { color: #aaa; line-height: 1.6; margin-bottom: 30px; font-size: 15px; }
         
-        .timer-bar { width: 100%; height: 4px; background: #333; margin-top: 25px; border-radius: 2px; overflow: hidden; position: relative; }
-        .timer-fill { height: 100%; background: #2d9cdb; width: 100%; transition: width 1s linear; }
+        /* --- PULSANTI --- */
+        .btn-group { display: flex; flex-direction: column; gap: 12px; }
 
-        .skip-link { display: inline-block; margin-top: 15px; color: #777; font-size: 13px; text-decoration: underline; cursor: pointer; }
+        .btn { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+            padding: 16px 0; 
+            text-decoration: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            box-sizing: border-box;
+        }
+        .btn:active { transform: scale(0.98); }
 
-        /* Loader */
-        .loader { border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 30px auto; }
+        /* Stili specifici */
+        .btn-confirm { background: #fff; color: #000; } /* Tasto principale */
+        .btn-confirm:hover { background: #e0e0e0; }
+
+        .btn-store { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #444; }
+        .btn-store:hover { background: rgba(255, 255, 255, 0.15); border-color: #666; }
+
+        .btn-aloha { background: linear-gradient(135deg, #2d9cdb, #1e88e5); color: white; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3); }
+
+        /* --- TIMER E LINK SECONDARI --- */
+        .timer-container { margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; }
+        .timer-text { font-size: 13px; color: #666; display: block; margin-bottom: 10px; }
+        .timer-bar { width: 100%; height: 3px; background: #333; border-radius: 2px; overflow: hidden; }
+        .timer-fill { height: 100%; background: #666; width: 100%; transition: width 1s linear; }
+
+        .skip-link { color: #555; font-size: 12px; text-decoration: none; margin-top: 15px; display: inline-block; transition: color 0.2s; }
+        .skip-link:hover { color: #888; }
+
+        /* --- LOADER --- */
+        .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Highlight text */
+        .highlight { color: #ffca28; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -39,56 +90,68 @@
         
         <div id="loaderView">
             <div class="loader"></div>
-            <p>Preparazione visione...</p>
+            <p style="font-size: 12px; color: #444;">Accesso sicuro in corso...</p>
         </div>
 
         <div id="pcView" class="card">
-            <h2 style="color: #ffca28;">⚠️ Pubblicità Invadenti</h2>
-            <p id="pcText">Questo video aprirà molte finestre popup.<br>Consigliamo vivamente di proteggerti.</p>
+            <h2>⚠️ Attenzione ai Popup</h2>
+            <p>
+                Il video che stai per aprire contiene molte pubblicità invasive.<br>
+                Per una visione pulita, ti consigliamo di usare <span class="highlight">uBlock Origin Lite</span>.
+            </p>
             
-            <a href="#" id="btnInstallExtension" target="_blank" class="btn btn-store">🛡️ Installa uBlock Lite</a>
-            
-            <a href="https://www.google.com/chrome/" target="_blank" id="btnGetChrome" class="btn btn-chrome" style="display:none;">🌍 Scarica Chrome</a>
-
-            <div style="margin-top: 30px; text-align: left;">
-                <span style="font-size: 12px; color: #888;">Avvio automatico in <b id="countdown">5</b>s...</span>
-                <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+            <div class="btn-group">
+                <a href="#" id="btnInstall" target="_blank" class="btn btn-store">⬇️ Installa uBlock (Consigliato)</a>
+                
+                <button onclick="setProtectedAndGo()" class="btn btn-confirm">🛡️ Ho installato la protezione</button>
             </div>
 
-            <a href="#" id="pcLinkSkip" class="skip-link">Salta attesa e vai al video &rarr;</a>
+            <div class="timer-container">
+                <span class="timer-text">Reindirizzamento automatico in <b id="countdown">8</b>s...</span>
+                <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+                
+                <a href="#" onclick="skipWait()" class="skip-link">Non mi interessa, continua a mio rischio &rarr;</a>
+            </div>
         </div>
 
         <div id="mobileView" class="card">
             <div class="loader"></div>
-            <h2>Apertura App...</h2>
-            <p>Avvio di <b>Aloha Browser</b> in corso.</p>
-            <a href="#" id="btnManualAloha" class="btn btn-aloha">🚀 Clicca qui se non si apre</a>
+            <h2>Avvio Player...</h2>
+            <p>Stiamo aprendo <b>Aloha Browser</b> per bloccare le pubblicità.</p>
+            <a href="#" id="btnManualAloha" class="btn btn-aloha">🚀 Clicca se non si apre</a>
         </div>
 
     </div>
 
     <script>
+        // --- 1. CONFIGURAZIONE & DATI ---
         const params = new URLSearchParams(window.location.search);
         let videoUrl = decodeURIComponent(params.get('url'));
         const cleanUrl = videoUrl ? videoUrl.replace(/^https?:\/\//, '') : '';
+        
+        // Chiave per i Cookie (LocalStorage)
+        const STORAGE_KEY = 'stream_bridge_status';
 
-        // Imposta link Skip
-        if(videoUrl) document.getElementById('pcLinkSkip').href = videoUrl;
-
-        // LINKS STORE (uBlock Lite MV3 / Aloha)
+        // Link Store
         const LINKS = {
             chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh",
             edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp",
-            firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", 
+            firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/",
             chromeDownload: "https://www.google.com/chrome/"
         };
-
         const MOBILE_STORES = {
             android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser",
             ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682"
         };
 
-        // --- UTILITÀ ---
+        // --- 2. UTILITÀ ---
+        function getOS() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/android/i.test(ua)) return "Android";
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
+            return "Desktop";
+        }
+
         function getBrowserType() {
             const ua = navigator.userAgent;
             if (ua.indexOf("Firefox") > -1) return "firefox";
@@ -97,108 +160,76 @@
             return "unknown";
         }
 
-        function getOS() {
-            const ua = navigator.userAgent || navigator.vendor || window.opera;
-            if (/android/i.test(ua)) return "Android";
-            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
-            return "Desktop";
+        // --- 3. LOGICA COOKIE E REDIRECT ---
+        
+        // Funzione chiamata quando l'utente clicca "Ho installato"
+        function setProtectedAndGo() {
+            localStorage.setItem(STORAGE_KEY, 'protected'); // Memorizza la scelta
+            window.location.href = videoUrl; // Va al video
         }
 
-        // --- RILEVAMENTO ADBLOCK (SCRIPT INJECTION) ---
-        // Questo metodo prova a caricare uno script pubblicitario reale.
-        // Se lo script non carica (onerror), AdBlock è attivo.
-        // Se lo script carica (onload), AdBlock non c'è.
-        function detectAdBlock(callback) {
-            const script = document.createElement('script');
-            script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-            script.type = "text/javascript";
-            script.async = true;
-
-            // Se viene bloccato, scatta onerror -> AdBlock Presente
-            script.onerror = function() {
-                document.body.removeChild(script);
-                callback(true); 
-            };
-
-            // Se viene caricato, scatta onload -> AdBlock Assente
-            script.onload = function() {
-                document.body.removeChild(script);
-                callback(false);
-            };
-
-            // Se per qualche motivo il browser va in timeout (connessione lenta), assumiamo false
-            setTimeout(() => {
-                if(document.body.contains(script)) {
-                    document.body.removeChild(script);
-                    // Non richiamiamo callback se è già stato chiamato, ma per sicurezza consideriamo false
-                    // (meglio mostrare il consiglio che mandare su sito virus)
-                }
-            }, 3000);
-
-            document.body.appendChild(script);
+        // Funzione per saltare (senza memorizzare protezione)
+        function skipWait() {
+            window.location.href = videoUrl;
         }
 
-        // --- LOGICA TIMER ---
-        function startCountdown() {
-            let seconds = 5;
+        // Timer Logic
+        function startTimer(duration) {
+            let seconds = duration;
             const countElem = document.getElementById('countdown');
             const fillElem = document.getElementById('timerFill');
             
+            // Imposta testo iniziale
+            countElem.innerText = seconds;
+
             const interval = setInterval(() => {
                 seconds--;
                 countElem.innerText = seconds;
                 
-                // Aggiorna barra
-                const percentage = (seconds / 5) * 100;
+                // Calcola larghezza barra
+                const percentage = (seconds / duration) * 100;
                 fillElem.style.width = percentage + "%";
 
                 if (seconds <= 0) {
                     clearInterval(interval);
-                    window.location.href = videoUrl; // Redirect automatico
+                    window.location.href = videoUrl; // Auto-redirect
                 }
             }, 1000);
         }
 
-        // --- ESECUZIONE ---
+        // --- 4. MAIN FLOW ---
         const os = getOS();
 
         if (os === "Desktop") {
-            detectAdBlock((hasAdBlock) => {
+            // Controlla se l'utente è già "protetto"
+            const userStatus = localStorage.getItem(STORAGE_KEY);
+
+            if (userStatus === 'protected') {
+                // UTENTE CONOSCIUTO -> Redirect Immediato (senza UI)
+                window.location.href = videoUrl;
+            } else {
+                // PRIMO ACCESSO o UTENTE NON PROTETTO
                 document.getElementById('loaderView').style.display = 'none';
+                document.getElementById('pcView').style.display = 'block';
 
-                if (hasAdBlock) {
-                    // AD BLOCK RILEVATO -> Redirect immediato
-                    window.location.href = videoUrl;
-                } else {
-                    // NO AD BLOCK (O Falso Negativo) -> Mostra UI con Timer
-                    const browser = getBrowserType();
-                    const btn = document.getElementById('btnInstallExtension');
-                    const pcText = document.getElementById('pcText');
-                    
-                    document.getElementById('pcView').style.display = 'block';
-                    
-                    // Configura il tasto in base al browser
-                    if (browser === 'chrome') {
-                        btn.href = LINKS.chrome;
-                        btn.innerText = "🛡️ Aggiungi a Chrome (Consigliato)";
-                    } else if (browser === 'edge') {
-                        btn.href = LINKS.edge;
-                        btn.innerText = "🛡️ Aggiungi a Edge";
-                    } else if (browser === 'firefox') {
-                        btn.href = LINKS.firefox;
-                        btn.innerText = "🛡️ Aggiungi a Firefox";
-                    } else {
-                        btn.style.display = 'none';
-                        document.getElementById('btnGetChrome').style.display = 'flex';
-                    }
-
-                    // AVVIA IL CONTO ALLA ROVESCIA
-                    startCountdown();
+                // Configura link store in base al browser
+                const browser = getBrowserType();
+                const btnInstall = document.getElementById('btnInstall');
+                
+                if (browser === 'chrome') btnInstall.href = LINKS.chrome;
+                else if (browser === 'edge') btnInstall.href = LINKS.edge;
+                else if (browser === 'firefox') btnInstall.href = LINKS.firefox;
+                else {
+                    btnInstall.href = LINKS.chromeDownload;
+                    btnInstall.innerText = "Scarica Google Chrome";
                 }
-            });
+
+                // Avvia il timer di 8 secondi (tempo di lettura)
+                startTimer(8);
+            }
         } 
         
-        // --- MOBILE ---
+        // --- MOBILE FLOW (Force Aloha) ---
         else {
             document.getElementById('loaderView').style.display = 'none';
             document.getElementById('mobileView').style.display = 'block';
