@@ -243,7 +243,7 @@
             // 1. GESTIONE RESET: Pagina di sola configurazione
             if (params.get('reset') === 'true') {
                 localStorage.removeItem(STORAGE_KEY);
-                alert("✅ RESET COMPLETATO: Memoria cancellata.\n\nPuoi ora reinstallare le app necessarie.");
+                // RIMOSSO ALERT QUI - Il reset è silenzioso
                 
                 // Prepara l'interfaccia per mostrare SOLO il link di installazione
                 document.getElementById('loaderView').style.display = 'none';
@@ -341,5 +341,3 @@
             }
         };
     </script>
-</body>
-</html>
