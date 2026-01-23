@@ -190,7 +190,7 @@
             if (!videoUrl) return "#";
 
             if (os === "Android") {
-                // Intent per Android (Fallback automatico gestito dal sistema)
+                // Intent per Android
                 return "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
             } else if (os === "iOS") {
                 // Scheme per iOS
@@ -240,16 +240,54 @@
 
         // --- INIZIALIZZAZIONE ---
         window.onload = function() {
-            // SICUREZZA ANTI-LOOP: Resetta se richiesto nell'URL
+            // 1. GESTIONE RESET: Pagina di sola configurazione
             if (params.get('reset') === 'true') {
                 localStorage.removeItem(STORAGE_KEY);
-                alert("✅ RESET COMPLETATO: Memoria cancellata. Il loop è stato interrotto.");
-                // Mostra l'interfaccia pulita
+                alert("✅ RESET COMPLETATO: Memoria cancellata.\n\nPuoi ora reinstallare le app necessarie.");
+                
+                // Prepara l'interfaccia per mostrare SOLO il link di installazione
                 document.getElementById('loaderView').style.display = 'none';
                 document.getElementById('mainView').style.display = 'block';
-                return; // Ferma qualsiasi altro codice
+                
+                // Cambia testi
+                document.getElementById('titleText').innerText = "⚙️ Configurazione";
+                document.getElementById('descText').innerHTML = "Ecco i link per installare la protezione sul tuo dispositivo.<br><br>Una volta installata, chiudi questa pagina.";
+                
+                // Nasconde i tasti di navigazione (perché non c'è video)
+                document.querySelector('.btn-confirm').style.display = 'none';
+                document.querySelector('.skip-link').style.display = 'none';
+                
+                // Mostra e configura il tasto di installazione corretto
+                const btnInstall = document.getElementById('btnInstall');
+                
+                if (os === "Desktop") {
+                    const browser = getBrowserType();
+                    if (browser === 'chrome') {
+                        btnInstall.href = LINKS.chrome;
+                        btnInstall.innerText = "🛡️ Installa su Chrome";
+                    } else if (browser === 'edge') {
+                        btnInstall.href = LINKS.edge;
+                        btnInstall.innerText = "🛡️ Installa su Edge";
+                    } else if (browser === 'firefox') {
+                        btnInstall.href = LINKS.firefox;
+                        btnInstall.innerText = "🛡️ Installa su Firefox";
+                    } else {
+                        btnInstall.href = LINKS.chromeDownload;
+                        btnInstall.innerText = "Scarica Google Chrome";
+                    }
+                } else {
+                    if (os === "Android") {
+                        btnInstall.href = LINKS.android;
+                        btnInstall.innerText = "⬇️ Installa Aloha (Zero Pubblicità)";
+                    } else {
+                        btnInstall.href = LINKS.ios;
+                        btnInstall.innerText = "⬇️ Installa Aloha (Zero Pubblicità)";
+                    }
+                }
+                return; // Ferma il resto dello script
             }
 
+            // 2. LOGICA NORMALE (VIDEO STREAMING)
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
             
             // REDIRECT AUTOMATICO (Solo se c'è un videoUrl valido)
@@ -258,7 +296,7 @@
                 return;
             }
 
-            // SE SIAMO QUI: Mostra l'interfaccia
+            // MOSTRA INTERFACCIA DI SCELTA
             document.getElementById('loaderView').style.display = 'none';
             document.getElementById('mainView').style.display = 'block';
 
@@ -266,9 +304,10 @@
             const btnInstall = document.getElementById('btnInstall');
             const descText = document.getElementById('descText');
 
-            // Avviso se URL mancante (Modalità Test)
+            // Avviso se URL mancante (ma non è reset)
             if (!videoUrl) {
-                descText.innerHTML = "⚠️ <b>Modalità Test</b>: Aggiungi <code>?url=...</code> all'indirizzo per provare il redirect.";
+                descText.innerHTML = "⚠️ <b>Errore</b>: Link video mancante.";
+                document.querySelector('.btn-group').style.display = 'none';
                 document.querySelector('.skip-link').style.display = 'none';
             } else if (os === "Desktop") {
                 // LOGICA PC
