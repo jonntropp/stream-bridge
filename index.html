@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stream Bridge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- STILI GENERALI (Invariati) --- */
+        /* --- STILI GENERALI --- */
         body { 
             background-color: #0f0f0f; color: #e0e0e0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             height: 100vh; margin: 0; padding: 0; box-sizing: border-box; overflow: hidden;
         }
@@ -21,14 +23,14 @@
             display: none; animation: fadeIn 0.4s ease-out;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        h2 { color: #fff; margin: 0 0 15px 0; font-weight: 700; font-size: 24px; }
-        p { color: #aaa; line-height: 1.6; margin-bottom: 30px; font-size: 15px; max-width: 95%; margin-left: auto; margin-right: auto; }
-        .highlight { color: #4caf50; font-weight: bold; } 
+        h2 { color: #fff; margin: 0 0 15px 0; font-weight: 600; font-size: 22px; }
+        p { color: #aaa; line-height: 1.6; margin-bottom: 30px; font-size: 14px; max-width: 95%; margin-left: auto; margin-right: auto; }
+        .highlight { color: #4caf50; font-weight: 600; } 
 
         .btn-group { display: flex; flex-direction: column; gap: 15px; }
         .btn { 
             display: flex; align-items: center; justify-content: center; width: 100%; padding: 18px 0; 
-            text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; box-sizing: border-box;
+            text-decoration: none; border-radius: 12px; font-size: 15px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; box-sizing: border-box;
         }
         .btn:active { transform: scale(0.98); }
         .btn-install { background: #fff; color: #000; }
@@ -51,8 +53,8 @@
             background: #000; z-index: 9999; display: none; align-items: center; justify-content: center; cursor: pointer;
         }
         #startBtn {
-            background: rgba(180, 20, 30, 0.9); color: white; border: none; padding: 20px 40px;
-            font-size: 20px; font-weight: 600; border-radius: 50px; cursor: pointer;
+            background: rgba(180, 20, 30, 0.9); color: white; border: none; padding: 18px 40px;
+            font-size: 18px; font-weight: 500; border-radius: 50px; cursor: pointer; font-family: 'Poppins', sans-serif;
             box-shadow: 0 10px 30px rgba(180, 20, 30, 0.4); transition: transform 0.2s; letter-spacing: 1px;
         }
         #startBtn:active { transform: scale(0.95); }
@@ -60,38 +62,46 @@
         #playerContainer {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
         }
-        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
+        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; }
 
-        /* --- PULSANTI ELEGANTI (AGGIORNATI) --- */
+        /* SENSORI MOUSE (Aree invisibili per intercettare il cursore ai bordi) */
+        .edge-sensor { position: absolute; z-index: 20; }
+        #sensorTop { top: 0; left: 0; width: 100%; height: 15%; }
+        #sensorLeft { top: 0; left: 0; width: 15%; height: 100%; }
+        #sensorRight { top: 0; right: 0; width: 15%; height: 100%; }
+        #sensorBottom { bottom: 0; left: 0; width: 100%; height: 20%; }
+
+        /* --- PULSANTI ELEGANTI MINIMAL --- */
         .overlay-btn {
             position: absolute; 
-            background: rgba(20, 20, 20, 0.4); /* Più trasparente */
+            background: rgba(20, 20, 20, 0.4); 
             color: #eaeaea; 
-            text-decoration: none; padding: 12px 24px; border-radius: 30px; 
-            font-size: 15px; font-weight: 500; letter-spacing: 0.5px;
+            text-decoration: none; padding: 10px 24px; border-radius: 30px; 
+            font-size: 14px; font-weight: 500; letter-spacing: 0.8px;
             border: 1px solid rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); /* Effetto vetro satinato forte */
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
             opacity: 0; pointer-events: none; 
             transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
             z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: flex; align-items: center; gap: 8px;
+            font-family: 'Poppins', sans-serif;
         }
         
         .overlay-btn.visible { opacity: 1; pointer-events: auto; }
         
         .overlay-btn:hover { 
-            background: rgba(160, 20, 30, 0.75); /* Rosso cremisi elegante, meno sgargiante */
+            background: rgba(160, 20, 30, 0.75); 
             border-color: rgba(255, 255, 255, 0.2); 
             transform: scale(1.03); 
             color: #fff;
         }
 
-        #btnPrev { top: 75%; left: 40px; transform: translateY(-50%); }
-        #btnNext { top: 75%; right: 40px; transform: translateY(-50%); }
+        /* Posizionamento modificato: 85% per gli episodi, top left per il bot */
+        #btnPrev { top: 85%; left: 40px; transform: translateY(-50%); }
+        #btnNext { top: 85%; right: 40px; transform: translateY(-50%); }
         #btnBot  { top: 30px; left: 30px; }
 
         @media (max-width: 768px) {
-            .overlay-btn { padding: 10px 18px; font-size: 13px; }
+            .overlay-btn { padding: 8px 18px; font-size: 12px; }
             #btnPrev { left: 20px; }
             #btnNext { right: 20px; }
             #btnBot  { top: 20px; left: 20px; }
@@ -113,8 +123,8 @@
                     Il video contiene finestre popup. Installa la protezione consigliata per guardare con <span class="highlight">zero pubblicità</span>.
                 </p>
                 <div class="btn-group">
-                    <a href="#" id="btnInstall" target="_blank" class="btn btn-install">🛡️ Installa Protezione</a>
-                    <button onclick="setProtectedAndGo()" class="btn btn-confirm">✅ Ho già la protezione</button>
+                    <a href="#" id="btnInstall" target="_blank" class="btn btn-install">Installa Protezione</a>
+                    <button onclick="setProtectedAndGo()" class="btn btn-confirm">Ho già la protezione</button>
                 </div>
                 <a onclick="triggerPenalty()" class="skip-link">Non installare e continua con le pubblicità &rarr;</a>
             </div>
@@ -128,15 +138,20 @@
     </div>
 
     <div id="startOverlay" onclick="startImmersiveExperience()">
-        <button id="startBtn">▶️ TOCCA PER INIZIARE</button>
+        <button id="startBtn">TOCCA PER INIZIARE</button>
     </div>
 
     <div id="playerContainer">
-        <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <div id="sensorTop" class="edge-sensor"></div>
+        <div id="sensorLeft" class="edge-sensor"></div>
+        <div id="sensorRight" class="edge-sensor"></div>
+        <div id="sensorBottom" class="edge-sensor"></div>
+
+        <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
         
-        <a href="#" id="btnBot" class="overlay-btn">🤖 Torna al Bot</a>
-        <a href="#" id="btnPrev" class="overlay-btn"><span>⏮️</span> Ep. Precedente</a>
-        <a href="#" id="btnNext" class="overlay-btn">Prossimo Ep. <span>⏭️</span></a>
+        <a href="#" id="btnBot" class="overlay-btn">Torna al Bot</a>
+        <a href="#" id="btnPrev" class="overlay-btn">Ep. Precedente</a>
+        <a href="#" id="btnNext" class="overlay-btn">Prossimo Ep.</a>
     </div>
 
     <script>
@@ -214,7 +229,7 @@
                 localStorage.removeItem(STORAGE_KEY);
                 document.getElementById('loaderView').style.display = 'none';
                 document.getElementById('mainView').style.display = 'block';
-                document.getElementById('titleText').innerText = "⚙️ Configurazione";
+                document.getElementById('titleText').innerText = "Configurazione";
                 document.getElementById('descText').innerHTML = "Ecco i link per installare la protezione.<br><br>Una volta installata, chiudi questa pagina.";
                 document.querySelector('.btn-confirm').style.display = 'none';
                 document.querySelector('.skip-link').style.display = 'none';
@@ -235,18 +250,18 @@
             const descText = document.getElementById('descText');
 
             if (!videoUrl) {
-                descText.innerHTML = "⚠️ <b>Errore</b>: Link video mancante.";
+                descText.innerHTML = "Errore: Link video mancante.";
                 document.querySelector('.btn-group').style.display = 'none';
                 document.querySelector('.skip-link').style.display = 'none';
             } else if (os === "Desktop") {
                 const browser = getBrowserType();
-                if (browser === 'chrome') { btnInstall.href = LINKS.chrome; btnInstall.innerText = "🛡️ Installa su Chrome"; }
-                else if (browser === 'edge') { btnInstall.href = LINKS.edge; btnInstall.innerText = "🛡️ Installa su Edge"; }
-                else if (browser === 'firefox') { btnInstall.href = LINKS.firefox; btnInstall.innerText = "🛡️ Installa su Firefox"; }
+                if (browser === 'chrome') { btnInstall.href = LINKS.chrome; btnInstall.innerText = "Installa su Chrome"; }
+                else if (browser === 'edge') { btnInstall.href = LINKS.edge; btnInstall.innerText = "Installa su Edge"; }
+                else if (browser === 'firefox') { btnInstall.href = LINKS.firefox; btnInstall.innerText = "Installa su Firefox"; }
                 else { btnInstall.href = LINKS.chromeDownload; btnInstall.innerText = "Scarica Google Chrome"; }
             } else {
                 btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios;
-                btnInstall.innerText = "⬇️ Installa Aloha (Zero Pubblicità)";
+                btnInstall.innerText = "Installa Aloha Browser";
             }
         };
 
@@ -269,7 +284,6 @@
             document.getElementById('playerContainer').style.display = 'block';
             document.getElementById('videoFrame').src = videoUrl;
             
-            // Simula un movimento iniziale per mostrare i bottoni all'avvio
             handleUserActivity();
         }
 
@@ -280,19 +294,17 @@
         let isMouseActive = false;
         let mouseHideTimeout;
 
-        // Aggiorna la visibilità dei bottoni in base allo stato globale
         function updateUI() {
             let showPrev = false;
             let showNext = false;
             let showBot = false;
 
             if (isPaused || isMouseActive) {
-                // In pausa o mouse in movimento: mostra tutto il possibile
                 showBot = true;
                 if (prevTarget) showPrev = true;
                 if (nextTarget) showNext = true;
             } else {
-                // In riproduzione e mouse fermo: logica a tempo
+                // Logica a tempo solo se il mouse è fermo e in riproduzione
                 if (prevTarget && lastTime <= 5) showPrev = true;
                 if (nextTarget && lastDuration > 0 && (lastDuration - lastTime <= 10)) showNext = true;
             }
@@ -302,7 +314,6 @@
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
         }
 
-        // Gestore dell'attività dell'utente (mouse o touch)
         function handleUserActivity() {
             isMouseActive = true;
             updateUI();
@@ -311,11 +322,15 @@
             mouseHideTimeout = setTimeout(() => {
                 isMouseActive = false;
                 updateUI();
-            }, 3500); // Scompare dopo 3.5 secondi di inattività
+            }, 3500); 
         }
 
-        // Ascoltatori per il movimento e il tocco
-        window.addEventListener('mousemove', handleUserActivity);
+        // Ascoltatori sui "Sensori" ai bordi dello schermo per catturare il mouse
+        document.querySelectorAll('.edge-sensor').forEach(sensor => {
+            sensor.addEventListener('mousemove', handleUserActivity);
+        });
+        
+        // Touch o click diretti (su tutto il documento)
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
 
