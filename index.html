@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pop Corn Bot</title>
+    <title>Stream Bridge</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
     
@@ -198,7 +198,7 @@
         let currentEp = parseInt(params.get('e')) || 1;
         let totalEps = parseInt(params.get('tot')) || 1;
         
-        const botUsername = "PopCorn04bot"; // <--- INSERISCI QUI IL NOME DEL BOT
+        const botUsername = "NomeDelTuoBot"; // <--- INSERISCI QUI IL NOME DEL BOT
 
         const STORAGE_KEY = 'stream_bridge_consent_v3'; 
         const LINKS = { chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh", edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp", firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", chromeDownload: "https://www.google.com/chrome/", android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser", ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682" };
@@ -230,7 +230,7 @@
             document.getElementById('playerTitle').innerText = displayTitle;
             
             // AGGIORNA IL TITOLO DELLA SCHEDA DEL BROWSER
-            document.title = ` ${displayTitle}`;
+            document.title = `🍿 Guardando: ${displayTitle}`;
 
             // Aggiorna Testo Modal
             if (!isMovie) {
@@ -264,8 +264,8 @@
 
         // --- 4. BINGE-WATCHING & SALVATAGGIO ---
         function getBotSaveLink() {
-            if (isMovie) return `tg://resolve?domain=${PopCorn04bot}`;
-            return `tg://resolve?domain=${PopCorn04bot}&start=save_${mediaId}_${currentSeason}_${currentEp}`;
+            if (isMovie) return `tg://resolve?domain=${botUsername}`;
+            return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}`;
         }
 
         function saveAndExit(e) {
@@ -283,7 +283,7 @@
             if (step === 1 && newEp > totalEps) {
                 // Fine Stagione: Saluta e torna al bot
                 isIntentionalExit = true;
-                window.location.href = `tg://resolve?domain=${PopCorn04bot}&start=nextS_${mediaId}_${currentSeason + 1}`;
+                window.location.href = `tg://resolve?domain=${botUsername}&start=nextS_${mediaId}_${currentSeason + 1}`;
             } else if (newEp > 0) {
                 // Navigazione interna veloce
                 currentEp = newEp;
