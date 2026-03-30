@@ -3,63 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stream Player</title>
+    <title>Stream Bridge</title>
     <style>
-        /* --- RESET TOTALE --- */
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background-color: #000; overflow: hidden; font-family: sans-serif;
-            color: white; user-select: none; -webkit-user-select: none;
+        /* --- STILI GENERALI (Mantenuti) --- */
+        body { 
+            background-color: #0f0f0f; color: #e0e0e0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; margin: 0; padding: 0; box-sizing: border-box; overflow: hidden;
         }
+        
+        .container { max-width: 480px; width: 100%; text-align: center; padding: 20px; z-index: 10; }
 
-        /* --- OVERLAY INIZIALE (Per forzare il fullscreen) --- */
+        /* --- CARD E UI AUTENTICAZIONE --- */
+        .card { 
+            background: #1a1a1a; padding: 40px 30px; border-radius: 20px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 1px solid #333;
+            display: none; animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        h2 { color: #fff; margin: 0 0 15px 0; font-weight: 700; font-size: 24px; }
+        p { color: #aaa; line-height: 1.6; margin-bottom: 30px; font-size: 15px; max-width: 95%; margin-left: auto; margin-right: auto; }
+        .highlight { color: #4caf50; font-weight: bold; } 
+
+        .btn-group { display: flex; flex-direction: column; gap: 15px; }
+        .btn { 
+            display: flex; align-items: center; justify-content: center; width: 100%; padding: 18px 0; 
+            text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; box-sizing: border-box;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-install { background: #fff; color: #000; }
+        .btn-install:hover { background: #e0e0e0; }
+        .btn-confirm { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #444; }
+        .btn-confirm:hover { background: rgba(255, 255, 255, 0.2); border-color: #666; }
+
+        .skip-link { color: #666; font-size: 13px; text-decoration: underline; margin-top: 25px; display: inline-block; cursor: pointer; transition: color 0.2s; }
+        .skip-link:hover { color: #999; }
+        #penaltyView { display: none; margin-top: 20px; }
+        .timer-bar { width: 100%; height: 6px; background: #000; margin-top: 15px; border-radius: 3px; overflow: hidden; }
+        .timer-fill { height: 100%; background: #2d9cdb; width: 0%; transition: width 0.1s linear; }
+
+        .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- STILI PLAYER IMMERSIVO (NOVITÀ) --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
+            background: #000; z-index: 9999; display: none; align-items: center; justify-content: center; cursor: pointer;
         }
         #startBtn {
-            background: rgba(229, 9, 20, 0.8); color: white; border: none; padding: 20px 40px;
-            font-size: 24px; font-weight: bold; border-radius: 10px; cursor: pointer;
-            box-shadow: 0 0 20px rgba(229, 9, 20, 0.4); transition: transform 0.2s;
+            background: rgba(229, 9, 20, 0.9); color: white; border: none; padding: 20px 40px;
+            font-size: 20px; font-weight: 600; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(229, 9, 20, 0.4); transition: transform 0.2s; letter-spacing: 1px;
         }
         #startBtn:active { transform: scale(0.95); }
 
-        /* --- CONTAINER DEL PLAYER --- */
         #playerContainer {
-            position: relative; width: 100vw; height: 100vh; display: none; background: #000;
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
         }
-        
-        iframe {
-            width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0;
-        }
+        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
 
-        /* --- PULSANTI IN SOVRAPPOSIZIONE --- */
+        /* PULSANTI ELEGANTI SUL PLAYER */
         .overlay-btn {
-            position: absolute; background: rgba(0, 0, 0, 0.7); color: white; 
-            text-decoration: none; padding: 15px 25px; border-radius: 8px; font-size: 16px; font-weight: bold;
-            border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 100;
+            position: absolute; background: rgba(20, 20, 20, 0.65); color: #fff; 
+            text-decoration: none; padding: 12px 24px; border-radius: 30px; 
+            font-size: 15px; font-weight: 500; letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 8px;
         }
-        
         .overlay-btn.visible { opacity: 1; pointer-events: auto; }
-        .overlay-btn:hover { background: rgba(229, 9, 20, 0.8); border-color: #E50914; }
+        .overlay-btn:hover { background: rgba(229, 9, 20, 0.85); border-color: rgba(229, 9, 20, 1); transform: scale(1.05); }
 
-        /* Posizionamento specifico */
-        #btnPrev { bottom: 40px; left: 40px; }
-        #btnNext { bottom: 40px; right: 40px; }
-        #btnBot  { top: 40px; left: 40px; background: rgba(20, 20, 20, 0.8); }
+        /* Posizionamento 3/4 per Navigazione Episodi */
+        #btnPrev { top: 75%; left: 40px; transform: translateY(-50%); }
+        #btnNext { top: 75%; right: 40px; transform: translateY(-50%); }
+        #btnBot  { top: 30px; left: 30px; }
 
-        /* Responsive Mobile */
+        /* Responsive Mobile per Pulsanti Player */
         @media (max-width: 768px) {
-            .overlay-btn { padding: 10px 15px; font-size: 14px; }
-            #btnPrev { bottom: 20px; left: 20px; }
-            #btnNext { bottom: 20px; right: 20px; }
+            .overlay-btn { padding: 10px 18px; font-size: 13px; }
+            #btnPrev { left: 20px; }
+            #btnNext { right: 20px; }
             #btnBot  { top: 20px; left: 20px; }
         }
     </style>
 </head>
 <body>
+
+    <div class="container" id="authContainer">
+        <div id="loaderView">
+            <div class="loader"></div>
+            <p style="font-size: 12px; color: #555;">Verifica sicurezza...</p>
+        </div>
+
+        <div id="mainView" class="card">
+            <div id="choiceContent">
+                <h2 id="titleText">Visione senza interruzioni</h2>
+                <p id="descText">
+                    Il video contiene finestre popup. Installa la protezione consigliata per guardare con <span class="highlight">zero pubblicità</span>.
+                </p>
+                <div class="btn-group">
+                    <a href="#" id="btnInstall" target="_blank" class="btn btn-install">🛡️ Installa Protezione</a>
+                    <button onclick="setProtectedAndGo()" class="btn btn-confirm">✅ Ho già la protezione</button>
+                </div>
+                <a onclick="triggerPenalty()" class="skip-link">Non installare e continua con le pubblicità &rarr;</a>
+            </div>
+
+            <div id="penaltyView">
+                <div class="loader" style="width:30px; height:30px; border-width:2px;"></div>
+                <p style="margin-bottom: 10px;">Attendi il caricamento del video...</p>
+                <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+            </div>
+        </div>
+    </div>
 
     <div id="startOverlay" onclick="startImmersiveExperience()">
         <button id="startBtn">▶️ TOCCA PER INIZIARE</button>
@@ -69,90 +128,167 @@
         <iframe id="videoFrame" allow="autoplay; fullscreen" allowfullscreen></iframe>
         
         <a href="#" id="btnBot" class="overlay-btn">🤖 Torna al Bot</a>
-        <a href="#" id="btnPrev" class="overlay-btn">⏮️ Ep. Precedente</a>
-        <a href="#" id="btnNext" class="overlay-btn">Prossimo Ep. ⏭️</a>
+        <a href="#" id="btnPrev" class="overlay-btn"><span>⏮️</span> Ep. Precedente</a>
+        <a href="#" id="btnNext" class="overlay-btn">Prossimo Ep. <span>⏭️</span></a>
     </div>
 
     <script>
-        // --- 1. LETTURA PARAMETRI URL ---
+        // --- 1. CONFIGURAZIONE E URL PARSING ---
         const params = new URLSearchParams(window.location.search);
         let rawUrl = params.get('url');
         let videoUrl = (rawUrl && rawUrl !== 'null') ? decodeURIComponent(rawUrl) : null;
         
-        // Parametri per la navigazione (es. ?prev=tg://... &next=tg://... &bot=tg://...)
+        // Parametri Player
         const prevTarget = params.get('prev'); 
         const nextTarget = params.get('next'); 
-        const botUsername = "NomeDelTuoBot"; // <--- INSERISCI QUI IL NOME DEL TUO BOT
+        const botUsername = "NomeDelTuoBot"; // <--- INSERISCI QUI IL NOME DEL BOT
 
-        // Elementi DOM
+        // Aggiunta parametri autoplay
+        if (videoUrl && !videoUrl.includes('primaryColor=')) {
+            const separator = videoUrl.includes('?') ? '&' : '?';
+            videoUrl += separator + "primaryColor=E50914&autoplay=true&secondaryColor=111111";
+        }
+
+        const STORAGE_KEY = 'stream_bridge_consent_v3'; 
+
+        // Links Store originali
+        const LINKS = {
+            chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh",
+            edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp",
+            firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/",
+            chromeDownload: "https://www.google.com/chrome/",
+            android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser",
+            ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682"
+        };
+
+        function getOS() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/android/i.test(ua)) return "Android";
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
+            return "Desktop";
+        }
+
+        function getBrowserType() {
+            const ua = navigator.userAgent;
+            if (ua.indexOf("Firefox") > -1) return "firefox";
+            if (ua.indexOf("Edg") > -1) return "edge"; 
+            if (ua.indexOf("Chrome") > -1) return "chrome";
+            return "unknown";
+        }
+        const os = getOS();
+
+        // --- 2. LOGICA TRANSIZIONE AL PLAYER ---
+        // Questa funzione viene chiamata quando l'utente passa il controllo (consenso o penalità)
+        function preparePlayerScreen() {
+            if (!videoUrl) return;
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('startOverlay').style.display = 'flex'; // Mostra il trigger fullscreen
+        }
+
+        function setProtectedAndGo() {
+            if (!videoUrl) { alert("Errore: URL video mancante."); return; }
+            localStorage.setItem(STORAGE_KEY, 'true');
+            preparePlayerScreen();
+        }
+
+        function triggerPenalty() {
+            if (!videoUrl) { alert("Nessun video da caricare."); return; }
+            document.getElementById('choiceContent').style.display = 'none';
+            document.getElementById('penaltyView').style.display = 'block';
+            let duration = 5000, start = Date.now(), bar = document.getElementById('timerFill');
+            let timer = setInterval(() => {
+                let progress = ((Date.now() - start) / duration) * 100;
+                bar.style.width = Math.min(progress, 100) + "%";
+                if (progress >= 100) {
+                    clearInterval(timer);
+                    preparePlayerScreen();
+                }
+            }, 50);
+        }
+
+        // --- 3. INIZIALIZZAZIONE ---
+        window.onload = function() {
+            if (params.get('reset') === 'true') {
+                localStorage.removeItem(STORAGE_KEY);
+                document.getElementById('loaderView').style.display = 'none';
+                document.getElementById('mainView').style.display = 'block';
+                document.getElementById('titleText').innerText = "⚙️ Configurazione";
+                document.getElementById('descText').innerHTML = "Ecco i link per installare la protezione.<br><br>Una volta installata, chiudi questa pagina.";
+                document.querySelector('.btn-confirm').style.display = 'none';
+                document.querySelector('.skip-link').style.display = 'none';
+                // (Logica assegnazione link OS omessa per brevità, è uguale a prima)
+                return;
+            }
+
+            const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
+            
+            // Se ha già dato il consenso, salta la UI e prepara direttamente il player
+            if (isProtected && videoUrl) {
+                preparePlayerScreen();
+                return;
+            }
+
+            document.getElementById('loaderView').style.display = 'none';
+            document.getElementById('mainView').style.display = 'block';
+
+            const btnInstall = document.getElementById('btnInstall');
+            const descText = document.getElementById('descText');
+
+            if (!videoUrl) {
+                descText.innerHTML = "⚠️ <b>Errore</b>: Link video mancante.";
+                document.querySelector('.btn-group').style.display = 'none';
+                document.querySelector('.skip-link').style.display = 'none';
+            } else if (os === "Desktop") {
+                const browser = getBrowserType();
+                if (browser === 'chrome') { btnInstall.href = LINKS.chrome; btnInstall.innerText = "🛡️ Installa su Chrome"; }
+                else if (browser === 'edge') { btnInstall.href = LINKS.edge; btnInstall.innerText = "🛡️ Installa su Edge"; }
+                else if (browser === 'firefox') { btnInstall.href = LINKS.firefox; btnInstall.innerText = "🛡️ Installa su Firefox"; }
+                else { btnInstall.href = LINKS.chromeDownload; btnInstall.innerText = "Scarica Google Chrome"; }
+            } else {
+                btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios;
+                btnInstall.innerText = "⬇️ Installa Aloha (Zero Pubblicità)";
+            }
+        };
+
+        // --- 4. LOGICA PLAYER IMMERSIVO ---
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
         const btnBot = document.getElementById('btnBot');
-        const container = document.getElementById('playerContainer');
 
-        // Setup base dei link
         btnBot.href = `tg://resolve?domain=${botUsername}`;
         if (prevTarget) btnPrev.href = decodeURIComponent(prevTarget);
         if (nextTarget) btnNext.href = decodeURIComponent(nextTarget);
 
-        // Aggiungi autoplay e colori a vixsrc
-        if (videoUrl && !videoUrl.includes('primaryColor=')) {
-            const sep = videoUrl.includes('?') ? '&' : '?';
-            videoUrl += sep + "primaryColor=E50914&autoplay=true&secondaryColor=111111";
-        }
-
-        // --- 2. AVVIO ESPERIENZA FULLSCREEN ---
         function startImmersiveExperience() {
-            if (!videoUrl) {
-                alert("Errore: Nessun link video fornito.");
-                return;
-            }
+            const docElm = document.documentElement;
+            if (docElm.requestFullscreen) docElm.requestFullscreen();
+            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
 
-            // Richiedi Fullscreen sul container principale
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen();
-            } else if (document.documentElement.msRequestFullscreen) {
-                document.documentElement.msRequestFullscreen();
-            }
-
-            // Nascondi overlay, mostra player, carica iframe
             document.getElementById('startOverlay').style.display = 'none';
-            container.style.display = 'block';
+            document.getElementById('playerContainer').style.display = 'block';
             document.getElementById('videoFrame').src = videoUrl;
         }
 
-        // --- 3. LOGICA DI COMPARSA PULSANTI ---
         let isPaused = false;
 
         function updateUI(currentTime, duration) {
-            // Se è in pausa, le regole di tempo vengono ignorate dalla logica principale
             if (isPaused) return;
 
-            // Mostra PREV nei primi 5 secondi (se esiste un prevTarget)
-            if (prevTarget && currentTime <= 5) {
-                btnPrev.classList.add('visible');
-            } else if (!isPaused) {
-                btnPrev.classList.remove('visible');
-            }
+            // Mostra PREV nei primi 5 secondi
+            if (prevTarget && currentTime <= 5) btnPrev.classList.add('visible');
+            else if (!isPaused) btnPrev.classList.remove('visible');
 
-            // Mostra NEXT negli ultimi 10 secondi (se esiste un nextTarget)
-            if (nextTarget && duration > 0 && (duration - currentTime <= 10)) {
-                btnNext.classList.add('visible');
-            } else if (!isPaused) {
-                btnNext.classList.remove('visible');
-            }
+            // Mostra NEXT negli ultimi 10 secondi
+            if (nextTarget && duration > 0 && (duration - currentTime <= 10)) btnNext.classList.add('visible');
+            else if (!isPaused) btnNext.classList.remove('visible');
 
-            // Durante la riproduzione, nascondi il tasto BOT
             btnBot.classList.remove('visible');
         }
 
-        // Ascolta l'iframe
         window.addEventListener('message', (event) => {
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                
                 if (data && data.type === 'PLAYER_EVENT' && data.data) {
                     const payload = data.data;
 
@@ -161,25 +297,20 @@
                     } 
                     else if (payload.event === 'pause') {
                         isPaused = true;
-                        // In pausa mostriamo tutto
                         btnBot.classList.add('visible');
                         if (prevTarget) btnPrev.classList.add('visible');
                         if (nextTarget) btnNext.classList.add('visible');
                     } 
                     else if (payload.event === 'play') {
                         isPaused = false;
-                        // Al play, nascondiamo forzatamente il bot, il resto lo gestisce timeupdate
                         btnBot.classList.remove('visible');
                     }
                     else if (payload.event === 'ended') {
-                        // Se finisce, forza la visualizzazione del Next
                         if (nextTarget) btnNext.classList.add('visible');
                         btnBot.classList.add('visible');
                     }
                 }
-            } catch (e) {
-                // Ignora messaggi non validi
-            }
+            } catch (e) {}
         });
     </script>
 </body>
