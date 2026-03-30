@@ -64,17 +64,27 @@
         }
         iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; }
 
-        /* SENSORI MOUSE (Aree invisibili per intercettare il cursore ai bordi) */
+        /* SENSORI MOUSE E TRIGGER FULLSCREEN */
         .edge-sensor { position: absolute; z-index: 20; }
-        
         #sensorTop { top: 0; left: 0; width: 100%; height: 15%; }
-        
-        /* Tagliamo i sensori laterali affinché non coprano gli angoli in basso (volume/fullscreen del player) */
         #sensorLeft { top: 0; left: 0; width: 15%; height: calc(100% - 90px); }
         #sensorRight { top: 0; right: 0; width: 15%; height: calc(100% - 90px); }
-        
-        /* Solleviamo il sensore inferiore esattamente sopra la barra di controllo del player */
         #sensorBottom { bottom: 90px; left: 0; width: 100%; height: 15%; }
+
+        /* TRIGGER INVISIBILE FULLSCREEN */
+        #fullscreenTrigger {
+            position: absolute;
+            bottom: 5px; /* Modifica per centrare in altezza */
+            right: 15px; /* Modifica per centrare in larghezza */
+            width: 50px;
+            height: 50px;
+            z-index: 110; /* Deve stare sopra a tutto, anche ai bottoni */
+            cursor: pointer;
+            
+            /* SCOMMENTA LA RIGA QUI SOTTO PER CENTRARE IL RETTANGOLO SUL BOTTONE DEL VIDEO! */
+            background: rgba(255, 0, 0, 0.5);  
+            background: transparent;
+        }
 
         /* --- PULSANTI ELEGANTI MINIMAL --- */
         .overlay-btn {
@@ -100,7 +110,6 @@
             color: #fff;
         }
 
-        /* Posizionamento modificato: 85% per gli episodi, top left per il bot */
         #btnPrev { top: 85%; left: 40px; transform: translateY(-50%); }
         #btnNext { top: 85%; right: 40px; transform: translateY(-50%); }
         #btnBot  { top: 30px; left: 30px; }
@@ -110,6 +119,9 @@
             #btnPrev { left: 20px; }
             #btnNext { right: 20px; }
             #btnBot  { top: 20px; left: 20px; }
+            
+            /* Su mobile le barre dei player spesso sono diverse, adegua il trigger */
+            #fullscreenTrigger { bottom: 0px; right: 0px; width: 60px; height: 60px; }
         }
     </style>
 </head>
@@ -151,6 +163,8 @@
         <div id="sensorLeft" class="edge-sensor"></div>
         <div id="sensorRight" class="edge-sensor"></div>
         <div id="sensorBottom" class="edge-sensor"></div>
+
+        <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
 
         <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
         
@@ -270,7 +284,35 @@
             }
         };
 
-        // --- 4. LOGICA PLAYER E MOVIMENTO MOUSE ---
+        // --- 4. GESTIONE FULLSCREEN MANUALE E TASTO "F" ---
+        function toggleFullscreen(e) {
+            // Evitiamo che il click passi agli elementi sotto
+            if(e) e.stopPropagation(); 
+            
+            const docElm = document.documentElement;
+            
+            // Controlla se siamo già in fullscreen
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            
+            if (!isFullscreen) {
+                if (docElm.requestFullscreen) docElm.requestFullscreen();
+                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            }
+        }
+
+        // Ascolta il tasto 'F' sulla pagina globale
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen(e);
+            }
+        });
+
+        // --- 5. LOGICA PLAYER E MOVIMENTO MOUSE ---
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
         const btnBot = document.getElementById('btnBot');
@@ -309,7 +351,6 @@
                 if (prevTarget) showPrev = true;
                 if (nextTarget) showNext = true;
             } else {
-                // Logica a tempo solo se il mouse è fermo e in riproduzione
                 if (prevTarget && lastTime <= 5) showPrev = true;
                 if (nextTarget && lastDuration > 0 && (lastDuration - lastTime <= 10)) showNext = true;
             }
@@ -330,16 +371,14 @@
             }, 3500); 
         }
 
-        // Ascoltatori sui "Sensori" ai bordi dello schermo per catturare il mouse
+        // Sensori bordo e click
         document.querySelectorAll('.edge-sensor').forEach(sensor => {
             sensor.addEventListener('mousemove', handleUserActivity);
         });
-        
-        // Touch o click diretti (su tutto il documento)
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
 
-        // Ascoltatore eventi dell'Iframe
+        // Eventi Iframe
         window.addEventListener('message', (event) => {
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
