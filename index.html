@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stream Bridge</title>
     <style>
-        /* --- STILI GENERALI (Mantenuti) --- */
+        /* --- STILI GENERALI (Invariati) --- */
         body { 
             background-color: #0f0f0f; color: #e0e0e0; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -15,7 +15,6 @@
         
         .container { max-width: 480px; width: 100%; text-align: center; padding: 20px; z-index: 10; }
 
-        /* --- CARD E UI AUTENTICAZIONE --- */
         .card { 
             background: #1a1a1a; padding: 40px 30px; border-radius: 20px; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 1px solid #333;
@@ -46,15 +45,15 @@
         .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- STILI PLAYER IMMERSIVO (NOVITÀ) --- */
+        /* --- STILI PLAYER IMMERSIVO --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #000; z-index: 9999; display: none; align-items: center; justify-content: center; cursor: pointer;
         }
         #startBtn {
-            background: rgba(229, 9, 20, 0.9); color: white; border: none; padding: 20px 40px;
+            background: rgba(180, 20, 30, 0.9); color: white; border: none; padding: 20px 40px;
             font-size: 20px; font-weight: 600; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 10px 30px rgba(229, 9, 20, 0.4); transition: transform 0.2s; letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(180, 20, 30, 0.4); transition: transform 0.2s; letter-spacing: 1px;
         }
         #startBtn:active { transform: scale(0.95); }
 
@@ -63,26 +62,34 @@
         }
         iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
 
-        /* PULSANTI ELEGANTI SUL PLAYER */
+        /* --- PULSANTI ELEGANTI (AGGIORNATI) --- */
         .overlay-btn {
-            position: absolute; background: rgba(20, 20, 20, 0.65); color: #fff; 
+            position: absolute; 
+            background: rgba(20, 20, 20, 0.4); /* Più trasparente */
+            color: #eaeaea; 
             text-decoration: none; padding: 12px 24px; border-radius: 30px; 
             font-size: 15px; font-weight: 500; letter-spacing: 0.5px;
-            border: 1px solid rgba(255, 255, 255, 0.15); 
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-            z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); /* Effetto vetro satinato forte */
+            opacity: 0; pointer-events: none; 
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             display: flex; align-items: center; gap: 8px;
         }
+        
         .overlay-btn.visible { opacity: 1; pointer-events: auto; }
-        .overlay-btn:hover { background: rgba(229, 9, 20, 0.85); border-color: rgba(229, 9, 20, 1); transform: scale(1.05); }
+        
+        .overlay-btn:hover { 
+            background: rgba(160, 20, 30, 0.75); /* Rosso cremisi elegante, meno sgargiante */
+            border-color: rgba(255, 255, 255, 0.2); 
+            transform: scale(1.03); 
+            color: #fff;
+        }
 
-        /* Posizionamento 3/4 per Navigazione Episodi */
         #btnPrev { top: 75%; left: 40px; transform: translateY(-50%); }
         #btnNext { top: 75%; right: 40px; transform: translateY(-50%); }
         #btnBot  { top: 30px; left: 30px; }
 
-        /* Responsive Mobile per Pulsanti Player */
         @media (max-width: 768px) {
             .overlay-btn { padding: 10px 18px; font-size: 13px; }
             #btnPrev { left: 20px; }
@@ -125,7 +132,7 @@
     </div>
 
     <div id="playerContainer">
-        <iframe id="videoFrame" allow="autoplay; fullscreen" allowfullscreen></iframe>
+        <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
         
         <a href="#" id="btnBot" class="overlay-btn">🤖 Torna al Bot</a>
         <a href="#" id="btnPrev" class="overlay-btn"><span>⏮️</span> Ep. Precedente</a>
@@ -138,20 +145,16 @@
         let rawUrl = params.get('url');
         let videoUrl = (rawUrl && rawUrl !== 'null') ? decodeURIComponent(rawUrl) : null;
         
-        // Parametri Player
         const prevTarget = params.get('prev'); 
         const nextTarget = params.get('next'); 
         const botUsername = "NomeDelTuoBot"; // <--- INSERISCI QUI IL NOME DEL BOT
 
-        // Aggiunta parametri autoplay
         if (videoUrl && !videoUrl.includes('primaryColor=')) {
             const separator = videoUrl.includes('?') ? '&' : '?';
             videoUrl += separator + "primaryColor=E50914&autoplay=true&secondaryColor=111111";
         }
 
         const STORAGE_KEY = 'stream_bridge_consent_v3'; 
-
-        // Links Store originali
         const LINKS = {
             chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh",
             edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp",
@@ -178,11 +181,10 @@
         const os = getOS();
 
         // --- 2. LOGICA TRANSIZIONE AL PLAYER ---
-        // Questa funzione viene chiamata quando l'utente passa il controllo (consenso o penalità)
         function preparePlayerScreen() {
             if (!videoUrl) return;
             document.getElementById('authContainer').style.display = 'none';
-            document.getElementById('startOverlay').style.display = 'flex'; // Mostra il trigger fullscreen
+            document.getElementById('startOverlay').style.display = 'flex'; 
         }
 
         function setProtectedAndGo() {
@@ -216,13 +218,11 @@
                 document.getElementById('descText').innerHTML = "Ecco i link per installare la protezione.<br><br>Una volta installata, chiudi questa pagina.";
                 document.querySelector('.btn-confirm').style.display = 'none';
                 document.querySelector('.skip-link').style.display = 'none';
-                // (Logica assegnazione link OS omessa per brevità, è uguale a prima)
                 return;
             }
 
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
             
-            // Se ha già dato il consenso, salta la UI e prepara direttamente il player
             if (isProtected && videoUrl) {
                 preparePlayerScreen();
                 return;
@@ -250,7 +250,7 @@
             }
         };
 
-        // --- 4. LOGICA PLAYER IMMERSIVO ---
+        // --- 4. LOGICA PLAYER E MOVIMENTO MOUSE ---
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
         const btnBot = document.getElementById('btnBot');
@@ -268,24 +268,58 @@
             document.getElementById('startOverlay').style.display = 'none';
             document.getElementById('playerContainer').style.display = 'block';
             document.getElementById('videoFrame').src = videoUrl;
+            
+            // Simula un movimento iniziale per mostrare i bottoni all'avvio
+            handleUserActivity();
         }
 
+        // Variabili di stato per gestire i bottoni
         let isPaused = false;
+        let lastTime = 0;
+        let lastDuration = 0;
+        let isMouseActive = false;
+        let mouseHideTimeout;
 
-        function updateUI(currentTime, duration) {
-            if (isPaused) return;
+        // Aggiorna la visibilità dei bottoni in base allo stato globale
+        function updateUI() {
+            let showPrev = false;
+            let showNext = false;
+            let showBot = false;
 
-            // Mostra PREV nei primi 5 secondi
-            if (prevTarget && currentTime <= 5) btnPrev.classList.add('visible');
-            else if (!isPaused) btnPrev.classList.remove('visible');
+            if (isPaused || isMouseActive) {
+                // In pausa o mouse in movimento: mostra tutto il possibile
+                showBot = true;
+                if (prevTarget) showPrev = true;
+                if (nextTarget) showNext = true;
+            } else {
+                // In riproduzione e mouse fermo: logica a tempo
+                if (prevTarget && lastTime <= 5) showPrev = true;
+                if (nextTarget && lastDuration > 0 && (lastDuration - lastTime <= 10)) showNext = true;
+            }
 
-            // Mostra NEXT negli ultimi 10 secondi
-            if (nextTarget && duration > 0 && (duration - currentTime <= 10)) btnNext.classList.add('visible');
-            else if (!isPaused) btnNext.classList.remove('visible');
-
-            btnBot.classList.remove('visible');
+            showBot ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
+            showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
+            showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
         }
 
+        // Gestore dell'attività dell'utente (mouse o touch)
+        function handleUserActivity() {
+            isMouseActive = true;
+            updateUI();
+            
+            clearTimeout(mouseHideTimeout);
+            mouseHideTimeout = setTimeout(() => {
+                isMouseActive = false;
+                updateUI();
+            }, 3500); // Scompare dopo 3.5 secondi di inattività
+        }
+
+        // Ascoltatori per il movimento e il tocco
+        window.addEventListener('mousemove', handleUserActivity);
+        window.addEventListener('touchstart', handleUserActivity);
+        window.addEventListener('click', handleUserActivity);
+
+        // Ascoltatore eventi dell'Iframe
         window.addEventListener('message', (event) => {
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
@@ -293,17 +327,17 @@
                     const payload = data.data;
 
                     if (payload.event === 'timeupdate') {
-                        updateUI(payload.currentTime, payload.duration);
+                        lastTime = payload.currentTime;
+                        lastDuration = payload.duration;
+                        updateUI();
                     } 
                     else if (payload.event === 'pause') {
                         isPaused = true;
-                        btnBot.classList.add('visible');
-                        if (prevTarget) btnPrev.classList.add('visible');
-                        if (nextTarget) btnNext.classList.add('visible');
+                        updateUI();
                     } 
                     else if (payload.event === 'play') {
                         isPaused = false;
-                        btnBot.classList.remove('visible');
+                        updateUI();
                     }
                     else if (payload.event === 'ended') {
                         if (nextTarget) btnNext.classList.add('visible');
