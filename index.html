@@ -66,10 +66,15 @@
 
         /* SENSORI MOUSE (Aree invisibili per intercettare il cursore ai bordi) */
         .edge-sensor { position: absolute; z-index: 20; }
+        
         #sensorTop { top: 0; left: 0; width: 100%; height: 15%; }
-        #sensorLeft { top: 0; left: 0; width: 15%; height: 100%; }
-        #sensorRight { top: 0; right: 0; width: 15%; height: 100%; }
-        #sensorBottom { bottom: 0; left: 0; width: 100%; height: 20%; }
+        
+        /* Tagliamo i sensori laterali affinché non coprano gli angoli in basso (volume/fullscreen del player) */
+        #sensorLeft { top: 0; left: 0; width: 15%; height: calc(100% - 90px); }
+        #sensorRight { top: 0; right: 0; width: 15%; height: calc(100% - 90px); }
+        
+        /* Solleviamo il sensore inferiore esattamente sopra la barra di controllo del player */
+        #sensorBottom { bottom: 90px; left: 0; width: 100%; height: 15%; }
 
         /* --- PULSANTI ELEGANTI MINIMAL --- */
         .overlay-btn {
