@@ -198,7 +198,7 @@
         let currentEp = parseInt(params.get('e')) || 1;
         let totalEps = parseInt(params.get('tot')) || 1;
         
-        const botUsername = "@PopCorn04bot"; // <--- INSERISCI QUI IL NOME DEL BOT
+        const botUsername = "PopCorn04bot"; // <--- INSERISCI QUI IL NOME DEL BOT
 
         const STORAGE_KEY = 'stream_bridge_consent_v3'; 
         const LINKS = { chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh", edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp", firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", chromeDownload: "https://www.google.com/chrome/", android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser", ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682" };
@@ -264,8 +264,8 @@
 
         // --- 4. BINGE-WATCHING & SALVATAGGIO ---
         function getBotSaveLink() {
-            if (isMovie) return `tg://resolve?domain=${@PopCorn04bot}`;
-            return `tg://resolve?domain=${@PopCorn04bot}&start=save_${mediaId}_${currentSeason}_${currentEp}`;
+            if (isMovie) return `tg://resolve?domain=${PopCorn04bot}`;
+            return `tg://resolve?domain=${PopCorn04bot}&start=save_${mediaId}_${currentSeason}_${currentEp}`;
         }
 
         function saveAndExit(e) {
@@ -283,7 +283,7 @@
             if (step === 1 && newEp > totalEps) {
                 // Fine Stagione: Saluta e torna al bot
                 isIntentionalExit = true;
-                window.location.href = `tg://resolve?domain=${@PopCorn04bot}&start=nextS_${mediaId}_${currentSeason + 1}`;
+                window.location.href = `tg://resolve?domain=${PopCorn04bot}&start=nextS_${mediaId}_${currentSeason + 1}`;
             } else if (newEp > 0) {
                 // Navigazione interna veloce
                 currentEp = newEp;
