@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stream Bridge</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         /* --- STILI GENERALI --- */
@@ -52,11 +52,24 @@
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #000; z-index: 9999; display: none; align-items: center; justify-content: center; cursor: pointer;
         }
+        
+        /* NUOVO TASTO PLAY CENTRALE */
         #startBtn {
-            background: rgba(180, 20, 30, 0.9); color: white; border: none; padding: 18px 40px;
-            font-size: 18px; font-weight: 500; border-radius: 50px; cursor: pointer; font-family: 'Poppins', sans-serif;
-            box-shadow: 0 10px 30px rgba(180, 20, 30, 0.4); transition: transform 0.2s; letter-spacing: 1px;
+            background: rgba(180, 20, 30, 0.85); 
+            color: white; 
+            border: none; 
+            width: 80px; 
+            height: 80px;
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(180, 20, 30, 0.5); 
+            transition: transform 0.2s, background 0.2s;
         }
+        #startBtn svg { width: 35px; height: 35px; margin-left: 6px; fill: currentColor; }
+        #startBtn:hover { transform: scale(1.1); background: rgba(220, 20, 30, 1); }
         #startBtn:active { transform: scale(0.95); }
 
         #playerContainer {
@@ -71,22 +84,27 @@
         #sensorRight { top: 0; right: 0; width: 15%; height: calc(100% - 90px); }
         #sensorBottom { bottom: 90px; left: 0; width: 100%; height: 15%; }
 
-        /* TRIGGER INVISIBILE FULLSCREEN */
         #fullscreenTrigger {
-            position: absolute;
-            bottom: 5px; /* Modifica per centrare in altezza */
-            right: 15px; /* Modifica per centrare in larghezza */
-            width: 50px;
-            height: 50px;
-            z-index: 110; /* Deve stare sopra a tutto, anche ai bottoni */
-            cursor: pointer;
-            
-            /* SCOMMENTA LA RIGA QUI SOTTO PER CENTRARE IL RETTANGOLO SUL BOTTONE DEL VIDEO! */
-            background: rgba(255, 0, 0, 0.5);  
-            background: transparent;
+            position: absolute; bottom: 5px; right: 15px; width: 50px; height: 50px;
+            z-index: 110; cursor: pointer; background: transparent;
         }
 
-        /* --- PULSANTI ELEGANTI MINIMAL --- */
+        /* --- TITOLO E PULSANTI ELEGANTI --- */
+        
+        /* Nuovo Titolo Stile Netflix */
+        #playerTitle {
+            position: absolute;
+            top: 30px; left: 40px;
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            opacity: 0; pointer-events: none; 
+            transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 100;
+        }
+
         .overlay-btn {
             position: absolute; 
             background: rgba(20, 20, 20, 0.4); 
@@ -101,7 +119,7 @@
             font-family: 'Poppins', sans-serif;
         }
         
-        .overlay-btn.visible { opacity: 1; pointer-events: auto; }
+        #playerTitle.visible, .overlay-btn.visible { opacity: 1; pointer-events: auto; }
         
         .overlay-btn:hover { 
             background: rgba(160, 20, 30, 0.75); 
@@ -110,17 +128,17 @@
             color: #fff;
         }
 
+        /* Posizionamenti */
         #btnPrev { top: 85%; left: 40px; transform: translateY(-50%); }
         #btnNext { top: 85%; right: 40px; transform: translateY(-50%); }
-        #btnBot  { top: 30px; left: 30px; }
+        #btnBot  { top: 30px; right: 40px; } /* Spostato a DESTRA */
 
         @media (max-width: 768px) {
+            #playerTitle { top: 20px; left: 20px; font-size: 16px; }
             .overlay-btn { padding: 8px 18px; font-size: 12px; }
             #btnPrev { left: 20px; }
             #btnNext { right: 20px; }
-            #btnBot  { top: 20px; left: 20px; }
-            
-            /* Su mobile le barre dei player spesso sono diverse, adegua il trigger */
+            #btnBot  { top: 20px; right: 20px; } /* Spostato a DESTRA su mobile */
             #fullscreenTrigger { bottom: 0px; right: 0px; width: 60px; height: 60px; }
         }
     </style>
@@ -155,7 +173,9 @@
     </div>
 
     <div id="startOverlay" onclick="startImmersiveExperience()">
-        <button id="startBtn">TOCCA PER INIZIARE</button>
+        <button id="startBtn">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
     </div>
 
     <div id="playerContainer">
@@ -168,6 +188,8 @@
 
         <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
         
+        <div id="playerTitle"></div>
+
         <a href="#" id="btnBot" class="overlay-btn">Torna al Bot</a>
         <a href="#" id="btnPrev" class="overlay-btn">Ep. Precedente</a>
         <a href="#" id="btnNext" class="overlay-btn">Prossimo Ep.</a>
@@ -181,6 +203,7 @@
         
         const prevTarget = params.get('prev'); 
         const nextTarget = params.get('next'); 
+        const titleTarget = params.get('title'); 
         const botUsername = "NomeDelTuoBot"; // <--- INSERISCI QUI IL NOME DEL BOT
 
         if (videoUrl && !videoUrl.includes('primaryColor=')) {
@@ -286,12 +309,8 @@
 
         // --- 4. GESTIONE FULLSCREEN MANUALE E TASTO "F" ---
         function toggleFullscreen(e) {
-            // Evitiamo che il click passi agli elementi sotto
             if(e) e.stopPropagation(); 
-            
             const docElm = document.documentElement;
-            
-            // Controlla se siamo già in fullscreen
             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
             
             if (!isFullscreen) {
@@ -305,21 +324,21 @@
             }
         }
 
-        // Ascolta il tasto 'F' sulla pagina globale
         window.addEventListener('keydown', function(e) {
-            if (e.key === 'f' || e.key === 'F') {
-                toggleFullscreen(e);
-            }
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen(e);
         });
 
         // --- 5. LOGICA PLAYER E MOVIMENTO MOUSE ---
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
         const btnBot = document.getElementById('btnBot');
+        const playerTitle = document.getElementById('playerTitle');
 
+        // Settaggio Dati
         btnBot.href = `tg://resolve?domain=${botUsername}`;
         if (prevTarget) btnPrev.href = decodeURIComponent(prevTarget);
         if (nextTarget) btnNext.href = decodeURIComponent(nextTarget);
+        if (titleTarget) playerTitle.innerText = decodeURIComponent(titleTarget);
 
         function startImmersiveExperience() {
             const docElm = document.documentElement;
@@ -334,7 +353,6 @@
             handleUserActivity();
         }
 
-        // Variabili di stato per gestire i bottoni
         let isPaused = false;
         let lastTime = 0;
         let lastDuration = 0;
@@ -344,10 +362,10 @@
         function updateUI() {
             let showPrev = false;
             let showNext = false;
-            let showBot = false;
+            let showTopBar = false; // Controlla Titolo e Tasto Bot
 
             if (isPaused || isMouseActive) {
-                showBot = true;
+                showTopBar = true;
                 if (prevTarget) showPrev = true;
                 if (nextTarget) showNext = true;
             } else {
@@ -355,7 +373,10 @@
                 if (nextTarget && lastDuration > 0 && (lastDuration - lastTime <= 10)) showNext = true;
             }
 
-            showBot ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
+            // Visibilità Elementi
+            showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
+            showTopBar && titleTarget ? playerTitle.classList.add('visible') : playerTitle.classList.remove('visible');
+            
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
         }
@@ -371,14 +392,12 @@
             }, 3500); 
         }
 
-        // Sensori bordo e click
         document.querySelectorAll('.edge-sensor').forEach(sensor => {
             sensor.addEventListener('mousemove', handleUserActivity);
         });
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
 
-        // Eventi Iframe
         window.addEventListener('message', (event) => {
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
@@ -401,6 +420,7 @@
                     else if (payload.event === 'ended') {
                         if (nextTarget) btnNext.classList.add('visible');
                         btnBot.classList.add('visible');
+                        if (titleTarget) playerTitle.classList.add('visible');
                     }
                 }
             } catch (e) {}
