@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stream Bridge</title>
+    <title>Pop Corn Bot</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
     
@@ -198,7 +198,8 @@
         let currentEp = parseInt(params.get('e')) || 1;
         let totalEps = parseInt(params.get('tot')) || 1;
         
-        const botUsername = "NomeDelTuoBot"; // <--- INSERISCI QUI IL NOME DEL BOT
+        // NOME DEL BOT AGGIORNATO
+        const botUsername = "PopCorn04bot"; 
 
         const STORAGE_KEY = 'stream_bridge_consent_v3'; 
         const LINKS = { chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh", edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp", firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", chromeDownload: "https://www.google.com/chrome/", android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser", ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682" };
@@ -229,8 +230,8 @@
             if (!isMovie) displayTitle += ` • S${currentSeason}:E${currentEp}`;
             document.getElementById('playerTitle').innerText = displayTitle;
             
-            // AGGIORNA IL TITOLO DELLA SCHEDA DEL BROWSER
-            document.title = `🍿 Guardando: ${displayTitle}`;
+            // AGGIORNA IL TITOLO DELLA SCHEDA DEL BROWSER (Senza Popcorn e senza "Guardando:")
+            document.title = displayTitle;
 
             // Aggiorna Testo Modal
             if (!isMovie) {
