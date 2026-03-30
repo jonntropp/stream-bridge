@@ -54,20 +54,39 @@
         }
         
         /* NUOVO TASTO PLAY CENTRALE */
-        #startBtn {
-            background: rgba(180, 20, 30, 0.85); 
-            color: white; 
-            border: none; 
-            width: 80px; 
-            height: 80px;
-            border-radius: 50%; 
-            cursor: pointer; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 30px rgba(180, 20, 30, 0.5); 
-            transition: transform 0.2s, background 0.2s;
-        }
+       #startBtn {
+    /* Rimosso il rosso, impostato trasparente */
+    background: transparent; 
+    /* Aggiunto un bordo sottile per definire la forma (opzionale) */
+    border: 2px solid rgba(255, 255, 255, 0.8); 
+    color: white; 
+    width: 100px;  /* Leggermente più grande per ospitare un play grande */
+    height: 100px;
+    border-radius: 50%; 
+    cursor: pointer; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Ombra ridotta o rimossa se lo sfondo è trasparente */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
+    transition: transform 0.2s, background 0.2s, border-color 0.2s;
+    outline: none;
+}
+
+/* Effetto al passaggio del mouse */
+#startBtn:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Stile per l'icona all'interno del pulsante */
+#startBtn i, #startBtn svg {
+    font-size: 40px; /* Aumenta questo valore per ingrandire il Play */
+    width: 40px;
+    height: 40px;
+    /* Se usi un simbolo testuale come "▶", il margin-left aiuta a centrarlo otticamente */
+    margin-left: 5px; 
+}
         #startBtn svg { width: 35px; height: 35px; margin-left: 6px; fill: currentColor; }
         #startBtn:hover { transform: scale(1.1); background: rgba(220, 20, 30, 1); }
         #startBtn:active { transform: scale(0.95); }
