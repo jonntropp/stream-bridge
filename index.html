@@ -312,9 +312,13 @@
             else { btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios; btnInstall.innerText = "Installa Aloha Browser"; }
         };
 
-        // --- 5. BINGE-WATCHING & SALVATAGGIO ---
+       // --- 5. BINGE-WATCHING & SALVATAGGIO ---
         function getBotSaveLink() {
-            if (isMovie) return `tg://resolve?domain=${botUsername}`;
+            if (isMovie) {
+                // Anche i film devono inviare il payload di salvataggio!
+                // Usiamo 0_0 per stagione ed episodio come segnaposto.
+                return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_0_0`;
+            }
             return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}`;
         }
 
@@ -335,6 +339,8 @@
                 window.location.href = `tg://resolve?domain=${botUsername}&start=nextS_${mediaId}_${currentSeason + 1}`;
             } else if (newEp > 0) {
                 currentEp = newEp;
+                // FIX: Resettiamo il flag di uscita, perché stiamo iniziando una nuova visione
+                isIntentionalExit = false; 
                 updatePlayerSource();
             }
         }
