@@ -360,42 +360,56 @@
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
 
+            // Se l'utente non è in fullscreen, il player è attivo e NON ha cliccato "Salva ed Esci"
             if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
                 document.getElementById('btnModalSave').href = getBotSaveLink();
                 modal.style.display = 'flex';
-                isPaused = true; updateUI();
+                
+                // --- TENTATIVO DI PAUSA AUTOMATICA ---
+                const iframeWin = document.getElementById('videoFrame').contentWindow;
+                try {
+                    // Inviamo i comandi di pausa standard ai player più famosi
+                    iframeWin.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); // Stile YT
+                    iframeWin.postMessage({cmd: 'pause'}, '*'); // Stile JWPlayer
+                    iframeWin.postMessage('pause', '*'); // Stile Vimeo/HTML5
+                } catch(err) {}
+
+                isPaused = true;
+                updateUI();
+                
                 setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'translateY(0)'; }, 10);
             }
         }
 
-       function resumeFullscreen(e) {
-            // Blocca qualsiasi altro comportamento di default del browser
+        function resumeFullscreen(e) {
             if(e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
 
-            // 1. FORZA IMMEDIATAMENTE IL FULLSCREEN (Stesso codice del primo avvio)
-            // Facendolo istantaneamente al tocco, impediamo ad Aloha di "rubare" il video
             const docElm = document.documentElement;
             if (docElm.requestFullscreen) docElm.requestFullscreen();
             else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
             else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
 
-            // 2. Nasconde la modale graficamente
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
             modal.style.opacity = '0';
             modalBox.style.transform = 'translateY(20px)';
+            
+            // --- TENTATIVO DI PLAY AUTOMATICO ---
+            const iframeWin = document.getElementById('videoFrame').contentWindow;
+            try {
+                iframeWin.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                iframeWin.postMessage({cmd: 'play'}, '*');
+                iframeWin.postMessage('play', '*');
+            } catch(err) {}
+
             setTimeout(() => { modal.style.display = 'none'; }, 300);
-
-            // 3. TRUCCO PER L'AUTOPLAY: Forza il "focus" del sistema sull'iframe
-            // Aiuta Aloha a capire che l'utente sta interagendo con il video
-            document.getElementById('videoFrame').focus();
-
-            // 4. Risveglia la UI e i nostri bottoni
             handleUserActivity();
         }
+
+       
 
         // --- 7. LOGICA MOUSE E UI ---
         function startImmersiveExperience() {
