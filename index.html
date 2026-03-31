@@ -387,6 +387,11 @@
                 e.stopPropagation();
             }
 
+            // TRUCCO ANTI-ALOHA: Rendiamo il video invisibile per un istante
+            const videoFrame = document.getElementById('videoFrame');
+            videoFrame.style.display = 'none';
+
+            // Chiediamo il fullscreen mentre il video è "nascosto"
             const docElm = document.documentElement;
             if (docElm.requestFullscreen) docElm.requestFullscreen();
             else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
@@ -397,15 +402,21 @@
             modal.style.opacity = '0';
             modalBox.style.transform = 'translateY(20px)';
             
-            // --- TENTATIVO DI PLAY AUTOMATICO ---
-            const iframeWin = document.getElementById('videoFrame').contentWindow;
+            // Tentativo di Play (opzionale)
+            const iframeWin = videoFrame.contentWindow;
             try {
                 iframeWin.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
                 iframeWin.postMessage({cmd: 'play'}, '*');
                 iframeWin.postMessage('play', '*');
             } catch(err) {}
 
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
+            // Dopo 50 millisecondi (il tempo che Aloha ci metta a schermo intero),
+            // facciamo riapparire il player e nascondiamo la modale
+            setTimeout(() => { 
+                modal.style.display = 'none'; 
+                videoFrame.style.display = 'block'; // Il video torna visibile!
+            }, 50);
+
             handleUserActivity();
         }
 
