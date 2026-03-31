@@ -212,6 +212,11 @@
         
         const botUsername = "PopCorn04bot"; 
 
+        // 🪄 TRUCCO MAGICO: Pulisce l'URL dalla barra degli indirizzi senza ricaricare la pagina!
+        if (window.history.replaceState && mediaId) {
+            window.history.replaceState(null, null, window.location.pathname);
+        }
+
         const STORAGE_KEY = 'stream_bridge_consent_v3'; 
         const LINKS = { chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh", edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp", firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", chromeDownload: "https://www.google.com/chrome/", android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser", ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682" };
         
