@@ -392,8 +392,13 @@
             const docElm = document.documentElement;
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
+            const videoFrame = document.getElementById('videoFrame');
 
             if (isAlohaBrowser) {
+                // TRUCCO TIMING ALOHA: Uccidiamo il video prima di chiedere il fullscreen
+                videoFrame.style.display = 'none';
+                videoFrame.src = ''; // Accechiamo lo sniffer di Aloha
+
                 modal.style.opacity = '0';
                 modalBox.style.transform = 'translateY(20px)';
                 setTimeout(() => { modal.style.display = 'none'; }, 300);
@@ -402,11 +407,16 @@
                 else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
                 else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
 
-                updatePlayerSource(lastTime);
-                handleUserActivity();
+                // Ritardo vitale: aspettiamo che il telefono completi l'animazione di ingrandimento
+                setTimeout(() => {
+                    updatePlayerSource(lastTime); // Ricostruiamo l'url con startAt
+                    videoFrame.style.display = 'block'; // Facciamo riapparire il player
+                    handleUserActivity();
+                }, 500); 
+
             } 
             else {
-                const videoFrame = document.getElementById('videoFrame');
+                // BROWSER STANDARD
                 videoFrame.style.display = 'none';
 
                 if (docElm.requestFullscreen) docElm.requestFullscreen();
