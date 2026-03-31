@@ -315,13 +315,12 @@
        // --- 5. BINGE-WATCHING & SALVATAGGIO ---
         function getBotSaveLink() {
             if (isMovie) {
-                // Anche i film devono inviare il payload di salvataggio!
-                // Usiamo 0_0 per stagione ed episodio come segnaposto.
-                return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_0_0`;
+                // Formato Film: ID_0_0_1
+                return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_0_0_1`;
             }
-            return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}`;
+            // Formato Serie: ID_S_E_TOT
+            return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}_${totalEps}`;
         }
-
         function saveAndExit(e) {
             if(e) e.preventDefault();
             isIntentionalExit = true; 
