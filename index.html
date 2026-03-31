@@ -182,7 +182,7 @@
             <p id="modalDescText">Vuoi salvare i progressi dell' <span id="modalEpText" style="color:white; font-weight:bold;">Episodio</span> prima di chiudere?</p>
             <div class="modal-btns">
                 <a href="#" id="btnModalSave" class="btn" style="background: #E50914; color: white;" onclick="setExitingFlag()">💾 Salva sul Bot</a>
-                <button onclick="resumeFullscreen()" class="btn btn-confirm">Annulla e Continua</button>
+                <button onclick="resumeFullscreen(event)" class="btn btn-confirm">Annulla e Continua</button>
             </div>
         </div>
     </div>
@@ -368,13 +368,33 @@
             }
         }
 
-        function resumeFullscreen() {
+       function resumeFullscreen(e) {
+            // Blocca qualsiasi altro comportamento di default del browser
+            if(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // 1. FORZA IMMEDIATAMENTE IL FULLSCREEN (Stesso codice del primo avvio)
+            // Facendolo istantaneamente al tocco, impediamo ad Aloha di "rubare" il video
+            const docElm = document.documentElement;
+            if (docElm.requestFullscreen) docElm.requestFullscreen();
+            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+
+            // 2. Nasconde la modale graficamente
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
             modal.style.opacity = '0';
             modalBox.style.transform = 'translateY(20px)';
             setTimeout(() => { modal.style.display = 'none'; }, 300);
-            toggleFullscreen(); 
+
+            // 3. TRUCCO PER L'AUTOPLAY: Forza il "focus" del sistema sull'iframe
+            // Aiuta Aloha a capire che l'utente sta interagendo con il video
+            document.getElementById('videoFrame').focus();
+
+            // 4. Risveglia la UI e i nostri bottoni
+            handleUserActivity();
         }
 
         // --- 7. LOGICA MOUSE E UI ---
