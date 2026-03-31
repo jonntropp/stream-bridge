@@ -207,18 +207,26 @@
         
         function getOS() { const ua = navigator.userAgent || navigator.vendor || window.opera; if (/android/i.test(ua)) return "Android"; if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS"; return "Desktop"; }
         function getBrowserType() { const ua = navigator.userAgent; if (ua.indexOf("Firefox") > -1) return "firefox"; if (ua.indexOf("Edg") > -1) return "edge"; if (ua.indexOf("Chrome") > -1) return "chrome"; return "unknown"; }
+        
         const os = getOS();
+        // Rilevamento globale di Aloha (usato per le scelte drastiche)
+        const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
 
         let isIntentionalExit = false;
         function setExitingFlag() { isIntentionalExit = true; }
 
-        // --- 2. GENERAZIONE URL DINAMICA ---
-        function updatePlayerSource() {
+        // --- 2. GENERAZIONE URL DINAMICA (CON START-AT) ---
+        function updatePlayerSource(startAtTime = 0) {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
+            
+            // Se passiamo un tempo (Ricarica Brutale Aloha), accodiamo startAt
+            if (startAtTime > 0) {
+                urlParams += `&startAt=${Math.floor(startAtTime)}`;
+            }
             
             src += urlParams;
             document.getElementById('videoFrame').src = src;
@@ -236,10 +244,9 @@
         }
 
         // --- 3. REDIRECT ALOHA INTELLIGENTE ---
-        // Genera il link per costringere Android ad aprire QUESTA PAGINA su Aloha
         function getAlohaRedirectUrl() {
             let url = new URL(window.location.href);
-            url.searchParams.set('aloha', '1'); // Il flag che ci dirà "Ehi, siamo già dentro Aloha!"
+            url.searchParams.set('aloha', '1'); 
             let cleanUrl = url.href.replace(/^https?:\/\//, '');
 
             if (os === "Android") {
@@ -259,13 +266,10 @@
 
         function setProtectedAndGo() { 
             localStorage.setItem(STORAGE_KEY, 'true'); 
-            const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
             
-            // Se siamo su Mobile e NON siamo su Aloha, lancia l'Intento per Aloha
             if (os !== "Desktop" && !isAlohaBrowser) {
                 window.location.href = getAlohaRedirectUrl();
             } else {
-                // Altrimenti (Desktop o già in Aloha) lancia il player
                 preparePlayerScreen();
             }
         }
@@ -278,7 +282,7 @@
                 let p = ((Date.now() - s) / d) * 100; b.style.width = Math.min(p, 100) + "%"; 
                 if (p >= 100) { 
                     clearInterval(t); 
-                    preparePlayerScreen(); // La penalità ti lascia sul browser attuale
+                    preparePlayerScreen(); 
                 } 
             }, 50); 
         }
@@ -287,10 +291,8 @@
             if (params.get('reset') === 'true') { localStorage.removeItem(STORAGE_KEY); document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block'; document.getElementById('titleText').innerText = "Configurazione"; document.getElementById('descText').innerHTML = "Chiudi questa pagina dopo l'installazione."; document.querySelector('.btn-confirm').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; return; }
             
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
-            const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
 
             if (isProtected && mediaId) { 
-                // Bypass automatico
                 if (os !== "Desktop" && !isAlohaBrowser) {
                     window.location.href = getAlohaRedirectUrl();
                 } else {
@@ -360,18 +362,15 @@
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
 
-            // Se l'utente non è in fullscreen, il player è attivo e NON ha cliccato "Salva ed Esci"
             if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
                 document.getElementById('btnModalSave').href = getBotSaveLink();
                 modal.style.display = 'flex';
                 
-                // --- TENTATIVO DI PAUSA AUTOMATICA ---
                 const iframeWin = document.getElementById('videoFrame').contentWindow;
                 try {
-                    // Inviamo i comandi di pausa standard ai player più famosi
-                    iframeWin.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); // Stile YT
-                    iframeWin.postMessage({cmd: 'pause'}, '*'); // Stile JWPlayer
-                    iframeWin.postMessage('pause', '*'); // Stile Vimeo/HTML5
+                    iframeWin.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); 
+                    iframeWin.postMessage({cmd: 'pause'}, '*'); 
+                    iframeWin.postMessage('pause', '*'); 
                 } catch(err) {}
 
                 isPaused = true;
@@ -382,45 +381,54 @@
         }
 
         function resumeFullscreen(e) {
-            if(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            if(e) { e.preventDefault(); e.stopPropagation(); }
 
-            // TRUCCO ANTI-ALOHA: Rendiamo il video invisibile per un istante
-            const videoFrame = document.getElementById('videoFrame');
-            videoFrame.style.display = 'none';
-
-            // Chiediamo il fullscreen mentre il video è "nascosto"
             const docElm = document.documentElement;
-            if (docElm.requestFullscreen) docElm.requestFullscreen();
-            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
-            modal.style.opacity = '0';
-            modalBox.style.transform = 'translateY(20px)';
-            
-            // Tentativo di Play (opzionale)
-            const iframeWin = videoFrame.contentWindow;
-            try {
-                iframeWin.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                iframeWin.postMessage({cmd: 'play'}, '*');
-                iframeWin.postMessage('play', '*');
-            } catch(err) {}
 
-            // Dopo 50 millisecondi (il tempo che Aloha ci metta a schermo intero),
-            // facciamo riapparire il player e nascondiamo la modale
-            setTimeout(() => { 
-                modal.style.display = 'none'; 
-                videoFrame.style.display = 'block'; // Il video torna visibile!
-            }, 100);
+            // SE SIAMO SU ALOHA: RICARICA BRUTALE CON START-AT
+            if (isAlohaBrowser) {
+                modal.style.opacity = '0';
+                modalBox.style.transform = 'translateY(20px)';
+                setTimeout(() => { modal.style.display = 'none'; }, 300);
 
-            handleUserActivity();
+                if (docElm.requestFullscreen) docElm.requestFullscreen();
+                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+
+                // Usa il current time per ricaricare il video a quel minuto esatto
+                updatePlayerSource(lastTime);
+
+                handleUserActivity();
+            } 
+            // COMPORTAMENTO STANDARD PER GLI ALTRI BROWSER (Veloce e fluido)
+            else {
+                const videoFrame = document.getElementById('videoFrame');
+                videoFrame.style.display = 'none';
+
+                if (docElm.requestFullscreen) docElm.requestFullscreen();
+                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+
+                modal.style.opacity = '0';
+                modalBox.style.transform = 'translateY(20px)';
+                
+                const iframeWin = videoFrame.contentWindow;
+                try {
+                    iframeWin.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                    iframeWin.postMessage({cmd: 'play'}, '*');
+                    iframeWin.postMessage('play', '*');
+                } catch(err) {}
+
+                setTimeout(() => { 
+                    modal.style.display = 'none'; 
+                    videoFrame.style.display = 'block'; 
+                }, 100);
+
+                handleUserActivity();
+            }
         }
-
-       
 
         // --- 7. LOGICA MOUSE E UI ---
         function startImmersiveExperience() {
