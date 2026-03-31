@@ -121,8 +121,11 @@
         @media (max-width: 768px) {
             #playerTitle { top: 20px; left: 20px; font-size: 16px; }
             .overlay-btn { padding: 8px 18px; font-size: 12px; }
-            #btnPrev { left: 20px; }
-            #btnNext { right: 20px; }
+            
+            /* Alziamo i pulsanti al 75% (o 70% se serve ancora più spazio) solo su mobile */
+            #btnPrev { top: 70%; left: 20px; }
+            #btnNext { top: 70%; right: 20px; }
+            
             #btnBot  { top: 20px; right: 20px; }
             #fullscreenTrigger { bottom: 0px; right: 0px; width: 60px; height: 60px; }
             .modal-box { padding: 30px 20px; }
