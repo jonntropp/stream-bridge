@@ -399,7 +399,9 @@
                 if (!isMovie) showNext = true; 
             } else {
                 if (!isMovie && currentEp > 1 && lastTime <= 5) showPrev = true;
-                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 10)) showNext = true;
+                
+                // MODIFICA QUI: Cambiato il 10 in 30
+                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
 
             showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
