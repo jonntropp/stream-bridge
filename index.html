@@ -118,17 +118,33 @@
         .modal-btns { display: flex; flex-direction: column; gap: 12px; }
         .modal-btns .btn { padding: 16px; font-size: 16px; border-radius: 14px; }
 
-        @media (max-width: 768px) {
-            #playerTitle { top: 20px; left: 20px; font-size: 16px; }
-            .overlay-btn { padding: 8px 18px; font-size: 12px; }
+        /* --- RESPONSIVE MOBILE E ROTAZIONE --- */
+        /* Aggiunto max-height per intercettare i telefoni ruotati in orizzontale */
+        @media (max-width: 768px), (max-height: 500px) {
+            #playerTitle { top: 15px; left: 15px; font-size: 14px; }
             
-            /* Alziamo i pulsanti al 75% (o 70% se serve ancora più spazio) solo su mobile */
-            #btnPrev { top: 70%; left: 20px; }
-            #btnNext { top: 70%; right: 20px; }
+            /* Rimpicciolisce elegantemente i pulsanti per non invadere lo schermo */
+            .overlay-btn { 
+                padding: 6px 14px; 
+                font-size: 11px; 
+                border-radius: 20px; 
+                letter-spacing: 0.5px; 
+            }
             
-            #btnBot  { top: 20px; right: 20px; }
+            /* IL TRUCCO: Annulliamo il 'top' e li ancoriamo al 'bottom' fisso. 
+               Così restano sempre sopra la barra, a prescindere dalla rotazione! */
+            #btnPrev { top: auto; bottom: 85px; left: 15px; transform: none; }
+            #btnNext { top: auto; bottom: 85px; right: 15px; transform: none; }
+            
+            #btnBot  { top: 15px; right: 15px; }
+            
             #fullscreenTrigger { bottom: 0px; right: 0px; width: 60px; height: 60px; }
-            .modal-box { padding: 30px 20px; }
+            
+            /* Rimpicciolisce anche la modal di salvataggio per schermi piccoli */
+            .modal-box { padding: 25px 15px; }
+            .modal-box h3 { font-size: 20px; }
+            .modal-box p { font-size: 13px; }
+            .modal-btns .btn { padding: 12px; font-size: 14px; }
         }
     </style>
 </head>
