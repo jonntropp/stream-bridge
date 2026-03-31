@@ -67,18 +67,6 @@
         #playerContainer {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
         }
-        
-        /* IL TRUCCO FAKE FULLSCREEN PER ALOHA */
-        .fake-fullscreen {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 99999 !important;
-            background-color: #000 !important;
-        }
-
         iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; }
 
         /* SENSORI MOUSE E TRIGGER FULLSCREEN */
@@ -128,7 +116,7 @@
         .modal-btns { display: flex; flex-direction: column; gap: 12px; }
         .modal-btns .btn { padding: 16px; font-size: 16px; border-radius: 14px; }
 
-        /* --- RESPONSIVE MOBILE --- */
+        /* --- RESPONSIVE MOBILE E ROTAZIONE --- */
         @media (max-width: 768px), (max-height: 500px) {
             #playerTitle { top: 15px; left: 15px; font-size: 14px; }
             .overlay-btn { padding: 6px 14px; font-size: 11px; border-radius: 20px; letter-spacing: 0.5px; }
@@ -194,12 +182,13 @@
             <p id="modalDescText">Vuoi salvare i progressi dell' <span id="modalEpText" style="color:white; font-weight:bold;">Episodio</span> prima di chiudere?</p>
             <div class="modal-btns">
                 <a href="#" id="btnModalSave" class="btn" style="background: #E50914; color: white;" onclick="setExitingFlag()">💾 Salva sul Bot</a>
-                <button onclick="resumeFullscreen()" class="btn btn-confirm">Annulla e Continua</button>
+                <button onclick="resumeFullscreen(event)" class="btn btn-confirm">Annulla e Continua</button>
             </div>
         </div>
     </div>
 
     <script>
+        // --- 1. LETTURA DATI SMART ---
         const params = new URLSearchParams(window.location.search);
         
         const mediaId = params.get('id');
@@ -218,14 +207,12 @@
         
         function getOS() { const ua = navigator.userAgent || navigator.vendor || window.opera; if (/android/i.test(ua)) return "Android"; if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS"; return "Desktop"; }
         function getBrowserType() { const ua = navigator.userAgent; if (ua.indexOf("Firefox") > -1) return "firefox"; if (ua.indexOf("Edg") > -1) return "edge"; if (ua.indexOf("Chrome") > -1) return "chrome"; return "unknown"; }
-        
         const os = getOS();
-        // Variabile GLOBALE che identifica se siamo su Aloha
-        const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('AlohaBrowser') || navigator.userAgent.includes('Aloha');
 
         let isIntentionalExit = false;
         function setExitingFlag() { isIntentionalExit = true; }
 
+        // --- 2. GENERAZIONE URL DINAMICA ---
         function updatePlayerSource() {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
@@ -248,9 +235,11 @@
             }
         }
 
+        // --- 3. REDIRECT ALOHA INTELLIGENTE ---
+        // Genera il link per costringere Android ad aprire QUESTA PAGINA su Aloha
         function getAlohaRedirectUrl() {
             let url = new URL(window.location.href);
-            url.searchParams.set('aloha', '1'); 
+            url.searchParams.set('aloha', '1'); // Il flag che ci dirà "Ehi, siamo già dentro Aloha!"
             let cleanUrl = url.href.replace(/^https?:\/\//, '');
 
             if (os === "Android") {
@@ -261,6 +250,7 @@
             return url.href;
         }
 
+        // --- 4. AUTENTICAZIONE E ROUTING ---
         function preparePlayerScreen() {
             if (!mediaId) return;
             document.getElementById('authContainer').style.display = 'none';
@@ -269,9 +259,13 @@
 
         function setProtectedAndGo() { 
             localStorage.setItem(STORAGE_KEY, 'true'); 
+            const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
+            
+            // Se siamo su Mobile e NON siamo su Aloha, lancia l'Intento per Aloha
             if (os !== "Desktop" && !isAlohaBrowser) {
                 window.location.href = getAlohaRedirectUrl();
             } else {
+                // Altrimenti (Desktop o già in Aloha) lancia il player
                 preparePlayerScreen();
             }
         }
@@ -282,7 +276,10 @@
             let d = 5000, s = Date.now(), b = document.getElementById('timerFill'); 
             let t = setInterval(() => { 
                 let p = ((Date.now() - s) / d) * 100; b.style.width = Math.min(p, 100) + "%"; 
-                if (p >= 100) { clearInterval(t); preparePlayerScreen(); } 
+                if (p >= 100) { 
+                    clearInterval(t); 
+                    preparePlayerScreen(); // La penalità ti lascia sul browser attuale
+                } 
             }, 50); 
         }
 
@@ -290,10 +287,15 @@
             if (params.get('reset') === 'true') { localStorage.removeItem(STORAGE_KEY); document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block'; document.getElementById('titleText').innerText = "Configurazione"; document.getElementById('descText').innerHTML = "Chiudi questa pagina dopo l'installazione."; document.querySelector('.btn-confirm').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; return; }
             
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
+            const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
 
             if (isProtected && mediaId) { 
-                if (os !== "Desktop" && !isAlohaBrowser) window.location.href = getAlohaRedirectUrl();
-                else preparePlayerScreen();
+                // Bypass automatico
+                if (os !== "Desktop" && !isAlohaBrowser) {
+                    window.location.href = getAlohaRedirectUrl();
+                } else {
+                    preparePlayerScreen();
+                }
                 return; 
             }
             
@@ -304,6 +306,7 @@
             else { btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios; btnInstall.innerText = "Installa Aloha Browser"; }
         };
 
+        // --- 5. BINGE-WATCHING & SALVATAGGIO ---
         function getBotSaveLink() {
             if (isMovie) return `tg://resolve?domain=${botUsername}`;
             return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}`;
@@ -330,49 +333,20 @@
             }
         }
 
-        // --- FUNZIONE ASTRATTA PER MOSTRARE LA MODAL ---
-        function showSaveModal() {
-            if (!isIntentionalExit && document.getElementById('playerContainer').style.display === 'block') {
-                const modal = document.getElementById('saveModal');
-                const modalBox = document.getElementById('modalBox');
-                document.getElementById('btnModalSave').href = getBotSaveLink();
-                modal.style.display = 'flex';
-                isPaused = true;
-                updateUI();
-                setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'translateY(0)'; }, 10);
-            }
-        }
-
-        // --- GESTIONE IBRIDA FULLSCREEN (CSS vs NATIVO) ---
+        // --- 6. FULLSCREEN & MODAL SALVATAGGIO ---
         function toggleFullscreen(e) {
             if(e) e.stopPropagation(); 
+            const docElm = document.documentElement;
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
             
-            // SE SIAMO SU ALOHA USA LA CLASSE CSS FAKE-FULLSCREEN
-            if (isAlohaBrowser) {
-                const container = document.getElementById('playerContainer');
-                if (container.classList.contains('fake-fullscreen')) {
-                    // Esce dal fake fullscreen
-                    container.classList.remove('fake-fullscreen');
-                    showSaveModal(); // Intercetta l'uscita
-                } else {
-                    // Entra nel fake fullscreen
-                    container.classList.add('fake-fullscreen');
-                }
-            } 
-            // ALTRIMENTI USA LE API NATIVE (Desktop/Chrome Android)
-            else {
-                const docElm = document.documentElement;
-                const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-                
-                if (!isFullscreen) {
-                    if (docElm.requestFullscreen) docElm.requestFullscreen();
-                    else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-                    else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-                } else {
-                    if (document.exitFullscreen) document.exitFullscreen();
-                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                    else if (document.msExitFullscreen) document.msExitFullscreen();
-                }
+            if (!isFullscreen) {
+                if (docElm.requestFullscreen) docElm.requestFullscreen();
+                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
             }
         }
 
@@ -382,43 +356,78 @@
         document.addEventListener('webkitfullscreenchange', exitHandler);
 
         function exitHandler() {
-            if (isAlohaBrowser) return; // Su Aloha gestiamo manualmente con la classe CSS
             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-            if (!isFullscreen) {
-                showSaveModal();
+            const modal = document.getElementById('saveModal');
+            const modalBox = document.getElementById('modalBox');
+
+            // Se l'utente non è in fullscreen, il player è attivo e NON ha cliccato "Salva ed Esci"
+            if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
+                document.getElementById('btnModalSave').href = getBotSaveLink();
+                modal.style.display = 'flex';
+                
+                // --- TENTATIVO DI PAUSA AUTOMATICA ---
+                const iframeWin = document.getElementById('videoFrame').contentWindow;
+                try {
+                    // Inviamo i comandi di pausa standard ai player più famosi
+                    iframeWin.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); // Stile YT
+                    iframeWin.postMessage({cmd: 'pause'}, '*'); // Stile JWPlayer
+                    iframeWin.postMessage('pause', '*'); // Stile Vimeo/HTML5
+                } catch(err) {}
+
+                isPaused = true;
+                updateUI();
+                
+                setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'translateY(0)'; }, 10);
             }
         }
 
-        function resumeFullscreen() {
+        function resumeFullscreen(e) {
+            if(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // TRUCCO ANTI-ALOHA: Rendiamo il video invisibile per un istante
+            const videoFrame = document.getElementById('videoFrame');
+            videoFrame.style.display = 'none';
+
+            // Chiediamo il fullscreen mentre il video è "nascosto"
+            const docElm = document.documentElement;
+            if (docElm.requestFullscreen) docElm.requestFullscreen();
+            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
             modal.style.opacity = '0';
             modalBox.style.transform = 'translateY(20px)';
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
             
-            // Rientra in fullscreen usando il metodo corretto
-            if (isAlohaBrowser) {
-                document.getElementById('playerContainer').classList.add('fake-fullscreen');
-            } else {
-                const docElm = document.documentElement;
-                if (docElm.requestFullscreen) docElm.requestFullscreen();
-                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-            }
+            // Tentativo di Play (opzionale)
+            const iframeWin = videoFrame.contentWindow;
+            try {
+                iframeWin.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                iframeWin.postMessage({cmd: 'play'}, '*');
+                iframeWin.postMessage('play', '*');
+            } catch(err) {}
+
+            // Dopo 50 millisecondi (il tempo che Aloha ci metta a schermo intero),
+            // facciamo riapparire il player e nascondiamo la modale
+            setTimeout(() => { 
+                modal.style.display = 'none'; 
+                videoFrame.style.display = 'block'; // Il video torna visibile!
+            }, 100);
+
+            handleUserActivity();
         }
 
+       
+
+        // --- 7. LOGICA MOUSE E UI ---
         function startImmersiveExperience() {
             updatePlayerSource(); 
+            toggleFullscreen();
             document.getElementById('startOverlay').style.display = 'none';
             document.getElementById('playerContainer').style.display = 'block';
-            
-            // Attiva subito il fullscreen (CSS o Nativo)
-            if (isAlohaBrowser) {
-                document.getElementById('playerContainer').classList.add('fake-fullscreen');
-            } else {
-                toggleFullscreen();
-            }
-            
             handleUserActivity();
         }
 
