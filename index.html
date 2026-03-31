@@ -396,26 +396,20 @@
             const oldIframe = document.getElementById('videoFrame');
 
             if (isAlohaBrowser) {
-                // 1. UCCISIONE PULITA: Rimuoviamo completamente l'iframe dal DOM
-                // Questo svuota la memoria e toglie ad Aloha qualsiasi cosa da "annusare"
+                // 1. UCCISIONE PULITA
                 if (oldIframe) {
                     playerContainer.removeChild(oldIframe);
                 }
 
-                // Nascondiamo la modale in uscita
                 modal.style.opacity = '0';
                 modalBox.style.transform = 'translateY(20px)';
                 setTimeout(() => { modal.style.display = 'none'; }, 300);
 
-                // 2. CHIEDIAMO IL FULLSCREEN
                 if (docElm.requestFullscreen) docElm.requestFullscreen();
                 else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
                 else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
 
-                // 3. LA PAUSA TATTICA LUNGA (1 Secondo)
-                // Aspettiamo che il telefono si assesti e che Aloha si rilassi
                 setTimeout(() => {
-                    // Creiamo l'URL con il tempo esatto
                     let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
                     if (!isMovie) src += `/${currentSeason}/${currentEp}`;
                     
@@ -425,22 +419,22 @@
                     
                     src += urlParams;
 
-                    // 4. RESURREZIONE: Creiamo un iframe nuovo di zecca
                     const newIframe = document.createElement('iframe');
                     newIframe.id = 'videoFrame';
                     newIframe.allow = 'autoplay; fullscreen; encrypted-media';
                     newIframe.setAttribute('allowfullscreen', '');
                     newIframe.src = src;
 
-                    // Lo attacchiamo alla pagina
                     playerContainer.appendChild(newIframe);
                     
+                    // FIX: Sblocchiamo i pulsanti resettando lo stato di pausa!
+                    isPaused = false; 
                     handleUserActivity();
-                }, 1000); // 1000ms = 1 secondo pieno di calma
+                }, 1000); 
 
             } 
             else {
-                // BROWSER STANDARD (Lasciato invariato per la massima velocità)
+                // BROWSER STANDARD
                 if (oldIframe) oldIframe.style.display = 'none';
 
                 if (docElm.requestFullscreen) docElm.requestFullscreen();
@@ -464,10 +458,11 @@
                     }, 100);
                 }
 
+                // FIX: Sblocchiamo i pulsanti resettando lo stato di pausa!
+                isPaused = false;
                 handleUserActivity();
             }
         }
-
         // --- 7. LOGICA MOUSE E UI ---
         function startImmersiveExperience() {
             updatePlayerSource(); 
