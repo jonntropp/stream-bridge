@@ -206,22 +206,18 @@
     </div>
 
     <script>
-        // --- 1. LETTURA DATI SMART ---
+      // --- 1. LETTURA DATI SMART ---
         const params = new URLSearchParams(window.location.search);
         
         const mediaId = params.get('id');
         const showTitle = params.get('title') ? decodeURIComponent(params.get('title')) : 'Streaming';
         const isMovie = params.get('type') === 'movie';
-        
-        // Lettura Lingua (default vuoto se non passato)
         const contentLang = params.get('lang');
         
-        // Variabili di Stato (mutabili durante il binge-watching)
         let currentSeason = parseInt(params.get('s')) || 1;
         let currentEp = parseInt(params.get('e')) || 1;
         let totalEps = parseInt(params.get('tot')) || 1;
         
-        // NOME DEL BOT AGGIORNATO
         const botUsername = "PopCorn04bot"; 
 
         const STORAGE_KEY = 'stream_bridge_consent_v3'; 
@@ -230,33 +226,25 @@
         function getBrowserType() { const ua = navigator.userAgent; if (ua.indexOf("Firefox") > -1) return "firefox"; if (ua.indexOf("Edg") > -1) return "edge"; if (ua.indexOf("Chrome") > -1) return "chrome"; return "unknown"; }
         const os = getOS();
 
-        // Flag vitale per non innescare la Modal quando l'utente preme "Salva ed Esci" volontariamente
         let isIntentionalExit = false;
         function setExitingFlag() { isIntentionalExit = true; }
 
         // --- 2. GENERAZIONE URL DINAMICA ---
         function updatePlayerSource() {
-            // Generazione link Vixsrc
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             
-            // Costruzione Parametri
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
-            if (contentLang) urlParams += `&lang=${contentLang}`; // Aggiunge la lingua se specificata
-            
+            if (contentLang) urlParams += `&lang=${contentLang}`; 
             src += urlParams;
             
             document.getElementById('videoFrame').src = src;
             
-            // Aggiorna Titolo UI
             let displayTitle = showTitle;
             if (!isMovie) displayTitle += ` • S${currentSeason}:E${currentEp}`;
             document.getElementById('playerTitle').innerText = displayTitle;
-            
-            // AGGIORNA IL TITOLO DELLA SCHEDA DEL BROWSER (Senza Popcorn e senza "Guardando:")
             document.title = displayTitle;
 
-            // Aggiorna Testo Modal
             if (!isMovie) {
                 document.getElementById('modalEpText').innerText = `Episodio ${currentEp}`;
             } else {
@@ -264,20 +252,67 @@
             }
         }
 
-        // --- 3. AUTENTICAZIONE ---
+        // --- 3. GESTIONE ALOHA REDIRECT ---
+        function getAlohaRedirectUrl() {
+            let currentUrl = window.location.href;
+            // Aggiungiamo un flag per far capire allo script che siamo già passati da Aloha
+            if (!currentUrl.includes('aloha=1')) {
+                currentUrl += (currentUrl.includes('?') ? '&' : '?') + 'aloha=1';
+            }
+            let cleanUrl = currentUrl.replace(/^https?:\/\//, '');
+
+            if (os === "Android") {
+                return "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
+            } else if (os === "iOS") {
+                return "alohabrowser://" + cleanUrl;
+            }
+            return currentUrl;
+        }
+
+        function checkAndRedirectOrPlay() {
+            // Se siamo su Mobile e non siamo nell'app Aloha (verificato dal flag o UserAgent)
+            const isAlohaBrowser = navigator.userAgent.includes('AlohaBrowser');
+            const hasAlohaFlag = window.location.href.includes('aloha=1');
+            
+            if (os !== "Desktop" && !isAlohaBrowser && !hasAlohaFlag) {
+                // Spara l'utente su Aloha aprendo QUESTA pagina GitHub
+                window.location.href = getAlohaRedirectUrl();
+            } else {
+                // Altrimenti carica il player normale
+                preparePlayerScreen();
+            }
+        }
+
         function preparePlayerScreen() {
             if (!mediaId) return;
             document.getElementById('authContainer').style.display = 'none';
             document.getElementById('startOverlay').style.display = 'flex'; 
         }
 
-        function setProtectedAndGo() { localStorage.setItem(STORAGE_KEY, 'true'); preparePlayerScreen(); }
-        function triggerPenalty() { document.getElementById('choiceContent').style.display = 'none'; document.getElementById('penaltyView').style.display = 'block'; let d = 5000, s = Date.now(), b = document.getElementById('timerFill'); let t = setInterval(() => { let p = ((Date.now() - s) / d) * 100; b.style.width = Math.min(p, 100) + "%"; if (p >= 100) { clearInterval(t); preparePlayerScreen(); } }, 50); }
+        function setProtectedAndGo() { 
+            localStorage.setItem(STORAGE_KEY, 'true'); 
+            checkAndRedirectOrPlay();
+        }
+
+        function triggerPenalty() { 
+            document.getElementById('choiceContent').style.display = 'none'; 
+            document.getElementById('penaltyView').style.display = 'block'; 
+            let d = 5000, s = Date.now(), b = document.getElementById('timerFill'); 
+            let t = setInterval(() => { 
+                let p = ((Date.now() - s) / d) * 100; b.style.width = Math.min(p, 100) + "%"; 
+                if (p >= 100) { clearInterval(t); preparePlayerScreen(); } // Chi sceglie le pubblicità non va forzato su Aloha
+            }, 50); 
+        }
 
         window.onload = function() {
             if (params.get('reset') === 'true') { localStorage.removeItem(STORAGE_KEY); document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block'; document.getElementById('titleText').innerText = "Configurazione"; document.getElementById('descText').innerHTML = "Chiudi questa pagina dopo l'installazione."; document.querySelector('.btn-confirm').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; return; }
+            
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
-            if (isProtected && mediaId) { preparePlayerScreen(); return; }
+            
+            if (isProtected && mediaId) { 
+                checkAndRedirectOrPlay(); 
+                return; 
+            }
             
             document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block';
             const btnInstall = document.getElementById('btnInstall');
@@ -294,7 +329,7 @@
 
         function saveAndExit(e) {
             if(e) e.preventDefault();
-            isIntentionalExit = true; // Impedisce l'apertura del popup
+            isIntentionalExit = true; 
             window.location.href = getBotSaveLink();
         }
 
@@ -305,11 +340,9 @@
             let newEp = currentEp + step;
 
             if (step === 1 && newEp > totalEps) {
-                // Fine Stagione: Saluta e torna al bot
                 isIntentionalExit = true;
                 window.location.href = `tg://resolve?domain=${botUsername}&start=nextS_${mediaId}_${currentSeason + 1}`;
             } else if (newEp > 0) {
-                // Navigazione interna veloce
                 currentEp = newEp;
                 updatePlayerSource();
             }
@@ -334,7 +367,6 @@
 
         window.addEventListener('keydown', function(e) { if (e.key === 'f' || e.key === 'F') toggleFullscreen(e); });
 
-        // Ascolta l'uscita dallo schermo intero
         document.addEventListener('fullscreenchange', exitHandler);
         document.addEventListener('webkitfullscreenchange', exitHandler);
 
@@ -343,12 +375,10 @@
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
 
-            // Se l'utente non è in fullscreen, il player è attivo e NON ha cliccato "Salva ed Esci"
             if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
                 document.getElementById('btnModalSave').href = getBotSaveLink();
                 modal.style.display = 'flex';
                 
-                // Mettiamo in pausa il player
                 isPaused = true;
                 updateUI();
                 
@@ -362,7 +392,7 @@
             modal.style.opacity = '0';
             modalBox.style.transform = 'translateY(20px)';
             setTimeout(() => { modal.style.display = 'none'; }, 300);
-            toggleFullscreen(); // Rientra in fullscreen
+            toggleFullscreen(); 
         }
 
         // --- 6. LOGICA MOUSE E UI ---
@@ -384,7 +414,6 @@
         function updateUI() {
             let showPrev = false, showNext = false, showTopBar = false;
 
-            // Logica del Tasto Next Intelligente
             if (!isMovie) {
                 if (currentEp === totalEps) {
                     btnNext.innerHTML = "Prossima Stagione ⏭️";
@@ -399,8 +428,6 @@
                 if (!isMovie) showNext = true; 
             } else {
                 if (!isMovie && currentEp > 1 && lastTime <= 5) showPrev = true;
-                
-                // MODIFICA QUI: Cambiato il 10 in 30
                 if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
 
