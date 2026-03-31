@@ -118,6 +118,13 @@
 
         /* --- RESPONSIVE MOBILE E ROTAZIONE --- */
         @media (max-width: 768px), (max-height: 500px) {
+            
+            /* DISATTIVAZIONE SENSORI SU MOBILE */
+            .edge-sensor { 
+                display: none !important; 
+                pointer-events: none !important; 
+            }
+
             #playerTitle { top: 15px; left: 15px; font-size: 14px; }
             .overlay-btn { padding: 6px 14px; font-size: 11px; border-radius: 20px; letter-spacing: 0.5px; }
             
@@ -165,6 +172,7 @@
         <div id="sensorLeft" class="edge-sensor"></div>
         <div id="sensorRight" class="edge-sensor"></div>
         <div id="sensorBottom" class="edge-sensor"></div>
+        
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
 
         <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
@@ -207,15 +215,14 @@
         
         function getOS() { const ua = navigator.userAgent || navigator.vendor || window.opera; if (/android/i.test(ua)) return "Android"; if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS"; return "Desktop"; }
         function getBrowserType() { const ua = navigator.userAgent; if (ua.indexOf("Firefox") > -1) return "firefox"; if (ua.indexOf("Edg") > -1) return "edge"; if (ua.indexOf("Chrome") > -1) return "chrome"; return "unknown"; }
-        
         const os = getOS();
-        // Rilevamento globale di Aloha (usato per le scelte drastiche)
-        const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
 
         let isIntentionalExit = false;
         function setExitingFlag() { isIntentionalExit = true; }
 
-        // --- 2. GENERAZIONE URL DINAMICA (CON START-AT) ---
+        const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
+
+        // --- 2. GENERAZIONE URL DINAMICA ---
         function updatePlayerSource(startAtTime = 0) {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
@@ -223,7 +230,6 @@
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
             
-            // Se passiamo un tempo (Ricarica Brutale Aloha), accodiamo startAt
             if (startAtTime > 0) {
                 urlParams += `&startAt=${Math.floor(startAtTime)}`;
             }
@@ -387,7 +393,6 @@
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
 
-            // SE SIAMO SU ALOHA: RICARICA BRUTALE CON START-AT
             if (isAlohaBrowser) {
                 modal.style.opacity = '0';
                 modalBox.style.transform = 'translateY(20px)';
@@ -397,12 +402,9 @@
                 else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
                 else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
 
-                // Usa il current time per ricaricare il video a quel minuto esatto
                 updatePlayerSource(lastTime);
-
                 handleUserActivity();
             } 
-            // COMPORTAMENTO STANDARD PER GLI ALTRI BROWSER (Veloce e fluido)
             else {
                 const videoFrame = document.getElementById('videoFrame');
                 videoFrame.style.display = 'none';
