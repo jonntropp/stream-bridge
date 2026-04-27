@@ -338,16 +338,12 @@
                 window.location.href = `tg://resolve?domain=${botUsername}&start=nextS_${mediaId}_${currentSeason + 1}`;
             } else if (newEp > 0) {
                 currentEp = newEp;
-                
-                // FIX: Resettiamo tutto prima di caricare il nuovo video!
+                // FIX: Resettiamo il flag di uscita, perché stiamo iniziando una nuova visione
                 isIntentionalExit = false; 
-                lastTime = 0;      
-                lastDuration = 0;  
-                isPaused = false;  
-                
                 updatePlayerSource();
             }
         }
+
         // --- 6. FULLSCREEN & MODAL SALVATAGGIO ---
         function toggleFullscreen(e) {
             if(e) e.stopPropagation(); 
@@ -488,7 +484,7 @@
 
         let isPaused = false; let lastTime = 0; let lastDuration = 0; let isMouseActive = false; let mouseHideTimeout;
 
-       function updateUI() {
+        function updateUI() {
             let showPrev = false, showNext = false, showTopBar = false;
 
             if (!isMovie) {
@@ -504,8 +500,7 @@
                 if (!isMovie && currentEp > 1) showPrev = true;
                 if (!isMovie) showNext = true; 
             } else {
-                // LOGICA ORIGINALE RIPRISTINATA (con l'aggiunta di lastTime > 0)
-                if (!isMovie && currentEp > 1 && lastTime > 0 && lastTime <= 5) showPrev = true;
+                if (!isMovie && currentEp > 1 && lastTime <= 5) showPrev = true;
                 if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
 
@@ -514,6 +509,7 @@
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
         }
+
         function handleUserActivity() {
             isMouseActive = true; updateUI();
             clearTimeout(mouseHideTimeout);
@@ -521,11 +517,9 @@
         }
 
         document.querySelectorAll('.edge-sensor').forEach(sensor => { sensor.addEventListener('mousemove', handleUserActivity); });
-        
-        // AGGIUNTO: Intercetta il mouse ovunque nella pagina (sopra i bottoni, testi, ecc.)
-        window.addEventListener('mousemove', handleUserActivity);
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
+
         window.addEventListener('message', (event) => {
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
