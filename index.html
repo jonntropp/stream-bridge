@@ -497,33 +497,44 @@
                 } else {
                     btnNext.innerHTML = "Prossimo Ep. ⏭️";
                 }
+
+                // 1. Mostra SEMPRE il Next negli ultimi 30 secondi (Logica Indipendente)
+                if (lastDuration > 0 && (lastDuration - lastTime <= 30)) {
+                    showNext = true;
+                }
+                
+                // 2. Mostra SEMPRE il Prev nei primi 5 secondi (Logica Indipendente)
+                if (currentEp > 1 && lastTime > 0 && lastTime <= 5) {
+                    showPrev = true;
+                }
             }
 
+            // 3. Regole Mouse e Pausa (Aggiungono i bottoni, ma non li tolgono se la regola 1 o 2 dicono di mostrarli)
             if (isPaused || isMouseActive) {
                 showTopBar = true;
                 if (!isMovie && currentEp > 1) showPrev = true;
                 if (!isMovie) showNext = true; 
-            } else {
-                // LOGICA ORIGINALE RIPRISTINATA (con l'aggiunta di lastTime > 0)
-                if (!isMovie && currentEp > 1 && lastTime > 0 && lastTime <= 5) showPrev = true;
-                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
 
+            // 4. APPLICAZIONE CLASSI CSS
             showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
             showTopBar ? playerTitle.classList.add('visible') : playerTitle.classList.remove('visible');
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
         }
+
         function handleUserActivity() {
-            isMouseActive = true; updateUI();
+            isMouseActive = true; 
+            updateUI();
             clearTimeout(mouseHideTimeout);
             mouseHideTimeout = setTimeout(() => { isMouseActive = false; updateUI(); }, 3500); 
         }
 
-        document.querySelectorAll('.edge-sensor').forEach(sensor => { sensor.addEventListener('mousemove', handleUserActivity); });
-        
-        // AGGIUNTO: Intercetta il mouse ovunque nella pagina (sopra i bottoni, testi, ecc.)
-        window.addEventListener('mousemove', handleUserActivity);
+        // I sensori ingranditi intercetteranno il mouse senza bloccare i click del video
+        document.querySelectorAll('.edge-sensor').forEach(sensor => { 
+            sensor.addEventListener('mousemove', handleUserActivity); 
+            sensor.addEventListener('touchstart', handleUserActivity);
+        });
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
         window.addEventListener('message', (event) => {
