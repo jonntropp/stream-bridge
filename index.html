@@ -312,15 +312,14 @@
             else { btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios; btnInstall.innerText = "Installa Aloha Browser"; }
         };
 
-       // --- 5. BINGE-WATCHING & SALVATAGGIO ---
+        // --- 5. BINGE-WATCHING & SALVATAGGIO ---
         function getBotSaveLink() {
             if (isMovie) {
-                // Formato Film: ID_0_0_1
                 return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_0_0_1`;
             }
-            // Formato Serie: ID_S_E_TOT
             return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}_${totalEps}`;
         }
+        
         function saveAndExit(e) {
             if(e) e.preventDefault();
             isIntentionalExit = true; 
@@ -338,8 +337,14 @@
                 window.location.href = `tg://resolve?domain=${botUsername}&start=nextS_${mediaId}_${currentSeason + 1}`;
             } else if (newEp > 0) {
                 currentEp = newEp;
-                // FIX: Resettiamo il flag di uscita, perché stiamo iniziando una nuova visione
+                
+                // RESET TOTALE STATO
                 isIntentionalExit = false; 
+                lastTime = 0;      
+                lastDuration = 0;  
+                isPaused = false;  
+                isEnded = false;
+                
                 updatePlayerSource();
             }
         }
@@ -396,12 +401,10 @@
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
             
-            // Troviamo il container e il vecchio iframe
             const playerContainer = document.getElementById('playerContainer');
             const oldIframe = document.getElementById('videoFrame');
 
             if (isAlohaBrowser) {
-                // 1. UCCISIONE PULITA
                 if (oldIframe) {
                     playerContainer.removeChild(oldIframe);
                 }
@@ -432,14 +435,12 @@
 
                     playerContainer.appendChild(newIframe);
                     
-                    // FIX: Sblocchiamo i pulsanti resettando lo stato di pausa!
                     isPaused = false; 
                     handleUserActivity();
                 }, 1000); 
 
             } 
             else {
-                // BROWSER STANDARD
                 if (oldIframe) oldIframe.style.display = 'none';
 
                 if (docElm.requestFullscreen) docElm.requestFullscreen();
@@ -463,11 +464,11 @@
                     }, 100);
                 }
 
-                // FIX: Sblocchiamo i pulsanti resettando lo stato di pausa!
                 isPaused = false;
                 handleUserActivity();
             }
         }
+
         // --- 7. LOGICA MOUSE E UI ---
         function startImmersiveExperience() {
             updatePlayerSource(); 
@@ -482,7 +483,12 @@
         const btnBot = document.getElementById('btnBot');
         const playerTitle = document.getElementById('playerTitle');
 
-        let isPaused = false; let lastTime = 0; let lastDuration = 0; let isMouseActive = false; let mouseHideTimeout;
+        let isPaused = false; 
+        let isEnded = false; 
+        let lastTime = 0; 
+        let lastDuration = 0; 
+        let isMouseActive = false; 
+        let mouseHideTimeout;
 
         function updateUI() {
             let showPrev = false, showNext = false, showTopBar = false;
@@ -495,15 +501,27 @@
                 }
             }
 
-            if (isPaused || isMouseActive) {
+            // 1. Mostriamo la barra superiore se in Pausa, Finito o Mouse Attivo
+            if (isPaused || isMouseActive || isEnded) {
                 showTopBar = true;
-                if (!isMovie && currentEp > 1) showPrev = true;
-                if (!isMovie) showNext = true; 
-            } else {
-                if (!isMovie && currentEp > 1 && lastTime <= 5) showPrev = true;
-                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
 
+            // 2. Logica Bottoni (Indipendente dal mouse per i timer)
+            if (!isMovie) {
+                // Il Next appare se muovi il mouse (showTopBar) OPPURE se mancano 30 secondi
+                if (showTopBar || (lastDuration > 0 && (lastDuration - lastTime <= 30))) {
+                    showNext = true;
+                }
+                
+                // Il Prev appare se muovi il mouse OPPURE nei primi 5 secondi effettivi
+                if (currentEp > 1) {
+                    if (showTopBar || (lastTime > 0 && lastTime <= 5)) {
+                        showPrev = true;
+                    }
+                }
+            }
+
+            // 3. APPLICAZIONE CLASSI CSS
             showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
             showTopBar ? playerTitle.classList.add('visible') : playerTitle.classList.remove('visible');
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
@@ -511,26 +529,62 @@
         }
 
         function handleUserActivity() {
-            isMouseActive = true; updateUI();
+            isMouseActive = true; 
+            updateUI();
             clearTimeout(mouseHideTimeout);
             mouseHideTimeout = setTimeout(() => { isMouseActive = false; updateUI(); }, 3500); 
         }
 
-        document.querySelectorAll('.edge-sensor').forEach(sensor => { sensor.addEventListener('mousemove', handleUserActivity); });
+        document.querySelectorAll('.edge-sensor').forEach(sensor => { 
+            sensor.addEventListener('mousemove', handleUserActivity); 
+            sensor.addEventListener('touchstart', handleUserActivity);
+        });
+        window.addEventListener('mousemove', handleUserActivity);
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
 
+        // --- 8. ASCOLTO EVENTI DEL PLAYER (SWITCH API) ---
         window.addEventListener('message', (event) => {
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                
                 if (data && data.type === 'PLAYER_EVENT' && data.data) {
                     const payload = data.data;
-                    if (payload.event === 'timeupdate') { lastTime = payload.currentTime; lastDuration = payload.duration; updateUI(); } 
-                    else if (payload.event === 'pause') { isPaused = true; updateUI(); } 
-                    else if (payload.event === 'play') { isPaused = false; updateUI(); }
-                    else if (payload.event === 'ended') { 
-                        if (!isMovie) btnNext.classList.add('visible'); 
-                        btnBot.classList.add('visible'); playerTitle.classList.add('visible'); 
+                    
+                    switch (payload.event) {
+                        case 'timeupdate':
+                            if (payload.currentTime !== undefined) {
+                                lastTime = Number(payload.currentTime); 
+                            }
+                            // Salviamo la durata SOLO se è valida, per evitare che si azzeri
+                            if (payload.duration !== undefined && Number(payload.duration) > 0) {
+                                lastDuration = Number(payload.duration); 
+                            }
+                            updateUI();
+                            break;
+                            
+                        case 'seeked':
+                            if (payload.currentTime !== undefined) {
+                                lastTime = Number(payload.currentTime);
+                            }
+                            updateUI();
+                            break;
+                            
+                        case 'pause':
+                            isPaused = true; 
+                            updateUI();
+                            break;
+                            
+                        case 'play':
+                            isPaused = false; 
+                            isEnded = false;
+                            updateUI();
+                            break;
+                            
+                        case 'ended':
+                            isEnded = true;
+                            updateUI();
+                            break;
                     }
                 }
             } catch (e) {}
