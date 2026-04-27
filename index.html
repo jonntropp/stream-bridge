@@ -141,27 +141,9 @@
             .modal-box p { font-size: 13px; }
             .modal-btns .btn { padding: 12px; font-size: 14px; }
         }
-        /* --- DEBUG OVERLAY --- */
-        #debugBox {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 0, 0, 0.8);
-            color: #fff;
-            padding: 5px 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 10000; /* Lo mettiamo sopra a tutto */
-            pointer-events: none; /* Ignora i click del mouse */
-        }
     </style>
 </head>
 <body>
-
-    <div class="container" id="authContainer">
 
     <div class="container" id="authContainer">
         <div id="loaderView"><div class="loader"></div><p style="font-size: 12px; color: #555;">Verifica sicurezza...</p></div>
@@ -188,7 +170,6 @@
     </div>
 
     <div id="playerContainer">
-        
         <div id="sensorTop" class="edge-sensor"></div>
         <div id="sensorLeft" class="edge-sensor"></div>
         <div id="sensorRight" class="edge-sensor"></div>
@@ -544,15 +525,7 @@
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 if (data && data.type === 'PLAYER_EVENT' && data.data) {
                     const payload = data.data;
-                    if (payload.event === 'timeupdate') { 
-                        lastTime = payload.currentTime; 
-                        lastDuration = payload.duration; 
-                        updateUI(); 
-                        
-                        // DEBUG: Stampa a schermo i secondi
-                        document.getElementById('debugOverlay').innerText = 
-                            `Time: ${Math.floor(lastTime)}s / ${Math.floor(lastDuration)}s | Ep: ${currentEp}`;
-                    }
+                    if (payload.event === 'timeupdate') { lastTime = payload.currentTime; lastDuration = payload.duration; updateUI(); } 
                     else if (payload.event === 'pause') { isPaused = true; updateUI(); } 
                     else if (payload.event === 'play') { isPaused = false; updateUI(); }
                     else if (payload.event === 'ended') { 
