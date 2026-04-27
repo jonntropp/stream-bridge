@@ -71,12 +71,12 @@
         /* Modificata per permettere ridimensionamento via JS */
         iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; transition: width 0.1s, height 0.1s; }
 
-        /* SENSORI MOUSE E TRIGGER FULLSCREEN */
+        /* SENSORI MOUSE E TRIGGER FULLSCREEN - INGRANDITI PER BYPASSARE L'IFRAME */
         .edge-sensor { position: absolute; z-index: 20; }
-        #sensorTop { top: 0; left: 0; width: 100%; height: 15%; }
-        #sensorLeft { top: 0; left: 0; width: 15%; height: calc(100% - 90px); }
-        #sensorRight { top: 0; right: 0; width: 15%; height: calc(100% - 90px); }
-        #sensorBottom { bottom: 90px; left: 0; width: 100%; height: 15%; }
+        #sensorTop { top: 0; left: 0; width: 100%; height: 25%; }
+        #sensorLeft { top: 0; left: 0; width: 20%; height: calc(100% - 90px); }
+        #sensorRight { top: 0; right: 0; width: 20%; height: calc(100% - 90px); }
+        #sensorBottom { bottom: 90px; left: 0; width: 100%; height: 25%; }
         #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
 
         /* --- TITOLO E PULSANTI --- */
@@ -339,11 +339,11 @@
             } else if (newEp > 0) {
                 currentEp = newEp;
                 
-                // FIX: Resettiamo i flag altrimenti il nuovo episodio eredita la "pausa" del vecchio
+                // FIX: Resettiamo tutto prima di caricare il nuovo video!
                 isIntentionalExit = false; 
-                isPaused = false; 
-                lastTime = 0;
-                lastDuration = 0;
+                lastTime = 0;      
+                lastDuration = 0;  
+                isPaused = false;  
                 
                 updatePlayerSource();
             }
@@ -498,32 +498,47 @@
                 } else {
                     btnNext.innerHTML = "Prossimo Ep. ⏭️";
                 }
+
+                // 1. Mostra SEMPRE il Next negli ultimi 30 secondi (Logica Indipendente)
+                if (lastDuration > 0 && (lastDuration - lastTime <= 30)) {
+                    showNext = true;
+                }
+                
+                // 2. Mostra SEMPRE il Prev nei primi 5 secondi (Logica Indipendente)
+                if (currentEp > 1 && lastTime > 0 && lastTime <= 5) {
+                    showPrev = true;
+                }
             }
 
+            // 3. Regole Mouse e Pausa (Aggiungono i bottoni, ma non li tolgono se la regola 1 o 2 dicono di mostrarli)
             if (isPaused || isMouseActive) {
                 showTopBar = true;
                 if (!isMovie && currentEp > 1) showPrev = true;
                 if (!isMovie) showNext = true; 
-            } else {
-                // FIX: Aggiunto lastTime > 0. Così scompare se il video sta ancora caricando a zero secondi!
-                if (!isMovie && currentEp > 1 && lastTime > 0 && lastTime <= 5) showPrev = true;
-                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
 
+            // 4. APPLICAZIONE CLASSI CSS
             showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
             showTopBar ? playerTitle.classList.add('visible') : playerTitle.classList.remove('visible');
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
         }
+
         function handleUserActivity() {
-            isMouseActive = true; updateUI();
+            isMouseActive = true; 
+            updateUI();
             clearTimeout(mouseHideTimeout);
             mouseHideTimeout = setTimeout(() => { isMouseActive = false; updateUI(); }, 3500); 
         }
 
-        document.querySelectorAll('.edge-sensor').forEach(sensor => { sensor.addEventListener('mousemove', handleUserActivity); });
+        // I sensori ingranditi intercetteranno il mouse senza bloccare i click del video
+        document.querySelectorAll('.edge-sensor').forEach(sensor => { 
+            sensor.addEventListener('mousemove', handleUserActivity); 
+            sensor.addEventListener('touchstart', handleUserActivity);
+        });
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
+        window.addEventListener('mousemove', handleUserActivity);
 
         window.addEventListener('message', (event) => {
             try {
