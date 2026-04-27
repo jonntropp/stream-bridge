@@ -498,23 +498,39 @@
                 } else {
                     btnNext.innerHTML = "Prossimo Ep. ⏭️";
                 }
+            }
 
-                // 1. Mostra SEMPRE il Next negli ultimi 30 secondi (Logica Indipendente)
-                if (lastDuration > 0 && (lastDuration - lastTime <= 30)) {
+            // 1. Mostriamo la barra superiore (Titolo + Salva) se è in Pausa o Mouse Attivo
+            if (isPaused || isMouseActive) {
+                showTopBar = true;
+            }
+
+            // 2. Mostriamo i bottoni di navigazione SOLO se il mouse è attivo (o è in pausa)
+            if (isMouseActive || isPaused) {
+                
+                // Il Next lo facciamo vedere sempre quando muovi il mouse (se è una serie)
+                if (!isMovie) {
                     showNext = true;
                 }
-                
-                // 2. Mostra SEMPRE il Prev nei primi 5 secondi (Logica Indipendente)
-                if (currentEp > 1 && lastTime > 0 && lastTime <= 5) {
+
+                // Il Prev lo facciamo vedere solo se non siamo al primo episodio
+                if (!isMovie && currentEp > 1) {
                     showPrev = true;
                 }
             }
 
-            // 3. Regole Mouse e Pausa (Aggiungono i bottoni, ma non li tolgono se la regola 1 o 2 dicono di mostrarli)
-            if (isPaused || isMouseActive) {
-                showTopBar = true;
-                if (!isMovie && currentEp > 1) showPrev = true;
-                if (!isMovie) showNext = true; 
+            // 3. LA MAGIA DEI 30 SECONDI E DEI 5 SECONDI (AUTOMATICA, ANCHE SENZA MOUSE)
+            // Se siamo alla fine o all'inizio, li "forziamo" a comparire ANCHE SE non tocchi il mouse.
+            if (!isMovie) {
+                // Negli ultimi 30 secondi, il Next compare da solo
+                if (lastDuration > 0 && (lastDuration - lastTime <= 30)) {
+                    showNext = true;
+                }
+                
+                // Nei primi 5 secondi, il Prev compare da solo (ma scompare al secondo 6!)
+                if (currentEp > 1 && lastTime > 0 && lastTime <= 5) {
+                    showPrev = true;
+                }
             }
 
             // 4. APPLICAZIONE CLASSI CSS
