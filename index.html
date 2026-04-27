@@ -540,20 +540,52 @@
         window.addEventListener('click', handleUserActivity);
         window.addEventListener('mousemove', handleUserActivity);
 
+       // --- 8. ASCOLTO EVENTI DEL PLAYER (API COMPLETA) ---
         window.addEventListener('message', (event) => {
             try {
+                // Decodifica il messaggio in arrivo dall'Iframe
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                
+                // Controlla se è esattamente il formato che hai scoperto tu
                 if (data && data.type === 'PLAYER_EVENT' && data.data) {
                     const payload = data.data;
-                    if (payload.event === 'timeupdate') { lastTime = payload.currentTime; lastDuration = payload.duration; updateUI(); } 
-                    else if (payload.event === 'pause') { isPaused = true; updateUI(); } 
-                    else if (payload.event === 'play') { isPaused = false; updateUI(); }
-                    else if (payload.event === 'ended') { 
-                        if (!isMovie) btnNext.classList.add('visible'); 
-                        btnBot.classList.add('visible'); playerTitle.classList.add('visible'); 
+                    
+                    // Gestione pulita di tutte le opzioni possibili
+                    switch (payload.event) {
+                        
+                        case 'timeupdate':
+                            lastTime = payload.currentTime; 
+                            lastDuration = payload.duration; 
+                            updateUI();
+                            break;
+                            
+                        case 'seeked':
+                            // L'utente ha spostato la barra del tempo manualmente
+                            lastTime = payload.currentTime;
+                            updateUI();
+                            break;
+                            
+                        case 'pause':
+                            isPaused = true; 
+                            updateUI();
+                            break;
+                            
+                        case 'play':
+                            isPaused = false; 
+                            updateUI();
+                            break;
+                            
+                        case 'ended':
+                            // Il video è finito: mostriamo tutto per far scegliere l'utente
+                            if (!isMovie) btnNext.classList.add('visible'); 
+                            btnBot.classList.add('visible'); 
+                            playerTitle.classList.add('visible'); 
+                            break;
                     }
                 }
-            } catch (e) {}
+            } catch (e) {
+                // Ignora messaggi non validi o sporchi inviati da altre estensioni
+            }
         });
     </script>
 </body>
