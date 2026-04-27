@@ -491,6 +491,7 @@
         function updateUI() {
             let showPrev = false, showNext = false, showTopBar = false;
 
+            // Determina il testo del tasto Next
             if (!isMovie) {
                 if (currentEp === totalEps) {
                     btnNext.innerHTML = "Prossima Stagione ⏭️";
@@ -499,21 +500,38 @@
                 }
             }
 
+            // REGOLE DI VISIBILITA'
+            // La TopBar (Titolo e Salva) si vede se c'è pausa o mouse attivo
             if (isPaused || isMouseActive) {
                 showTopBar = true;
-                if (!isMovie && currentEp > 1) showPrev = true;
-                if (!isMovie) showNext = true; 
-            } else {
-                if (!isMovie && currentEp > 1 && lastTime <= 5) showPrev = true;
-                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
 
+            // Pulsante PRECEDENTE
+            if (!isMovie && currentEp > 1) {
+                // Si vede SEMPRE se il mouse è attivo, OPPURE nei primi 5 secondi effettivi di riproduzione
+                if (isMouseActive || (lastTime > 0 && lastTime <= 5 && !isPaused)) {
+                    showPrev = true;
+                }
+            }
+
+            // Pulsante SUCCESSIVO
+            if (!isMovie) {
+                // Si vede SEMPRE se il mouse è attivo o in pausa
+                if (isMouseActive || isPaused) {
+                     showNext = true;
+                } 
+                // Altrimenti, appare negli ultimi 30 secondi
+                else if (lastDuration > 0 && (lastDuration - lastTime <= 30)) {
+                     showNext = true;
+                }
+            }
+
+            // APPLICA LE CLASSI CSS
             showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
             showTopBar ? playerTitle.classList.add('visible') : playerTitle.classList.remove('visible');
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
         }
-
         function handleUserActivity() {
             isMouseActive = true; updateUI();
             clearTimeout(mouseHideTimeout);
