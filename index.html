@@ -525,7 +525,7 @@
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 if (data && data.type === 'PLAYER_EVENT' && data.data) {
                     const payload = data.data;
-                    if (payload.event === 'timeupdate') { lastTime = payload.currentTime; lastDuration = payload.duration; updateUI(); } 
+                    if (payload.event === 'timeupdate') { lastTime = payload.currentTime; lastDuration = payload.duration;console.log("⏱️ VIXSRC TICK -> Tempo: " + lastTime + " | Durata Totale: " + lastDuration); updateUI(); } 
                     else if (payload.event === 'pause') { isPaused = true; updateUI(); } 
                     else if (payload.event === 'play') { isPaused = false; updateUI(); }
                     else if (payload.event === 'ended') { 
