@@ -71,12 +71,8 @@
         /* Modificata per permettere ridimensionamento via JS */
         iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; transition: width 0.1s, height 0.1s; }
 
-        /* SENSORI MOUSE E TRIGGER FULLSCREEN */
-        .edge-sensor { position: absolute; z-index: 20; }
-        #sensorTop { top: 0; left: 0; width: 100%; height: 15%; }
-        #sensorLeft { top: 0; left: 0; width: 15%; height: calc(100% - 90px); }
-        #sensorRight { top: 0; right: 0; width: 15%; height: calc(100% - 90px); }
-        #sensorBottom { bottom: 90px; left: 0; width: 100%; height: 15%; }
+        /* RILEVAMENTO MOUSE (a tutto schermo) E TRIGGER FULLSCREEN */
+        #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; }
         #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
 
         /* --- TITOLO E PULSANTI --- */
@@ -121,10 +117,10 @@
         /* --- RESPONSIVE MOBILE E ROTAZIONE --- */
         @media (max-width: 768px), (max-height: 500px) {
             
-            /* DISATTIVAZIONE SENSORI SU MOBILE */
-            .edge-sensor { 
-                display: none !important; 
-                pointer-events: none !important; 
+            /* DISATTIVAZIONE RILEVAMENTO MOUSE SU MOBILE (il tocco deve arrivare all'iframe) */
+            #mouseCatcher {
+                display: none !important;
+                pointer-events: none !important;
             }
 
             #playerTitle { top: 15px; left: 15px; font-size: 14px; }
@@ -170,10 +166,7 @@
     </div>
 
     <div id="playerContainer">
-        <div id="sensorTop" class="edge-sensor"></div>
-        <div id="sensorLeft" class="edge-sensor"></div>
-        <div id="sensorRight" class="edge-sensor"></div>
-        <div id="sensorBottom" class="edge-sensor"></div>
+        <div id="mouseCatcher"></div>
         
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
 
@@ -510,13 +503,26 @@
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
         }
 
+        const mouseCatcher = document.getElementById('mouseCatcher');
+
         function handleUserActivity() {
             isMouseActive = true; updateUI();
+
+            // Menu visibile -> lascio passare i click al video (seek/play/pausa nativi funzionano)
+            if (mouseCatcher) mouseCatcher.style.pointerEvents = 'none';
+
             clearTimeout(mouseHideTimeout);
-            mouseHideTimeout = setTimeout(() => { isMouseActive = false; updateUI(); }, 3500); 
+            mouseHideTimeout = setTimeout(() => {
+                isMouseActive = false; updateUI();
+                // Ri-armo il rilevatore per intercettare il prossimo movimento sul video
+                if (mouseCatcher) mouseCatcher.style.pointerEvents = 'auto';
+            }, 3500);
         }
 
-        document.querySelectorAll('.edge-sensor').forEach(sensor => { sensor.addEventListener('mousemove', handleUserActivity); });
+        // Qualsiasi minimo movimento sopra il video mostra il menu
+        if (mouseCatcher) mouseCatcher.addEventListener('mousemove', handleUserActivity);
+        // Mantengo il menu vivo mentre il mouse si muove sui pulsanti/titolo
+        [btnPrev, btnNext, btnBot, playerTitle].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
 
