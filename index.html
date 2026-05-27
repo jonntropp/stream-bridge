@@ -72,7 +72,7 @@
         iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; transition: width 0.1s, height 0.1s; }
 
         /* RILEVAMENTO MOUSE (a tutto schermo) E TRIGGER FULLSCREEN */
-        #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; }
+        #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
         #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
 
         /* --- TITOLO E PULSANTI --- */
@@ -86,7 +86,7 @@
             text-decoration: none; padding: 10px 24px; border-radius: 30px; 
             font-size: 14px; font-weight: 500; letter-spacing: 0.8px; border: 1px solid rgba(255, 255, 255, 0.08); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
-            opacity: 0; pointer-events: none; transition: all 1.0s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
             z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-family: 'Poppins', sans-serif;
         }
         
@@ -214,6 +214,7 @@
         const os = getOS();
 
         let isIntentionalExit = false;
+        let isTogglingFs = false; // true quando l'uscita dal fullscreen è un toggle volontario (tasto 'f'/hotspot)
         function setExitingFlag() { isIntentionalExit = true; }
 
         const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
@@ -353,19 +354,54 @@
                 else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
                 else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
             } else {
+                isTogglingFs = true; // uscita volontaria: non è un abbandono del player
                 if (document.exitFullscreen) document.exitFullscreen();
                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
                 else if (document.msExitFullscreen) document.msExitFullscreen();
+                setTimeout(() => { isTogglingFs = false; }, 1500); // safety: il flag non resta mai bloccato
             }
         }
 
-        window.addEventListener('keydown', function(e) { if (e.key === 'f' || e.key === 'F') toggleFullscreen(e); });
+        // Avvio/pausa "best-effort" verso il player cross-origin (stessa tecnica già usata nel file).
+        // Nota: vixsrc documenta solo eventi IN USCITA; se non accetta comandi, il video non risponderà
+        // (in quel caso restano i controlli nativi del player). Lo stato UI viene comunque aggiornato.
+        function togglePlayPause() {
+            const frame = document.getElementById('videoFrame');
+            if (!frame) return;
+            const wantPause = !isPaused;
+            try {
+                const win = frame.contentWindow;
+                win.postMessage(JSON.stringify({ event: 'command', func: wantPause ? 'pauseVideo' : 'playVideo', args: '' }), '*');
+                win.postMessage({ cmd: wantPause ? 'pause' : 'play' }, '*');
+                win.postMessage(wantPause ? 'pause' : 'play', '*');
+            } catch (err) {}
+            isPaused = wantPause;
+            handleUserActivity(); // feedback immediato: mostra il menu
+        }
+
+        window.addEventListener('keydown', function(e) {
+            // Le scorciatoie valgono solo dentro al player
+            if (document.getElementById('playerContainer').style.display !== 'block') return;
+            if (e.repeat) return; // ignora l'auto-ripetizione del tasto tenuto premuto
+
+            if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleFullscreen(e);
+            } else if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault(); // niente scroll della pagina
+                togglePlayPause();
+            }
+        });
 
         document.addEventListener('fullscreenchange', exitHandler);
         document.addEventListener('webkitfullscreenchange', exitHandler);
 
         function exitHandler() {
             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+
+            // Toggle volontario del fullscreen (tasto 'f' / hotspot): è solo un toggle, non un'uscita
+            if (!isFullscreen && isTogglingFs) { isTogglingFs = false; return; }
+
             const modal = document.getElementById('saveModal');
             const modalBox = document.getElementById('modalBox');
 
@@ -531,7 +567,24 @@
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
 
+        // Pannello di debug a schermo (?debug=1): mostra cosa invia vixsrc anche dove non c'è la console (browser in-app)
+        let debugBox = null;
+        if (DEBUG) {
+            debugBox = document.createElement('div');
+            debugBox.style.cssText = 'position:fixed;top:8px;left:8px;z-index:99999;background:rgba(0,0,0,.85);color:#0f0;font:11px/1.4 monospace;padding:8px 10px;border-radius:6px;max-width:92vw;white-space:pre-wrap;pointer-events:none;';
+            debugBox.textContent = 'DEBUG attivo — nessun messaggio ancora ricevuto da vixsrc';
+            (document.body || document.documentElement).appendChild(debugBox);
+        }
+
         window.addEventListener('message', (event) => {
+            if (DEBUG && debugBox) {
+                try {
+                    const raw = typeof event.data === 'string' ? event.data : JSON.stringify(event.data);
+                    debugBox.textContent = 'origin: ' + event.origin
+                        + '\nt: ' + lastTime.toFixed(1) + 's  dur: ' + lastDuration.toFixed(1) + 's'
+                        + '\nraw: ' + String(raw).slice(0, 180);
+                } catch (_) {}
+            }
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 if (DEBUG) console.log('[player msg]', event.origin, data);
