@@ -117,11 +117,10 @@
         /* --- RESPONSIVE MOBILE E ROTAZIONE --- */
         @media (max-width: 768px), (max-height: 500px) {
             
-            /* DISATTIVAZIONE RILEVAMENTO MOUSE SU MOBILE (il tocco deve arrivare all'iframe) */
-            #mouseCatcher {
-                display: none !important;
-                pointer-events: none !important;
-            }
+            /* Su mobile il catcher resta attivo: serve a far ricomparire il menu al tocco.
+               Quando il menu è visibile diventa pointer-events:none (gestito da JS) e i
+               tocchi successivi arrivano al video. Niente cursore su touch. */
+            #mouseCatcher { cursor: auto; }
 
             #playerTitle { top: 15px; left: 15px; font-size: 14px; }
             .overlay-btn { padding: 6px 14px; font-size: 11px; border-radius: 20px; letter-spacing: 0.5px; }
@@ -560,9 +559,13 @@
             }, 3500);
         }
 
-        // Qualsiasi minimo movimento sopra il video mostra il menu
+        // Qualsiasi minimo movimento sopra il video mostra il menu (desktop)
         if (mouseCatcher) mouseCatcher.addEventListener('mousemove', handleUserActivity);
-        // Mantengo il menu vivo mentre il mouse si muove sui pulsanti/titolo
+        // Mobile: il tocco sul catcher rivela il menu; preventDefault evita che il tocco
+        // "trapassi" all'iframe. Col menu visibile il catcher è pointer-events:none,
+        // quindi i tocchi successivi raggiungono i controlli nativi del player.
+        if (mouseCatcher) mouseCatcher.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserActivity(); }, { passive: false });
+        // Mantengo il menu vivo mentre il puntatore si muove sui pulsanti/titolo
         [btnPrev, btnNext, btnBot, playerTitle].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
