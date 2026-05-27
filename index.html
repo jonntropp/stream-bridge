@@ -500,7 +500,7 @@
                 if (!isMovie && currentEp > 1) showPrev = true;
                 if (!isMovie) showNext = true; 
             } else {
-                if (!isMovie && currentEp > 1 && lastTime <= 5) showPrev = true;
+                if (!isMovie && currentEp > 1 && lastDuration > 0 && lastTime <= 5) showPrev = true;
                 if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
 
