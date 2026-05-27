@@ -193,6 +193,7 @@
     <script>
         // --- 1. LETTURA DATI SMART ---
         const params = new URLSearchParams(window.location.search);
+        const DEBUG = params.get('debug') === '1';
         
         const mediaId = params.get('id');
         const showTitle = params.get('title') ? decodeURIComponent(params.get('title')) : 'Streaming';
@@ -238,6 +239,10 @@
             } else {
                 document.getElementById('modalDescText').innerHTML = "Vuoi tornare al menu principale su Telegram?";
             }
+
+            // Reset stato di riproduzione: i dati del vecchio episodio non devono
+            // pilotare la comparsa automatica dei pulsanti (primi 5s / ultimi 30s).
+            isPaused = false; lastTime = 0; lastDuration = 0;
         }
 
         // --- 3. REDIRECT ALOHA INTELLIGENTE ---
@@ -529,6 +534,7 @@
         window.addEventListener('message', (event) => {
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                if (DEBUG) console.log('[player msg]', event.origin, data);
                 if (data && data.type === 'PLAYER_EVENT' && data.data) {
                     const payload = data.data;
                     if (payload.event === 'timeupdate') { lastTime = payload.currentTime; lastDuration = payload.duration; updateUI(); } 
