@@ -204,12 +204,18 @@
         let isPaused = false;
 
         // --- 2. GENERAZIONE URL DINAMICA ---
-        function getPlayerUrl() {
+        // Aggiungiamo un argomento per decidere se inserire il parametro "esca"
+        function getPlayerUrl(useTrickParameter = false) {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             
-            let urlParams = `?primaryColor=E50914&secondaryColor=111111`;
+            let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
+            
+            // IL TRUCCO: Aggiungiamo il parametro stupido se richiesto
+            if (useTrickParameter) {
+                urlParams += `&cf_bypass=${Date.now()}`; 
+            }
             
             return src + urlParams;
         }
@@ -218,9 +224,7 @@
             document.getElementById('remoteTitle').innerText = showTitle;
             if (!isMovie) {
                 document.getElementById('remoteSubtitle').innerText = `Stagione ${currentSeason} - Episodio ${currentEp}`;
-                
                 document.getElementById('btnPrev').classList.toggle('disabled', currentEp <= 1);
-                // Permettiamo di cliccare "Next" per passare alla stagione successiva se si è all'ultimo ep
             } else {
                 document.getElementById('remoteSubtitle').innerText = "Film";
                 document.getElementById('btnPrev').classList.add('disabled');
@@ -229,80 +233,41 @@
             document.title = "Telecomando: " + showTitle;
         }
 
-        // --- 3. REDIRECT ALOHA INTELLIGENTE ---
-        function getAlohaRedirectUrl() {
-            let url = new URL(window.location.href);
-            url.searchParams.set('aloha', '1'); 
-            let cleanUrl = url.href.replace(/^https?:\/\//, '');
-            if (os === "Android") return "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
-            if (os === "iOS") return "alohabrowser://" + cleanUrl;
-            return url.href;
-        }
+        // --- (La sezione 3. REDIRECT e 4. AUTENTICAZIONE rimangono invariate) ---
+        // ... (lascia il tuo codice Aloha e Auth qui) ...
 
-        // --- 4. AUTENTICAZIONE E ROUTING ---
-        function preparePlayerScreen() {
-            if (!mediaId) return;
-            document.getElementById('authContainer').style.display = 'none';
-            document.getElementById('startOverlay').style.display = 'flex'; 
-        }
-
-        function setProtectedAndGo() { 
-            localStorage.setItem(STORAGE_KEY, 'true'); 
-            if (os !== "Desktop" && !isAlohaBrowser) window.location.href = getAlohaRedirectUrl();
-            else preparePlayerScreen();
-        }
-
-        function triggerPenalty() { 
-            document.getElementById('choiceContent').style.display = 'none'; 
-            document.getElementById('penaltyView').style.display = 'block'; 
-            let d = 5000, s = Date.now(), b = document.getElementById('timerFill'); 
-            let t = setInterval(() => { 
-                let p = ((Date.now() - s) / d) * 100; b.style.width = Math.min(p, 100) + "%"; 
-                if (p >= 100) { clearInterval(t); preparePlayerScreen(); } 
-            }, 50); 
-        }
-
-        window.onload = function() {
-            if (params.get('reset') === 'true') { localStorage.removeItem(STORAGE_KEY); document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block'; document.getElementById('titleText').innerText = "Configurazione"; document.getElementById('descText').innerHTML = "Chiudi questa pagina dopo l'installazione."; document.querySelector('.btn-confirm').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; return; }
-            
-            const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
-            if (isProtected && mediaId) { 
-                if (os !== "Desktop" && !isAlohaBrowser) window.location.href = getAlohaRedirectUrl();
-                else preparePlayerScreen();
-                return; 
-            }
-            
-            document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block';
-            const btnInstall = document.getElementById('btnInstall');
-            if (!mediaId) { document.getElementById('descText').innerHTML = "Errore: Dati mancanti."; document.querySelector('.btn-group').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; } 
-            else if (os === "Desktop") { const b = getBrowserType(); if (b === 'chrome') { btnInstall.href = LINKS.chrome; btnInstall.innerText = "Installa su Chrome"; } else if (b === 'edge') { btnInstall.href = LINKS.edge; btnInstall.innerText = "Installa su Edge"; } else if (b === 'firefox') { btnInstall.href = LINKS.firefox; btnInstall.innerText = "Installa su Firefox"; } else { btnInstall.href = LINKS.chromeDownload; btnInstall.innerText = "Scarica Google Chrome"; } } 
-            else { btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios; btnInstall.innerText = "Installa Aloha Browser"; }
-        };
-
-        // --- 5. LOGICA DEL TELECOMANDO ---
+        // --- 5. LOGICA DEL TELECOMANDO (AGGIORNATA CON BYPASS) ---
         function openVideoTab() {
-            const url = getPlayerUrl();
-            // Apre il video in una nuova scheda nominata "PopCornVideo" (per riutilizzarla)
-            videoTab = window.open(url, "PopCornVideo");
+            // 1. Generiamo l'URL CON il parametro "stupido"
+            const trickUrl = getPlayerUrl(true);
             
-            // Passa alla visualizzazione del telecomando
+            // Apriamo il video nella scheda nominata "PopCornVideo"
+            videoTab = window.open(trickUrl, "PopCornVideo");
+            
+            // Aggiorniamo l'interfaccia del telecomando
             document.getElementById('startOverlay').style.display = 'none';
             document.getElementById('remoteContainer').style.display = 'block';
-            
             updateRemoteUI();
+
+            // 2. AUTOMAZIONE DEL TRUCCO: Dopo 3.5 secondi ricarichiamo la pagina pulita
+            // Modifica i millisecondi (3500) se Cloudflare ci mette di più o di meno a caricare
+            setTimeout(() => {
+                if (videoTab && !videoTab.closed) {
+                    const cleanUrl = getPlayerUrl(false); // URL senza il parametro
+                    // Richiamando window.open con lo stesso nome, il browser aggiorna la scheda esistente
+                    videoTab = window.open(cleanUrl, "PopCornVideo");
+                }
+            }, 3500); 
         }
 
         function togglePlayPause() {
             if (videoTab && !videoTab.closed) {
                 const wantPause = !isPaused;
-                // Tentativo best-effort di inviare il comando alla nuova scheda
-                // Nota: alcuni player bloccano i postMessage in cross-tab
                 try {
                     videoTab.postMessage(JSON.stringify({ event: 'command', func: wantPause ? 'pauseVideo' : 'playVideo', args: '' }), '*');
                     videoTab.postMessage({ cmd: wantPause ? 'pause' : 'play' }, '*');
                     videoTab.postMessage(wantPause ? 'pause' : 'play', '*');
                 } catch (err) {}
-                
                 isPaused = wantPause;
             } else {
                 alert("La scheda del video sembra chiusa. Riavvia l'episodio.");
@@ -315,33 +280,12 @@
             let newEp = currentEp + step;
 
             if (step === 1 && newEp > totalEps) {
-                // Passa alla stagione successiva tramite bot
                 window.location.href = `tg://resolve?domain=${botUsername}&start=nextS_${mediaId}_${currentSeason + 1}`;
                 if(videoTab) videoTab.close();
             } else if (newEp > 0) {
                 currentEp = newEp;
                 isPaused = false;
                 updateRemoteUI();
-                openVideoTab(); // Aggiorna l'URL nella scheda target
+                openVideoTab(); // Questo farà di nuovo il doppio caricamento automatico per il nuovo ep
             }
         }
-
-        function saveAndExit() {
-            let botSaveLink = "";
-            if (isMovie) {
-                botSaveLink = `tg://resolve?domain=${botUsername}&start=save_${mediaId}_0_0_1`;
-            } else {
-                botSaveLink = `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}_${totalEps}`;
-            }
-            
-            // Chiude la tab del video se è aperta
-            if (videoTab && !videoTab.closed) {
-                videoTab.close();
-            }
-            
-            // Ritorna su Telegram
-            window.location.href = botSaveLink;
-        }
-    </script>
-</body>
-</html>
