@@ -319,10 +319,38 @@
             }
         };
 
-        // --- 5. LOGICA DEL TELECOMANDO CON BYPASS DI FORZATURA ---
+        // --- FUNZIONE PER SIMULARE IL TASTO "INVIO" ---
+        function forceNavigate(url, targetWindowName) {
+            // Crea un modulo invisibile
+            const form = document.createElement("form");
+            form.target = targetWindowName; // Punta alla scheda video già aperta
+            form.method = "GET"; // Metodo standard di navigazione
+            
+            // Separa il link base dai parametri (il punto interrogativo)
+            const [baseUrl, queryParams] = url.split('?');
+            form.action = baseUrl;
+            
+            // Ricostruisce i parametri come input nascosti
+            if (queryParams) {
+                const params = new URLSearchParams(queryParams);
+                params.forEach((value, key) => {
+                    const input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = key;
+                    input.value = value;
+                    form.appendChild(input);
+                });
+            }
+            
+            // Aggiunge il modulo, lo invia (simula "Invio") e lo distrugge
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+
+        // --- 5. LOGICA DEL TELECOMANDO CON AGGIRAMENTO POPUP BLOCKER ---
         function openVideoTab() {
-            // 1. Apriamo l'URL con il parametro trucco. 
-            // Questo costringe Cloudflare a registrare la sessione del browser.
+            // 1. Apriamo l'URL con il parametro trucco (Azione autorizzata perché cliccata dall'utente)
             const trickUrl = getPlayerUrl(true);
             videoTab = window.open(trickUrl, "PopCornVideo");
             
@@ -330,20 +358,24 @@
             document.getElementById('remoteContainer').style.display = 'block';
             updateRemoteUI();
 
-            // 2. Dopo 3.5 secondi (il tempo necessario a Cloudflare per sbloccarsi)
+            // Mostriamo un feedback visivo all'utente
+            const statusBadge = document.querySelector('.status-badge');
+            statusBadge.innerText = "Sblocco in corso... ⏳";
+            statusBadge.style.background = "rgba(255, 152, 0, 0.2)";
+            statusBadge.style.color = "#ff9800";
+
+            // 2. Dopo 3.5 secondi eseguiamo la "Hard Navigation"
             setTimeout(() => {
-                // Generiamo l'URL pulito
                 const cleanUrl = getPlayerUrl(false);
                 
-                // Forziamo il browser a trattarla come una nuova navigazione
-                // chiudendo la scheda truccata e aprendone una identica ma pulita.
-                if (videoTab && !videoTab.closed) {
-                    videoTab.close();
-                }
+                // Usiamo il modulo nascosto per navigare la scheda già esistente
+                // Questo aggira il blocco popup di Chrome e inganna Cloudflare!
+                forceNavigate(cleanUrl, "PopCornVideo");
                 
-                // Apriamo subito la scheda pulita. Poiché la sessione CF è appena
-                // stata validata dal browser, si caricherà direttamente come invio premuto.
-                videoTab = window.open(cleanUrl, "PopCornVideo");
+                // Aggiorniamo il badge per indicare che è pronto
+                statusBadge.innerText = "Connesso alla scheda video 🟢";
+                statusBadge.style.background = "rgba(76, 175, 80, 0.2)";
+                statusBadge.style.color = "#4caf50";
                 
             }, 3500); 
         }
