@@ -155,8 +155,8 @@
         <h3 id="showTitleOverlay" style="color:white; margin-bottom: 40px; font-weight: 600; text-align:center;"></h3>
         
         <button id="startBtn" onclick="startImmersiveExperience()">
-            <!-- SVG iniziale "Caricamento/Lucchetto" -->
-            <svg id="startIcon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+            <!-- Rotellina di caricamento integrata nel pulsante -->
+            <div class="loader" style="margin: 0; width: 36px; height: 36px; border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid #fff;"></div>
         </button>
         
         <p id="startHelpText" style="color: #ff9800; margin-top: 25px; font-size: 15px; font-weight: 500; text-align:center;">
@@ -272,25 +272,31 @@
             setupTitles();
             
             // FASE 1: Caricamento Esca silenzioso.
+            // Il pulsante inizia opaco con la rotellina al suo interno (vedi HTML) e non è cliccabile.
+            const btn = document.getElementById('startBtn');
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+
             // Il browser fisicamente impedirà l'autoplay grazie alla rimozione dell'attributo "allow".
             const frame = document.getElementById('videoFrame');
             frame.setAttribute('allow', 'fullscreen; encrypted-media'); // Autoplay rimosso
             frame.src = getPreloadUrl();
 
-            // Attendiamo 4.5 secondi affinché CF superi il controllo
+            // Attendiamo 4.5 secondi affinché CF superi il controllo in background
             setTimeout(() => {
-                const btn = document.getElementById('startBtn');
                 const helpText = document.getElementById('startHelpText');
                 
                 unlockStep = 2; // Pronto per essere cliccato
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
                 btn.style.borderColor = '#4caf50';
-                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; // Icona Play
+                
+                // Rimpiazziamo la rotellina con l'icona Play al termine del caricamento
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; 
                 
                 helpText.innerHTML = '<span style="color:#4caf50;">Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
                 
-            }, 2000); 
+            }, 1500); 
         }
 
         function setProtectedAndGo() { 
