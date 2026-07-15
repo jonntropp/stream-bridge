@@ -49,20 +49,22 @@
         .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- STILI PLAYER IMMERSIVO E PRELOAD --- */
+        /* --- STILI PLAYER IMMERSIVO E PRELOAD (DOPPIO CLIC) --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #050505; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
         }
         
         #startBtn {
-            background: transparent; border: 2px solid rgba(255, 255, 255, 0.3); color: white; 
-            width: 100px; height: 100px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; outline: none; opacity: 0.5; pointer-events: none; font-size: 40px;
+            background: transparent; border: 2px solid rgba(255, 255, 255, 0.5); color: white; 
+            width: 90px; height: 90px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; outline: none; font-size: 35px;
         }
         #startBtn:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.1); border-color: #4caf50; }
         #startBtn:active { transform: scale(0.95); }
-        #startBtn svg { width: 45px; height: 45px; margin-left: 6px; fill: currentColor; }
+        #startBtn svg { width: 40px; height: 40px; margin-left: 6px; fill: currentColor; }
 
         #playerContainer {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
@@ -149,7 +151,7 @@
         </div>
     </div>
 
-    <!-- OVERLAY DI AVVIO E PRECARICAMENTO -->
+    <!-- OVERLAY DI AVVIO MULTI-STEP -->
     <div id="startOverlay">
         <h3 id="showTitleOverlay" style="color:white; margin-bottom: 40px; font-weight: 600; text-align:center;"></h3>
         
@@ -167,8 +169,8 @@
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
         
-        <!-- Aggiunto referrerpolicy="no-referrer" vitale contro i blocchi Cloudflare -->
-        <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen referrerpolicy="no-referrer"></iframe>
+        <!-- Abbiamo tolto autoplay dall'allow per il precaricamento! -->
+        <iframe id="videoFrame" allow="fullscreen; encrypted-media" allowfullscreen referrerpolicy="no-referrer"></iframe>
         
         <div id="playerTitle"></div>
 
@@ -216,18 +218,23 @@
         function setExitingFlag() { isIntentionalExit = true; }
 
         const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
+        let unlockStep = 0; 
 
         // --- 2. GENERAZIONE URL DINAMICA (LOGICA BASE vs FULL) ---
         
-        // URL Base: Senza parametri. Serve a ingannare Cloudflare al primo caricamento.
         function getBaseUrl() {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             return src;
         }
 
-        // URL Full: Con i parametri del player. Si attiva solo quando premiamo "Play"
+        function getPreloadUrl() {
+            // URL Esca + autoplay spento (Così siamo certi che CF non reagisca a troppi parametri e non ci sia audio)
+            return getBaseUrl() + `?autoplay=false`;
+        }
+
         function getFullUrl() {
+            // URL finale con tutti i parametri grafici e autoplay attivo
             let src = getBaseUrl();
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
@@ -265,25 +272,26 @@
             
             setupTitles();
             
-            // FASE 1: Carichiamo l'URL BASE in background (invisibile all'utente ma non a CF)
-            // Questo farà sì che CF rilasci i cookie necessari
+            // FASE 1: Caricamento Esca silenzioso.
+            // Il browser fisicamente impedirà l'autoplay grazie alla rimozione dell'attributo "allow".
             const frame = document.getElementById('videoFrame');
-            frame.src = getBaseUrl();
+            frame.setAttribute('allow', 'fullscreen; encrypted-media'); // Autoplay rimosso
+            frame.src = getPreloadUrl();
 
             // Attendiamo 4.5 secondi affinché CF superi il controllo
             setTimeout(() => {
                 const btn = document.getElementById('startBtn');
                 const helpText = document.getElementById('startHelpText');
                 
-                // Attiviamo il bottone e lo trasformiamo in un tasto PLAY
+                unlockStep = 2; // Pronto per essere cliccato
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
                 btn.style.borderColor = '#4caf50';
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; // Icona Play
                 
-                helpText.innerHTML = '<span style="color:#4caf50;">Server Pronto!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
+                helpText.innerHTML = '<span style="color:#4caf50;">Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
                 
-            }, 4500); 
+            }, 3000); 
         }
 
         function setProtectedAndGo() { 
@@ -344,8 +352,11 @@
                 isPaused = false; lastTime = 0; lastDuration = 0;
                 setupTitles();
                 
-                // Essendo la sessione già validata da CF, possiamo caricare direttamente l'URL completo
-                document.getElementById('videoFrame').src = getFullUrl();
+                // Essendo la sessione già validata, ricarichiamo l'URL completo. 
+                // Assicuriamoci che l'autoplay sia attivo sull'iframe per i successivi episodi
+                const frame = document.getElementById('videoFrame');
+                frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+                frame.src = getFullUrl();
             }
         }
 
@@ -369,11 +380,14 @@
 
         // FASE 2: L'utente preme il tasto PLAY illuminato
         function startImmersiveExperience() {
-            const btn = document.getElementById('startBtn');
-            if (btn.style.pointerEvents === 'none') return; // Impedisce i clic anticipati
-
-            // Ora che CF è stato aggirato, carichiamo la URL FULL col player
-            document.getElementById('videoFrame').src = getFullUrl();
+            if (unlockStep !== 2) return; // Impedisce i clic anticipati
+            
+            const frame = document.getElementById('videoFrame');
+            
+            // 1. Diamo il permesso di Autoplay all'iframe (ora che l'utente ha interagito)
+            frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+            // 2. Carichiamo la URL FULL col player
+            frame.src = getFullUrl();
 
             toggleFullscreen();
             document.getElementById('startOverlay').style.display = 'none';
