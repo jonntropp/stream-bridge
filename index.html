@@ -52,8 +52,7 @@
         /* --- STILI PLAYER IMMERSIVO E PRELOAD (DOPPIO CLIC) --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            background: #000000; /* Schermata completamente nera e opaca */
             z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
         }
         
@@ -291,7 +290,7 @@
                 
                 helpText.innerHTML = '<span style="color:#4caf50;">Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
                 
-            }, 3000); 
+            }, 2000); 
         }
 
         function setProtectedAndGo() { 
