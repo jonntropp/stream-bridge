@@ -285,7 +285,13 @@
             // Attendiamo 4.5 secondi affinché CF superi il controllo in background
             setTimeout(() => {
                 const helpText = document.getElementById('startHelpText');
-                
+
+                // Dell'esca ci serve solo il cookie di clearance, che ormai è nel cookie jar:
+                // il player caricato qui viene comunque buttato via da startImmersiveExperience().
+                // Lo smontiamo subito, altrimenti Aloha aggancia il <video> rimasto appeso
+                // col suo player nativo se l'utente tarda a premere play.
+                frame.src = 'about:blank';
+
                 unlockStep = 2; // Pronto per essere cliccato
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
@@ -319,10 +325,10 @@
             if (params.get('reset') === 'true') { localStorage.removeItem(STORAGE_KEY); document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block'; document.getElementById('titleText').innerText = "Configurazione"; document.getElementById('descText').innerHTML = "Chiudi questa pagina dopo l'installazione."; document.querySelector('.btn-confirm').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; return; }
             
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
-            if (isProtected && mediaId) { 
+            if (isProtected && mediaId) {
                 if (os !== "Desktop" && !isAlohaBrowser) window.location.href = getAlohaRedirectUrl();
                 else preparePlayerScreen();
-                return; 
+                return;
             }
             
             document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block';
