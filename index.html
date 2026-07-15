@@ -58,7 +58,7 @@
         #startBtn {
             background: transparent; border: 2px solid rgba(255, 255, 255, 0.3); color: white; 
             width: 90px; height: 90px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; outline: none; opacity: 0.4; pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; outline: none; opacity: 0.4; pointer-events: none; font-size: 35px;
         }
         #startBtn:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.1); }
         #startBtn:active { transform: scale(0.95); }
@@ -156,16 +156,17 @@
         </div>
         
         <button id="startBtn" onclick="startImmersiveExperience()">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg viewBox="0 0 24 24" id="startIconSVG"><path d="M8 5v14l11-7z"/></svg>
         </button>
         
-        <p id="startHelpText" style="color: #666; margin-top: 20px; font-size: 13px;">Attendi lo sblocco per avviare</p>
+        <p id="startHelpText" style="color: #666; margin-top: 20px; font-size: 13px;">Sblocco protezione in corso...</p>
     </div>
 
     <div id="playerContainer">
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
-        <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+        
+        <!-- Gli Iframe ora vengono generati e distrutti via Javascript -->
         
         <div id="playerTitle"></div>
 
@@ -213,7 +214,9 @@
 
         const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
 
-        // --- 2. GENERAZIONE URL DINAMICA (CON TRUCCO CF) ---
+        let hasBypassedCF = false; // Memoria per non rifare il blocco ai cambi episodio
+
+        // --- 2. GENERAZIONE URL DINAMICA ---
         function getPlayerUrl(useTrickParameter = false) {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
@@ -221,7 +224,6 @@
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
             
-            // Parametro trucco per bypass loop CF
             if (useTrickParameter) {
                 urlParams += `&cf_bypass=${Date.now()}`; 
             }
@@ -229,14 +231,17 @@
             return src + urlParams;
         }
 
-        // Funzione unificata che gestisce l'aggiornamento a due step per ingannare Cloudflare
+        // Funzione unificata che DISTRUGGE e RICREA gli iframe per aggirare i blocchi del browser
         function updatePlayerSource(isInitialPreload = false) {
-            const frame = document.getElementById('videoFrame');
+            const playerContainer = document.getElementById('playerContainer');
             
-            // FASE 1: Carichiamo il parametro trucco
-            frame.src = getPlayerUrl(true);
-            
-            // Prepariamo i titoli dell'interfaccia UI
+            // 1. Polizia totale: rimuoviamo vecchi frame per forzare il browser a resettare la cache visiva
+            const oldFrame = document.getElementById('videoFrame');
+            if (oldFrame) oldFrame.remove();
+            const oldTrick = document.getElementById('trickFrame');
+            if (oldTrick) oldTrick.remove();
+
+            // 2. Aggiornamento UI testi
             let displayTitle = showTitle;
             if (!isMovie) displayTitle += ` • S${currentSeason}:E${currentEp}`;
             document.getElementById('playerTitle').innerText = displayTitle;
@@ -246,21 +251,54 @@
             
             isPaused = false; lastTime = 0; lastDuration = 0;
 
-            // FASE 2: Dopo 3.5s CF ha validato, ricarichiamo l'URL pulito
-            setTimeout(() => {
-                if(frame) frame.src = getPlayerUrl(false);
-                
-                // Se era il precaricamento iniziale sotto la schermata nera, sblocchiamo il tasto Play
-                if (isInitialPreload) {
-                    const btn = document.getElementById('startBtn');
-                    btn.style.opacity = '1';
-                    btn.style.pointerEvents = 'auto';
-                    btn.style.borderColor = 'rgba(255,255,255,0.8)';
+            if (!hasBypassedCF) {
+                // FASE 1: Creiamo l'iframe esca
+                const trickFrame = document.createElement('iframe');
+                trickFrame.id = 'trickFrame';
+                trickFrame.style.opacity = '0'; // Invisibile ma caricato
+                trickFrame.style.pointerEvents = 'none';
+                trickFrame.src = getPlayerUrl(true);
+                playerContainer.appendChild(trickFrame);
+
+                // FASE 2: Dopo 4.5s (per dare tempo a CF), distruggiamo l'esca e inseriamo il video vero
+                setTimeout(() => {
+                    const activeTrick = document.getElementById('trickFrame');
+                    if(activeTrick) activeTrick.remove(); // Distruggiamo traccia dell'esca
                     
-                    document.getElementById('preloadStatus').innerHTML = '<span style="color:#4caf50;">Server Sbloccato 🟢</span>';
-                    document.getElementById('startHelpText').innerText = "Tocca per guardare a schermo intero";
-                }
-            }, 3500);
+                    hasBypassedCF = true; // Sblocco confermato per tutta la sessione
+
+                    const cleanFrame = document.createElement('iframe');
+                    cleanFrame.id = 'videoFrame';
+                    cleanFrame.allow = 'autoplay; fullscreen; encrypted-media';
+                    cleanFrame.setAttribute('allowfullscreen', '');
+                    cleanFrame.src = getPlayerUrl(false);
+                    // Inseriamo all'inizio del container (sotto ai nostri controlli z-index)
+                    playerContainer.insertBefore(cleanFrame, playerContainer.firstChild);
+
+                    // Se era la schermata iniziale, accendiamo il bottone Play
+                    if (isInitialPreload) {
+                        const btn = document.getElementById('startBtn');
+                        btn.style.opacity = '1';
+                        btn.style.pointerEvents = 'auto';
+                        btn.style.borderColor = '#4caf50';
+                        document.getElementById('startIconSVG').style.display = 'none';
+                        btn.innerHTML = '▶️';
+                        btn.style.fontSize = '35px';
+                        
+                        document.getElementById('preloadStatus').innerHTML = '<span style="color:#4caf50;">Server Sbloccato 🟢</span>';
+                        document.getElementById('startHelpText').innerText = "Tocca per guardare a schermo intero";
+                    }
+                }, 4500); // 4.5s per essere certi su connessioni lente
+            } else {
+                // Se CF è già stato bypassato in precedenza (es. clicchi Prossimo Episodio)
+                // saltiamo l'esca e carichiamo subito!
+                const cleanFrame = document.createElement('iframe');
+                cleanFrame.id = 'videoFrame';
+                cleanFrame.allow = 'autoplay; fullscreen; encrypted-media';
+                cleanFrame.setAttribute('allowfullscreen', '');
+                cleanFrame.src = getPlayerUrl(false);
+                playerContainer.insertBefore(cleanFrame, playerContainer.firstChild);
+            }
         }
 
         // --- 3. REDIRECT E AUTENTICAZIONE ---
@@ -277,11 +315,11 @@
             if (!mediaId) return;
             document.getElementById('authContainer').style.display = 'none';
             
-            // Iniziamo a renderizzare il player, ma lo nascondiamo DIETRO startOverlay (z-index)
+            // Mostriamo i container per avviare i caricamenti in background
             document.getElementById('playerContainer').style.display = 'block';
             document.getElementById('startOverlay').style.display = 'flex'; 
             
-            // Avviamo il trucco di Cloudflare in background
+            // Avviamo la logica di distruzione/creazione in background
             updatePlayerSource(true);
         }
 
@@ -340,7 +378,7 @@
             } else if (newEp > 0) {
                 currentEp = newEp;
                 isIntentionalExit = false; 
-                // Esegue il riavvio doppio anche al cambio episodio (schermo diventerà nero per 3.5s)
+                // Avvia all'istante (poiché hasBypassedCF = true)
                 updatePlayerSource(false);
             }
         }
@@ -363,10 +401,9 @@
             }
         }
 
-        // L'utente preme il tasto PLAY della schermata iniziale solo quando è pronto
         function startImmersiveExperience() {
             const btn = document.getElementById('startBtn');
-            if (btn.style.pointerEvents === 'none') return; // Impedisce i clic affrettati
+            if (btn.style.pointerEvents === 'none') return;
 
             toggleFullscreen();
             document.getElementById('startOverlay').style.display = 'none';
@@ -401,7 +438,6 @@
             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
             if (!isFullscreen && isTogglingFs) { isTogglingFs = false; return; }
             
-            // Non attivare il popup se la schermata iniziale nera è ancora visibile
             if (document.getElementById('startOverlay').style.display !== 'none') return;
 
             const modal = document.getElementById('saveModal');
@@ -431,7 +467,7 @@
             const oldIframe = document.getElementById('videoFrame');
 
             if (isAlohaBrowser) {
-                if (oldIframe) playerContainer.removeChild(oldIframe);
+                if (oldIframe) oldIframe.remove();
                 modal.style.opacity = '0';
                 modalBox.style.transform = 'translateY(20px)';
                 setTimeout(() => { modal.style.display = 'none'; }, 300);
@@ -453,7 +489,7 @@
                     newIframe.setAttribute('allowfullscreen', '');
                     newIframe.src = src + urlParams;
 
-                    playerContainer.appendChild(newIframe);
+                    playerContainer.insertBefore(newIframe, playerContainer.firstChild);
                     isPaused = false; handleUserActivity();
                 }, 1000); 
             } 
