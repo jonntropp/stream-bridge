@@ -211,7 +211,6 @@
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
             
-            // IL TRUCCO: Aggiungiamo un parametro sempre diverso per bypassare il loop Cloudflare
             if (useTrickParameter) {
                 urlParams += `&cf_bypass=${Date.now()}`; 
             }
@@ -275,9 +274,7 @@
             }, 50); 
         }
 
-        // QUESTA E' LA FUNZIONE CHE MANCAVA (AVVIA TUTTA LA LOGICA DELLA PAGINA)
         window.onload = function() {
-            // Se richiesto il reset della configurazione
             if (params.get('reset') === 'true') { 
                 localStorage.removeItem(STORAGE_KEY); 
                 document.getElementById('loaderView').style.display = 'none'; 
@@ -291,7 +288,6 @@
             
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
 
-            // Se l'utente è già protetto, mostra direttamente il pulsante Play
             if (isProtected && mediaId) { 
                 if (os !== "Desktop" && !isAlohaBrowser) {
                     window.location.href = getAlohaRedirectUrl();
@@ -301,7 +297,6 @@
                 return; 
             }
             
-            // Altrimenti, nascondi il caricamento e mostra la schermata di verifica/installazione
             document.getElementById('loaderView').style.display = 'none'; 
             document.getElementById('mainView').style.display = 'block';
             
@@ -324,26 +319,32 @@
             }
         };
 
-        // --- 5. LOGICA DEL TELECOMANDO ---
+        // --- 5. LOGICA DEL TELECOMANDO CON BYPASS DI FORZATURA ---
         function openVideoTab() {
-            // 1. Generiamo l'URL CON il parametro "stupido" per superare Cloudflare
+            // 1. Apriamo l'URL con il parametro trucco. 
+            // Questo costringe Cloudflare a registrare la sessione del browser.
             const trickUrl = getPlayerUrl(true);
-            
-            // Apriamo il video nella scheda nominata "PopCornVideo"
             videoTab = window.open(trickUrl, "PopCornVideo");
             
-            // Aggiorniamo l'interfaccia del telecomando
             document.getElementById('startOverlay').style.display = 'none';
             document.getElementById('remoteContainer').style.display = 'block';
             updateRemoteUI();
 
-            // 2. AUTOMAZIONE DEL TRUCCO: Dopo 3.5 secondi ricarichiamo la pagina pulita
+            // 2. Dopo 3.5 secondi (il tempo necessario a Cloudflare per sbloccarsi)
             setTimeout(() => {
+                // Generiamo l'URL pulito
+                const cleanUrl = getPlayerUrl(false);
+                
+                // Forziamo il browser a trattarla come una nuova navigazione
+                // chiudendo la scheda truccata e aprendone una identica ma pulita.
                 if (videoTab && !videoTab.closed) {
-                    const cleanUrl = getPlayerUrl(false); // URL senza il parametro
-                    // Richiamando window.open con lo stesso nome, il browser aggiorna la scheda esistente
-                    videoTab = window.open(cleanUrl, "PopCornVideo");
+                    videoTab.close();
                 }
+                
+                // Apriamo subito la scheda pulita. Poiché la sessione CF è appena
+                // stata validata dal browser, si caricherà direttamente come invio premuto.
+                videoTab = window.open(cleanUrl, "PopCornVideo");
+                
             }, 3500); 
         }
 
