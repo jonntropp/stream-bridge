@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pop Corn Bot</title>
+    <title>Pop Corn Bot - Telecomando</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* --- STILI GENERALI --- */
+        /* --- STILI GENERALI (Invariati) --- */
         body { 
             background-color: #0f0f0f; color: #e0e0e0; 
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; 
@@ -49,97 +49,77 @@
         .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- STILI PLAYER IMMERSIVO --- */
+        /* --- STILI OVERLAY DI AVVIO --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #000; z-index: 9999; display: none; align-items: center; justify-content: center; cursor: pointer;
+            background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
         }
         
         #startBtn {
             background: transparent; border: 2px solid rgba(255, 255, 255, 0.8); color: white; 
             width: 90px; height: 90px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: transform 0.2s, background 0.2s, border-color 0.2s; outline: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: transform 0.2s, background 0.2s, border-color 0.2s; outline: none; margin-bottom: 20px;
         }
         #startBtn:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.1); }
         #startBtn:active { transform: scale(0.95); }
         #startBtn svg { width: 40px; height: 40px; margin-left: 6px; fill: currentColor; }
 
-        #playerContainer {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
+        /* --- STILI TELECOMANDO (Remote Control) --- */
+        #remoteContainer {
+            display: none;
+            width: 100%;
         }
         
-        /* Modificata per permettere ridimensionamento via JS */
-        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; transition: width 0.1s, height 0.1s; }
-
-        /* RILEVAMENTO MOUSE (a tutto schermo) E TRIGGER FULLSCREEN */
-        #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
-        #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
-
-        /* --- TITOLO E PULSANTI --- */
-        #playerTitle {
-            position: absolute; top: 30px; left: 40px; color: #fff; font-size: 24px; font-weight: 600;
-            letter-spacing: 0.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-            opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 100;
-        }
-        .overlay-btn {
-            position: absolute; background: rgba(20, 20, 20, 0.4); color: #eaeaea; 
-            text-decoration: none; padding: 10px 24px; border-radius: 30px; 
-            font-size: 14px; font-weight: 500; letter-spacing: 0.8px; border: 1px solid rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
-            opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
-            z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-family: 'Poppins', sans-serif;
+        .remote-header {
+            margin-bottom: 30px;
         }
         
-        #playerTitle.visible, .overlay-btn.visible { opacity: 1; pointer-events: auto; }
-        .overlay-btn:hover { background: rgba(160, 20, 30, 0.85); border-color: rgba(255, 255, 255, 0.2); transform: scale(1.03); color: #fff; }
+        .remote-title {
+            color: #fff; font-size: 20px; font-weight: 600; margin-bottom: 5px;
+        }
+        .remote-subtitle {
+            color: #E50914; font-size: 14px; font-weight: 500;
+        }
 
-        #btnPrev { top: 85%; left: 40px; transform: translateY(-50%); }
-        #btnNext { top: 85%; right: 40px; transform: translateY(-50%); }
+        .remote-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .remote-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: white; border-radius: 16px; padding: 20px 0; font-size: 24px;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .remote-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .remote-btn:active { transform: scale(0.95); }
+        .remote-btn.disabled { opacity: 0.3; pointer-events: none; }
+        .remote-btn span { font-size: 12px; margin-top: 8px; color: #aaa; font-family: 'Poppins', sans-serif;}
+
+        .remote-btn-play { background: rgba(229, 9, 20, 0.15); border-color: rgba(229, 9, 20, 0.5); }
+        .remote-btn-play:hover { background: rgba(229, 9, 20, 0.3); }
+
+        .btn-save-exit { background: #E50914; color: white; border: none; font-weight: 600; }
+        .btn-save-exit:hover { background: #b80710; }
         
-        #btnBot  { top: 30px; right: 40px; background: rgba(229, 9, 20, 0.7); border-color: rgba(229, 9, 20, 0.5); font-weight: 600;} 
-        #btnBot:hover { background: rgba(229, 9, 20, 1); }
-
-        /* --- MODAL DI SALVATAGGIO --- */
-        #saveModal {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            z-index: 1000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
+        .status-badge {
+            display: inline-block; padding: 5px 12px; background: rgba(76, 175, 80, 0.2); color: #4caf50;
+            border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 20px;
         }
-        .modal-box {
-            background: rgba(20, 20, 20, 0.85); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9); max-width: 420px; width: 90%; transform: translateY(30px); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .modal-box h3 { margin: 0 0 10px 0; font-size: 24px; color: #fff; }
-        .modal-box p { color: #bbb; margin-bottom: 25px; font-size: 15px; }
-        .modal-btns { display: flex; flex-direction: column; gap: 12px; }
-        .modal-btns .btn { padding: 16px; font-size: 16px; border-radius: 14px; }
 
-        /* --- RESPONSIVE MOBILE E ROTAZIONE --- */
+        /* --- RESPONSIVE MOBILE --- */
         @media (max-width: 768px), (max-height: 500px) {
-            
-            /* Su mobile il catcher resta attivo: serve a far ricomparire il menu al tocco.
-               Quando il menu è visibile diventa pointer-events:none (gestito da JS) e i
-               tocchi successivi arrivano al video. Niente cursore su touch. */
-            #mouseCatcher { cursor: auto; }
-
-            #playerTitle { top: 15px; left: 15px; font-size: 14px; }
-            .overlay-btn { padding: 6px 14px; font-size: 11px; border-radius: 20px; letter-spacing: 0.5px; }
-            
-            #btnPrev { top: auto; bottom: 85px; left: 15px; transform: none; }
-            #btnNext { top: auto; bottom: 85px; right: 15px; transform: none; }
-            #btnBot  { top: 15px; right: 15px; }
-            
-            #fullscreenTrigger { bottom: 0px; right: 0px; width: 65px; height: 65px; }
-            
-            .modal-box { padding: 25px 15px; }
-            .modal-box h3 { font-size: 20px; }
-            .modal-box p { font-size: 13px; }
-            .modal-btns .btn { padding: 12px; font-size: 14px; }
+            .remote-controls { gap: 10px; }
+            .remote-btn { padding: 15px 0; font-size: 20px; }
+            .card { padding: 30px 20px; }
         }
     </style>
 </head>
 <body>
 
+    <!-- SCHERMATA DI VERIFICA (Invariata) -->
     <div class="container" id="authContainer">
         <div id="loaderView"><div class="loader"></div><p style="font-size: 12px; color: #555;">Verifica sicurezza...</p></div>
         <div id="mainView" class="card">
@@ -160,39 +140,47 @@
         </div>
     </div>
 
-    <div id="startOverlay" onclick="startImmersiveExperience()">
+    <!-- OVERLAY DI AVVIO -->
+    <div id="startOverlay" onclick="openVideoTab()">
         <button id="startBtn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+        <p style="color: #aaa; margin-top: 10px;">Tocca per aprire il video in una nuova scheda</p>
     </div>
 
-    <div id="playerContainer">
-        <div id="mouseCatcher"></div>
-        
-        <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
-
-        <iframe id="videoFrame" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
-        
-        <div id="playerTitle"></div>
-
-        <a href="#" id="btnBot" class="overlay-btn" onclick="saveAndExit(event)">💾 Salva ed Esci</a>
-        <a href="#" id="btnPrev" class="overlay-btn" onclick="changeEpisode(-1, event)">Ep. Precedente</a>
-        <a href="#" id="btnNext" class="overlay-btn" onclick="changeEpisode(1, event)">Prossimo Ep.</a>
-    </div>
-
-    <div id="saveModal">
-        <div class="modal-box" id="modalBox">
-            <h3>Sei uscito dal player</h3>
-            <p id="modalDescText">Vuoi salvare i progressi dell' <span id="modalEpText" style="color:white; font-weight:bold;">Episodio</span> prima di chiudere?</p>
-            <div class="modal-btns">
-                <a href="#" id="btnModalSave" class="btn" style="background: #E50914; color: white;" onclick="setExitingFlag()">💾 Salva sul Bot</a>
-                <button onclick="resumeFullscreen(event)" class="btn btn-confirm">Annulla e Continua</button>
+    <!-- IL TELECOMANDO -->
+    <div class="container" id="remoteContainer">
+        <div class="card" style="display: block;">
+            <div class="status-badge">Connesso alla scheda video 🟢</div>
+            
+            <div class="remote-header">
+                <div class="remote-title" id="remoteTitle">Caricamento...</div>
+                <div class="remote-subtitle" id="remoteSubtitle"></div>
             </div>
+
+            <div class="remote-controls">
+                <button class="remote-btn" id="btnPrev" onclick="changeEpisode(-1)">
+                    ⏮️<span>Precedente</span>
+                </button>
+                
+                <button class="remote-btn remote-btn-play" id="btnPlayPause" onclick="togglePlayPause()">
+                    ⏯️<span id="playPauseText">Pausa/Play</span>
+                </button>
+                
+                <button class="remote-btn" id="btnNext" onclick="changeEpisode(1)">
+                    ⏭️<span>Successivo</span>
+                </button>
+            </div>
+
+            <button class="btn btn-save-exit" onclick="saveAndExit()">💾 Salva progressi e chiudi</button>
+            
+            <p style="font-size: 11px; color: #666; margin-top: 20px; margin-bottom: 0;">
+                Tieni questa pagina aperta. Se chiudi la scheda video, riaprila usando i pulsanti degli episodi.
+            </p>
         </div>
     </div>
 
     <script>
-        // --- 1. LETTURA DATI SMART ---
+        // --- 1. LETTURA DATI SMART (Invariata) ---
         const params = new URLSearchParams(window.location.search);
-        const DEBUG = params.get('debug') === '1';
         
         const mediaId = params.get('id');
         const showTitle = params.get('title') ? decodeURIComponent(params.get('title')) : 'Streaming';
@@ -204,45 +192,41 @@
         let totalEps = parseInt(params.get('tot')) || 1;
         
         const botUsername = "PopCorn04bot"; 
-        
         const STORAGE_KEY = 'stream_bridge_consent_v3'; 
         const LINKS = { chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh", edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp", firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", chromeDownload: "https://www.google.com/chrome/", android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser", ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682" };
         
         function getOS() { const ua = navigator.userAgent || navigator.vendor || window.opera; if (/android/i.test(ua)) return "Android"; if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS"; return "Desktop"; }
         function getBrowserType() { const ua = navigator.userAgent; if (ua.indexOf("Firefox") > -1) return "firefox"; if (ua.indexOf("Edg") > -1) return "edge"; if (ua.indexOf("Chrome") > -1) return "chrome"; return "unknown"; }
         const os = getOS();
-
-        let isIntentionalExit = false;
-        let isTogglingFs = false; // true quando l'uscita dal fullscreen è un toggle volontario (tasto 'f'/hotspot)
-        function setExitingFlag() { isIntentionalExit = true; }
-
         const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
 
+        let videoTab = null;
+        let isPaused = false;
+
         // --- 2. GENERAZIONE URL DINAMICA ---
-        function updatePlayerSource() {
+        function getPlayerUrl() {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
             
-            src += urlParams;
-            document.getElementById('videoFrame').src = src;
-            
-            let displayTitle = showTitle;
-            if (!isMovie) displayTitle += ` • S${currentSeason}:E${currentEp}`;
-            document.getElementById('playerTitle').innerText = displayTitle;
-            document.title = displayTitle;
+            return src + urlParams;
+        }
 
+        function updateRemoteUI() {
+            document.getElementById('remoteTitle').innerText = showTitle;
             if (!isMovie) {
-                document.getElementById('modalEpText').innerText = `Episodio ${currentEp}`;
+                document.getElementById('remoteSubtitle').innerText = `Stagione ${currentSeason} - Episodio ${currentEp}`;
+                
+                document.getElementById('btnPrev').classList.toggle('disabled', currentEp <= 1);
+                // Permettiamo di cliccare "Next" per passare alla stagione successiva se si è all'ultimo ep
             } else {
-                document.getElementById('modalDescText').innerHTML = "Vuoi tornare al menu principale su Telegram?";
+                document.getElementById('remoteSubtitle').innerText = "Film";
+                document.getElementById('btnPrev').classList.add('disabled');
+                document.getElementById('btnNext').classList.add('disabled');
             }
-
-            // Reset stato di riproduzione: i dati del vecchio episodio non devono
-            // pilotare la comparsa automatica dei pulsanti (primi 5s / ultimi 30s).
-            isPaused = false; lastTime = 0; lastDuration = 0;
+            document.title = "Telecomando: " + showTitle;
         }
 
         // --- 3. REDIRECT ALOHA INTELLIGENTE ---
@@ -250,12 +234,8 @@
             let url = new URL(window.location.href);
             url.searchParams.set('aloha', '1'); 
             let cleanUrl = url.href.replace(/^https?:\/\//, '');
-
-            if (os === "Android") {
-                return "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
-            } else if (os === "iOS") {
-                return "alohabrowser://" + cleanUrl;
-            }
+            if (os === "Android") return "intent://" + cleanUrl + "#Intent;scheme=https;package=com.alohamobile.browser;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end";
+            if (os === "iOS") return "alohabrowser://" + cleanUrl;
             return url.href;
         }
 
@@ -268,12 +248,8 @@
 
         function setProtectedAndGo() { 
             localStorage.setItem(STORAGE_KEY, 'true'); 
-            
-            if (os !== "Desktop" && !isAlohaBrowser) {
-                window.location.href = getAlohaRedirectUrl();
-            } else {
-                preparePlayerScreen();
-            }
+            if (os !== "Desktop" && !isAlohaBrowser) window.location.href = getAlohaRedirectUrl();
+            else preparePlayerScreen();
         }
 
         function triggerPenalty() { 
@@ -282,10 +258,7 @@
             let d = 5000, s = Date.now(), b = document.getElementById('timerFill'); 
             let t = setInterval(() => { 
                 let p = ((Date.now() - s) / d) * 100; b.style.width = Math.min(p, 100) + "%"; 
-                if (p >= 100) { 
-                    clearInterval(t); 
-                    preparePlayerScreen(); 
-                } 
+                if (p >= 100) { clearInterval(t); preparePlayerScreen(); } 
             }, 50); 
         }
 
@@ -293,13 +266,9 @@
             if (params.get('reset') === 'true') { localStorage.removeItem(STORAGE_KEY); document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block'; document.getElementById('titleText').innerText = "Configurazione"; document.getElementById('descText').innerHTML = "Chiudi questa pagina dopo l'installazione."; document.querySelector('.btn-confirm').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; return; }
             
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
-
             if (isProtected && mediaId) { 
-                if (os !== "Desktop" && !isAlohaBrowser) {
-                    window.location.href = getAlohaRedirectUrl();
-                } else {
-                    preparePlayerScreen();
-                }
+                if (os !== "Desktop" && !isAlohaBrowser) window.location.href = getAlohaRedirectUrl();
+                else preparePlayerScreen();
                 return; 
             }
             
@@ -310,299 +279,69 @@
             else { btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios; btnInstall.innerText = "Installa Aloha Browser"; }
         };
 
-       // --- 5. BINGE-WATCHING & SALVATAGGIO ---
-        function getBotSaveLink() {
-            if (isMovie) {
-                // Formato Film: ID_0_0_1
-                return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_0_0_1`;
+        // --- 5. LOGICA DEL TELECOMANDO ---
+        function openVideoTab() {
+            const url = getPlayerUrl();
+            // Apre il video in una nuova scheda nominata "PopCornVideo" (per riutilizzarla)
+            videoTab = window.open(url, "PopCornVideo");
+            
+            // Passa alla visualizzazione del telecomando
+            document.getElementById('startOverlay').style.display = 'none';
+            document.getElementById('remoteContainer').style.display = 'block';
+            
+            updateRemoteUI();
+        }
+
+        function togglePlayPause() {
+            if (videoTab && !videoTab.closed) {
+                const wantPause = !isPaused;
+                // Tentativo best-effort di inviare il comando alla nuova scheda
+                // Nota: alcuni player bloccano i postMessage in cross-tab
+                try {
+                    videoTab.postMessage(JSON.stringify({ event: 'command', func: wantPause ? 'pauseVideo' : 'playVideo', args: '' }), '*');
+                    videoTab.postMessage({ cmd: wantPause ? 'pause' : 'play' }, '*');
+                    videoTab.postMessage(wantPause ? 'pause' : 'play', '*');
+                } catch (err) {}
+                
+                isPaused = wantPause;
+            } else {
+                alert("La scheda del video sembra chiusa. Riavvia l'episodio.");
+                openVideoTab();
             }
-            // Formato Serie: ID_S_E_TOT
-            return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}_${totalEps}`;
-        }
-        function saveAndExit(e) {
-            if(e) e.preventDefault();
-            isIntentionalExit = true; 
-            window.location.href = getBotSaveLink();
         }
 
-        function changeEpisode(step, e) {
-            if (e) e.preventDefault();
+        function changeEpisode(step) {
             if (isMovie) return;
-
             let newEp = currentEp + step;
 
             if (step === 1 && newEp > totalEps) {
-                isIntentionalExit = true;
+                // Passa alla stagione successiva tramite bot
                 window.location.href = `tg://resolve?domain=${botUsername}&start=nextS_${mediaId}_${currentSeason + 1}`;
+                if(videoTab) videoTab.close();
             } else if (newEp > 0) {
                 currentEp = newEp;
-                // FIX: Resettiamo il flag di uscita, perché stiamo iniziando una nuova visione
-                isIntentionalExit = false; 
-                updatePlayerSource();
-            }
-        }
-
-        // --- 6. FULLSCREEN & MODAL SALVATAGGIO ---
-        function toggleFullscreen(e) {
-            if(e) e.stopPropagation(); 
-            const docElm = document.documentElement;
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-            
-            if (!isFullscreen) {
-                if (docElm.requestFullscreen) docElm.requestFullscreen();
-                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-            } else {
-                isTogglingFs = true; // uscita volontaria: non è un abbandono del player
-                if (document.exitFullscreen) document.exitFullscreen();
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                else if (document.msExitFullscreen) document.msExitFullscreen();
-                setTimeout(() => { isTogglingFs = false; }, 1500); // safety: il flag non resta mai bloccato
-            }
-        }
-
-        // Avvio/pausa "best-effort" verso il player cross-origin (stessa tecnica già usata nel file).
-        // Nota: vixsrc documenta solo eventi IN USCITA; se non accetta comandi, il video non risponderà
-        // (in quel caso restano i controlli nativi del player). Lo stato UI viene comunque aggiornato.
-        function togglePlayPause() {
-            const frame = document.getElementById('videoFrame');
-            if (!frame) return;
-            const wantPause = !isPaused;
-            try {
-                const win = frame.contentWindow;
-                win.postMessage(JSON.stringify({ event: 'command', func: wantPause ? 'pauseVideo' : 'playVideo', args: '' }), '*');
-                win.postMessage({ cmd: wantPause ? 'pause' : 'play' }, '*');
-                win.postMessage(wantPause ? 'pause' : 'play', '*');
-            } catch (err) {}
-            isPaused = wantPause;
-            handleUserActivity(); // feedback immediato: mostra il menu
-        }
-
-        window.addEventListener('keydown', function(e) {
-            // Le scorciatoie valgono solo dentro al player
-            if (document.getElementById('playerContainer').style.display !== 'block') return;
-            if (e.repeat) return; // ignora l'auto-ripetizione del tasto tenuto premuto
-
-            if (e.key === 'f' || e.key === 'F') {
-                e.preventDefault();
-                toggleFullscreen(e);
-            } else if (e.code === 'Space' || e.key === ' ') {
-                e.preventDefault(); // niente scroll della pagina
-                togglePlayPause();
-            }
-        });
-
-        document.addEventListener('fullscreenchange', exitHandler);
-        document.addEventListener('webkitfullscreenchange', exitHandler);
-
-        function exitHandler() {
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-
-            // Toggle volontario del fullscreen (tasto 'f' / hotspot): è solo un toggle, non un'uscita
-            if (!isFullscreen && isTogglingFs) { isTogglingFs = false; return; }
-
-            const modal = document.getElementById('saveModal');
-            const modalBox = document.getElementById('modalBox');
-
-            if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
-                document.getElementById('btnModalSave').href = getBotSaveLink();
-                modal.style.display = 'flex';
-                
-                const iframeWin = document.getElementById('videoFrame').contentWindow;
-                try {
-                    iframeWin.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); 
-                    iframeWin.postMessage({cmd: 'pause'}, '*'); 
-                    iframeWin.postMessage('pause', '*'); 
-                } catch(err) {}
-
-                isPaused = true;
-                updateUI();
-                
-                setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'translateY(0)'; }, 10);
-            }
-        }
-
-        function resumeFullscreen(e) {
-            if(e) { e.preventDefault(); e.stopPropagation(); }
-
-            const docElm = document.documentElement;
-            const modal = document.getElementById('saveModal');
-            const modalBox = document.getElementById('modalBox');
-            
-            // Troviamo il container e il vecchio iframe
-            const playerContainer = document.getElementById('playerContainer');
-            const oldIframe = document.getElementById('videoFrame');
-
-            if (isAlohaBrowser) {
-                // 1. UCCISIONE PULITA
-                if (oldIframe) {
-                    playerContainer.removeChild(oldIframe);
-                }
-
-                modal.style.opacity = '0';
-                modalBox.style.transform = 'translateY(20px)';
-                setTimeout(() => { modal.style.display = 'none'; }, 300);
-
-                if (docElm.requestFullscreen) docElm.requestFullscreen();
-                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-
-                setTimeout(() => {
-                    let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
-                    if (!isMovie) src += `/${currentSeason}/${currentEp}`;
-                    
-                    let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
-                    if (contentLang) urlParams += `&lang=${contentLang}`; 
-                    if (lastTime > 0) urlParams += `&startAt=${Math.floor(lastTime)}`;
-                    
-                    src += urlParams;
-
-                    const newIframe = document.createElement('iframe');
-                    newIframe.id = 'videoFrame';
-                    newIframe.allow = 'autoplay; fullscreen; encrypted-media';
-                    newIframe.setAttribute('allowfullscreen', '');
-                    newIframe.src = src;
-
-                    playerContainer.appendChild(newIframe);
-                    
-                    // FIX: Sblocchiamo i pulsanti resettando lo stato di pausa!
-                    isPaused = false; 
-                    handleUserActivity();
-                }, 1000); 
-
-            } 
-            else {
-                // BROWSER STANDARD
-                if (oldIframe) oldIframe.style.display = 'none';
-
-                if (docElm.requestFullscreen) docElm.requestFullscreen();
-                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-
-                modal.style.opacity = '0';
-                modalBox.style.transform = 'translateY(20px)';
-                
-                if (oldIframe) {
-                    const iframeWin = oldIframe.contentWindow;
-                    try {
-                        iframeWin.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                        iframeWin.postMessage({cmd: 'play'}, '*');
-                        iframeWin.postMessage('play', '*');
-                    } catch(err) {}
-
-                    setTimeout(() => { 
-                        modal.style.display = 'none'; 
-                        oldIframe.style.display = 'block'; 
-                    }, 100);
-                }
-
-                // FIX: Sblocchiamo i pulsanti resettando lo stato di pausa!
                 isPaused = false;
-                handleUserActivity();
+                updateRemoteUI();
+                openVideoTab(); // Aggiorna l'URL nella scheda target
             }
         }
-        // --- 7. LOGICA MOUSE E UI ---
-        function startImmersiveExperience() {
-            updatePlayerSource(); 
-            toggleFullscreen();
-            document.getElementById('startOverlay').style.display = 'none';
-            document.getElementById('playerContainer').style.display = 'block';
-            handleUserActivity();
-        }
 
-        const btnPrev = document.getElementById('btnPrev');
-        const btnNext = document.getElementById('btnNext');
-        const btnBot = document.getElementById('btnBot');
-        const playerTitle = document.getElementById('playerTitle');
-
-        let isPaused = false; let lastTime = 0; let lastDuration = 0; let isMouseActive = false; let mouseHideTimeout;
-
-        function updateUI() {
-            let showPrev = false, showNext = false, showTopBar = false;
-
-            if (!isMovie) {
-                if (currentEp === totalEps) {
-                    btnNext.innerHTML = "Prossima Stagione ⏭️";
-                } else {
-                    btnNext.innerHTML = "Prossimo Ep. ⏭️";
-                }
-            }
-
-            if (isPaused || isMouseActive) {
-                showTopBar = true;
-                if (!isMovie && currentEp > 1) showPrev = true;
-                if (!isMovie) showNext = true; 
+        function saveAndExit() {
+            let botSaveLink = "";
+            if (isMovie) {
+                botSaveLink = `tg://resolve?domain=${botUsername}&start=save_${mediaId}_0_0_1`;
             } else {
-                if (!isMovie && currentEp > 1 && lastDuration > 0 && lastTime <= 5) showPrev = true;
-                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
+                botSaveLink = `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}_${totalEps}`;
             }
-
-            showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
-            showTopBar ? playerTitle.classList.add('visible') : playerTitle.classList.remove('visible');
-            showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
-            showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
-        }
-
-        const mouseCatcher = document.getElementById('mouseCatcher');
-
-        function handleUserActivity() {
-            isMouseActive = true; updateUI();
-
-            // Menu visibile -> lascio passare i click al video (seek/play/pausa nativi funzionano)
-            if (mouseCatcher) mouseCatcher.style.pointerEvents = 'none';
-
-            clearTimeout(mouseHideTimeout);
-            mouseHideTimeout = setTimeout(() => {
-                isMouseActive = false; updateUI();
-                // Ri-armo il rilevatore per intercettare il prossimo movimento sul video
-                if (mouseCatcher) mouseCatcher.style.pointerEvents = 'auto';
-            }, 3500);
-        }
-
-        // Qualsiasi minimo movimento sopra il video mostra il menu (desktop)
-        if (mouseCatcher) mouseCatcher.addEventListener('mousemove', handleUserActivity);
-        // Mobile: il tocco sul catcher rivela il menu; preventDefault evita che il tocco
-        // "trapassi" all'iframe. Col menu visibile il catcher è pointer-events:none,
-        // quindi i tocchi successivi raggiungono i controlli nativi del player.
-        if (mouseCatcher) mouseCatcher.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserActivity(); }, { passive: false });
-        // Mantengo il menu vivo mentre il puntatore si muove sui pulsanti/titolo
-        [btnPrev, btnNext, btnBot, playerTitle].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
-        window.addEventListener('touchstart', handleUserActivity);
-        window.addEventListener('click', handleUserActivity);
-
-        // Pannello di debug a schermo (?debug=1): mostra cosa invia vixsrc anche dove non c'è la console (browser in-app)
-        let debugBox = null;
-        if (DEBUG) {
-            debugBox = document.createElement('div');
-            debugBox.style.cssText = 'position:fixed;top:8px;left:8px;z-index:99999;background:rgba(0,0,0,.85);color:#0f0;font:11px/1.4 monospace;padding:8px 10px;border-radius:6px;max-width:92vw;white-space:pre-wrap;pointer-events:none;';
-            debugBox.textContent = 'DEBUG attivo — nessun messaggio ancora ricevuto da vixsrc';
-            (document.body || document.documentElement).appendChild(debugBox);
-        }
-
-        window.addEventListener('message', (event) => {
-            if (DEBUG && debugBox) {
-                try {
-                    const raw = typeof event.data === 'string' ? event.data : JSON.stringify(event.data);
-                    debugBox.textContent = 'origin: ' + event.origin
-                        + '\nt: ' + lastTime.toFixed(1) + 's  dur: ' + lastDuration.toFixed(1) + 's'
-                        + '\nraw: ' + String(raw).slice(0, 180);
-                } catch (_) {}
+            
+            // Chiude la tab del video se è aperta
+            if (videoTab && !videoTab.closed) {
+                videoTab.close();
             }
-            try {
-                const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                if (DEBUG) console.log('[player msg]', event.origin, data);
-                if (data && data.type === 'PLAYER_EVENT' && data.data) {
-                    const payload = data.data;
-                    if (payload.event === 'timeupdate') { lastTime = payload.currentTime; lastDuration = payload.duration; updateUI(); } 
-                    else if (payload.event === 'pause') { isPaused = true; updateUI(); } 
-                    else if (payload.event === 'play') { isPaused = false; updateUI(); }
-                    else if (payload.event === 'ended') { 
-                        if (!isMovie) btnNext.classList.add('visible'); 
-                        btnBot.classList.add('visible'); playerTitle.classList.add('visible'); 
-                    }
-                }
-            } catch (e) {}
-        });
+            
+            // Ritorna su Telegram
+            window.location.href = botSaveLink;
+        }
     </script>
 </body>
 </html>
