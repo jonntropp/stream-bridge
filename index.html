@@ -208,7 +208,7 @@
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             
-            let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
+            let urlParams = `?primaryColor=E50914&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
             
             return src + urlParams;
