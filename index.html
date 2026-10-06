@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="origin">
     <title>Pop Corn Bot</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
@@ -279,7 +279,8 @@
 
             // Il browser fisicamente impedirà l'autoplay grazie alla rimozione dell'attributo "allow".
             const frame = document.getElementById('videoFrame');
-            frame.setAttribute('allow', 'fullscreen; encrypted-media'); // Autoplay rimosso
+            frame.setAttribute('allow', 'fullscreen; encrypted-media');
+            frame.referrerPolicy = "origin"; // Aggiungi questa riga
             frame.src = getPreloadUrl();
 
             // Attendiamo 4.5 secondi affinché CF superi il controllo in background
@@ -367,6 +368,7 @@
                 // Assicuriamoci che l'autoplay sia attivo sull'iframe per i successivi episodi
                 const frame = document.getElementById('videoFrame');
                 frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+                frame.referrerPolicy = "origin"; // Aggiungi questa riga
                 frame.src = getFullUrl();
             }
         }
@@ -394,10 +396,8 @@
             if (unlockStep !== 2) return; // Impedisce i clic anticipati
             
             const frame = document.getElementById('videoFrame');
-            
-            // 1. Diamo il permesso di Autoplay all'iframe (ora che l'utente ha interagito)
             frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
-            // 2. Carichiamo la URL FULL col player
+            frame.referrerPolicy = "origin"; // Aggiungi questa riga
             frame.src = getFullUrl();
 
             toggleFullscreen();
