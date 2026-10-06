@@ -2,7 +2,9 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="referrer" content="origin">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Policy globale aggiornata a strict-origin -->
+    <meta name="referrer" content="strict-origin">
     <title>Pop Corn Bot</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
@@ -52,7 +54,7 @@
         /* --- STILI PLAYER IMMERSIVO E PRELOAD (DOPPIO CLIC) --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #000000; /* Schermata completamente nera e opaca */
+            background: #000000;
             z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
         }
         
@@ -168,8 +170,8 @@
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
         
-        <!-- Abbiamo tolto autoplay dall'allow per il precaricamento! -->
-        <iframe id="videoFrame" allow="fullscreen; encrypted-media" allowfullscreen referrerpolicy="no-referrer"></iframe>
+        <!-- Abbiamo tolto autoplay dall'allow per il precaricamento! Policy aggiornata a strict-origin -->
+        <iframe id="videoFrame" allow="fullscreen; encrypted-media" allowfullscreen referrerpolicy="strict-origin"></iframe>
         
         <div id="playerTitle"></div>
 
@@ -222,7 +224,8 @@
         // --- 2. GENERAZIONE URL DINAMICA (LOGICA BASE vs FULL) ---
         
         function getBaseUrl() {
-            let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
+            // Aggiunto /embed/ per evitare i blocchi di routing sulla pagina principale
+            let src = `https://vixsrc.to/embed/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             return src;
         }
@@ -280,7 +283,7 @@
             // Il browser fisicamente impedirà l'autoplay grazie alla rimozione dell'attributo "allow".
             const frame = document.getElementById('videoFrame');
             frame.setAttribute('allow', 'fullscreen; encrypted-media');
-            frame.referrerPolicy = "origin"; // Aggiungi questa riga
+            frame.referrerPolicy = "strict-origin"; // Forza la policy strict-origin
             frame.src = getPreloadUrl();
 
             // Attendiamo 4.5 secondi affinché CF superi il controllo in background
@@ -368,7 +371,7 @@
                 // Assicuriamoci che l'autoplay sia attivo sull'iframe per i successivi episodi
                 const frame = document.getElementById('videoFrame');
                 frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
-                frame.referrerPolicy = "origin"; // Aggiungi questa riga
+                frame.referrerPolicy = "strict-origin"; // Forza la policy strict-origin al cambio episodio
                 frame.src = getFullUrl();
             }
         }
@@ -397,7 +400,7 @@
             
             const frame = document.getElementById('videoFrame');
             frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
-            frame.referrerPolicy = "origin"; // Aggiungi questa riga
+            frame.referrerPolicy = "strict-origin"; // Forza la policy strict-origin al play
             frame.src = getFullUrl();
 
             toggleFullscreen();
