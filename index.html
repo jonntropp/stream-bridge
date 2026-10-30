@@ -50,10 +50,10 @@
         .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- STILI PLAYER IMMERSIVO E PRELOAD (DOPPIO CLIC) --- */
+        /* --- STILI PLAYER IMMERSIVO --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #000000; /* Schermata completamente nera e opaca */
+            background: #000000;
             z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
         }
         
@@ -151,12 +151,10 @@
         </div>
     </div>
 
-    <!-- OVERLAY DI AVVIO MULTI-STEP -->
     <div id="startOverlay">
         <h3 id="showTitleOverlay" style="color:white; margin-bottom: 40px; font-weight: 600; text-align:center;"></h3>
         
         <button id="startBtn" onclick="startImmersiveExperience()">
-            <!-- Rotellina di caricamento integrata nel pulsante -->
             <div class="loader" style="margin: 0; width: 36px; height: 36px; border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid #fff;"></div>
         </button>
         
@@ -169,7 +167,6 @@
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
         
-        <!-- Abbiamo tolto autoplay dall'allow per il precaricamento! -->
         <iframe id="videoFrame" allow="fullscreen; encrypted-media" allowfullscreen referrerpolicy="origin"></iframe>
         
         <div id="playerTitle"></div>
@@ -220,21 +217,14 @@
         const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
         let unlockStep = 0; 
 
-        // --- 2. GENERAZIONE URL DINAMICA (LOGICA BASE vs FULL) ---
-        
+        // --- 2. GENERAZIONE URL DINAMICA (ENDPOINT UFFICIALE VIXSRC) ---
         function getBaseUrl() {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             return src;
         }
 
-        function getPreloadUrl() {
-            // URL Esca + autoplay spento (Così siamo certi che CF non reagisca a troppi parametri e non ci sia audio)
-            return getBaseUrl() + `?autoplay=false`;
-        }
-
         function getFullUrl() {
-            // URL finale con tutti i parametri grafici e autoplay attivo
             let src = getBaseUrl();
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`; 
@@ -272,39 +262,20 @@
             
             setupTitles();
             
-            // FASE 1: Caricamento Esca silenzioso.
-            // Il pulsante inizia opaco con la rotellina al suo interno (vedi HTML) e non è cliccabile.
             const btn = document.getElementById('startBtn');
             btn.style.opacity = '0.5';
             btn.style.pointerEvents = 'none';
 
-            // Il browser fisicamente impedirà l'autoplay grazie alla rimozione dell'attributo "allow".
-            const frame = document.getElementById('videoFrame');
-            frame.setAttribute('allow', 'fullscreen; encrypted-media'); // Autoplay rimosso
-            frame.referrerPolicy = "origin";
-            frame.src = getPreloadUrl();
-
-            // Attendiamo affinché CF superi il controllo in background
+            // Non carichiamo più l'URL esca interrotto a 1.5s per evitare blocchi rate-limit/WAF di Cloudflare
             setTimeout(() => {
                 const helpText = document.getElementById('startHelpText');
-
-                // Dell'esca ci serve solo il cookie di clearance, che ormai è nel cookie jar:
-                // il player caricato qui viene comunque buttato via da startImmersiveExperience().
-                // Lo smontiamo subito, altrimenti Aloha aggancia il <video> rimasto appeso
-                // col suo player nativo se l'utente tarda a premere play.
-                frame.src = 'about:blank';
-
-                unlockStep = 2; // Pronto per essere cliccato
+                unlockStep = 2;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
                 btn.style.borderColor = '#4caf50';
-                
-                // Rimpiazziamo la rotellina con l'icona Play al termine del caricamento
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; 
-                
-                helpText.innerHTML = '<span style="color:#4caf50;">Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
-                
-            }, 1500); 
+                helpText.innerHTML = '<span style="color:#4caf50;">Server Pronto!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
+            }, 600); 
         }
 
         function setProtectedAndGo() { 
@@ -365,8 +336,6 @@
                 isPaused = false; lastTime = 0; lastDuration = 0;
                 setupTitles();
                 
-                // Essendo la sessione già validata, ricarichiamo l'URL completo. 
-                // Assicuriamoci che l'autoplay sia attivo sull'iframe per i successivi episodi
                 const frame = document.getElementById('videoFrame');
                 frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
                 frame.referrerPolicy = "origin";
@@ -392,16 +361,12 @@
             }
         }
 
-        // FASE 2: L'utente preme il tasto PLAY illuminato
         function startImmersiveExperience() {
-            if (unlockStep !== 2) return; // Impedisce i clic anticipati
+            if (unlockStep !== 2) return;
             
             const frame = document.getElementById('videoFrame');
-            
-            // 1. Diamo il permesso di Autoplay all'iframe (ora che l'utente ha interagito)
             frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
             frame.referrerPolicy = "origin";
-            // 2. Carichiamo la URL FULL col player
             frame.src = getFullUrl();
 
             toggleFullscreen();
