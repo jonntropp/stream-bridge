@@ -130,7 +130,7 @@
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
         }
         
-        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; transition: width 0.1s, height 0.1s; }
+        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; }
 
         #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
         #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
@@ -178,11 +178,6 @@
         .overlay-btn:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.35); transform: translateY(-1px); color: #fff; }
         .overlay-btn:active { transform: scale(0.97); }
 
-        .key-hint {
-            font-size: 10.5px; background: rgba(255,255,255,0.14); padding: 2px 6px;
-            border-radius: 5px; font-weight: 600; color: #ddd; border: 1px solid rgba(255,255,255,0.1);
-        }
-
         #btnBot {
             background: rgba(229, 9, 20, 0.82); border-color: rgba(255, 255, 255, 0.2); font-weight: 600;
         } 
@@ -198,18 +193,27 @@
         #btnPrev { left: 36px; }
         #btnNext { right: 36px; }
 
-        /* --- MODAL DI SALVATAGGIO --- */
+        /* --- MODAL DI SALVATAGGIO (SENZA RACE CONDITION) --- */
         #saveModal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            z-index: 1000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
+            background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+        #saveModal.open {
+            opacity: 1; visibility: visible; pointer-events: auto;
         }
         .modal-box {
             background: rgba(22, 22, 26, 0.94); padding: 38px 32px; border-radius: 26px; text-align: center;
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 25px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.08);
-            max-width: 410px; width: 90%; transform: translateY(25px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 410px; width: 90%; transform: translateY(20px);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             box-sizing: border-box;
+        }
+        #saveModal.open .modal-box {
+            transform: translateY(0);
         }
         .modal-icon-badge {
             width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 16px auto;
@@ -230,7 +234,6 @@
             #epBadge { font-size: 10.5px; padding: 3px 7px; }
             .overlay-btn { padding: 7px 13px; font-size: 11.5px; border-radius: 20px; gap: 6px; }
             .overlay-btn svg { width: 14px; height: 14px; }
-            .key-hint { display: none; }
             #btnPrev { left: 16px; bottom: 75px; }
             #btnNext { right: 16px; bottom: 75px; }
             #fullscreenTrigger { bottom: 0px; right: 0px; width: 65px; height: 65px; }
@@ -287,9 +290,11 @@
     <!-- CONTAINER PLAYER -->
     <div id="playerContainer">
         <div id="mouseCatcher"></div>
+        <!-- Intercetta il clic sull'icona fullscreen in basso a destra del player -->
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
         
-        <iframe id="videoFrame" allow="fullscreen; encrypted-media" allowfullscreen referrerpolicy="origin"></iframe>
+        <!-- Rimosso fullscreen/allowfullscreen dall'iframe: così l'iframe non può mai andare in fullscreen da solo nascondendo la UI -->
+        <iframe id="videoFrame" allow="autoplay; encrypted-media" referrerpolicy="origin"></iframe>
         
         <!-- BARRA SUPERIORE FLEXBOX -->
         <div id="topBar">
@@ -298,11 +303,6 @@
                 <div id="playerTitle"></div>
             </div>
             <div class="top-actions">
-                <button id="btnFs" class="overlay-btn" onclick="toggleFullscreen(event)">
-                    <svg id="fsSvg" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-                    <span id="fsText">Schermo Intero</span>
-                    <span class="key-hint">F</span>
-                </button>
                 <a href="#" id="btnBot" class="overlay-btn" onclick="saveAndExit(event)">
                     <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
                     <span>Salva ed Esci</span>
@@ -362,7 +362,6 @@
         const os = getOS();
 
         let isIntentionalExit = false;
-        let isTogglingFs = false; 
         let isPaused = false;
         function setExitingFlag() { isIntentionalExit = true; }
 
@@ -429,8 +428,6 @@
             btn.style.opacity = '0.5';
             btn.style.pointerEvents = 'none';
 
-            // Nessuna richiesta preliminare interrotta: sblocchiamo il pulsante Play
-            // ed effettuiamo una singola chiamata pulita quando l'utente clicca.
             setTimeout(() => {
                 const helpText = document.getElementById('startHelpText');
 
@@ -511,72 +508,78 @@
                 } catch (_) {}
                 
                 const frame = document.getElementById('videoFrame');
-                frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+                frame.setAttribute('allow', 'autoplay; encrypted-media');
                 frame.referrerPolicy = "origin";
                 frame.src = getFullUrl();
                 frame.focus();
             }
         }
 
-        // --- FULLSCREEN & UI (LOGICA PLAY FINALE) ---
+        // --- FULLSCREEN & UI DETERMINISTICA ---
         function isCurrentlyFullscreen() {
             return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
         }
 
-        function updateFullscreenButtonUI() {
-            const fsText = document.getElementById('fsText');
-            const fsSvg = document.getElementById('fsSvg');
-            const isFs = isCurrentlyFullscreen();
-            if (fsText) fsText.innerText = isFs ? "Finestra" : "Schermo Intero";
-            if (fsSvg) {
-                fsSvg.innerHTML = isFs 
-                    ? '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'
-                    : '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+        function enterFullscreen() {
+            const docElm = document.documentElement;
+            if (!isCurrentlyFullscreen()) {
+                if (docElm.requestFullscreen) docElm.requestFullscreen().catch(() => {});
+                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+            }
+        }
+
+        function exitFullscreenMode() {
+            if (isCurrentlyFullscreen()) {
+                if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
             }
         }
 
         function toggleFullscreen(e) {
             if(e) { e.preventDefault(); e.stopPropagation(); }
-            const docElm = document.documentElement;
-            if (!isCurrentlyFullscreen()) {
-                if (docElm.requestFullscreen) docElm.requestFullscreen();
-                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+            const modal = document.getElementById('saveModal');
+            if (modal.classList.contains('open')) {
+                resumeFullscreen(e);
+            } else if (!isCurrentlyFullscreen()) {
+                enterFullscreen();
+                const frame = document.getElementById('videoFrame');
+                if (frame) frame.focus();
             } else {
-                isTogglingFs = true; 
-                if (document.exitFullscreen) document.exitFullscreen();
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                else if (document.msExitFullscreen) document.msExitFullscreen();
-                setTimeout(() => { isTogglingFs = false; }, 1500); 
+                // Uscendo dal fullscreen si attiverà automaticamente exitHandler() mostrando il modale
+                exitFullscreenMode();
             }
-            const frame = document.getElementById('videoFrame');
-            if (frame) frame.focus();
         }
 
         function startImmersiveExperience() {
             if (unlockStep !== 2) return;
             
             const frame = document.getElementById('videoFrame');
-            frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+            frame.setAttribute('allow', 'autoplay; encrypted-media');
             frame.referrerPolicy = "origin";
             frame.src = getFullUrl();
 
-            toggleFullscreen();
+            enterFullscreen();
             document.getElementById('startOverlay').style.display = 'none';
             handleUserActivity();
             frame.focus();
         }
 
-        function togglePlayPause() {
+        function sendPlayerCommand(wantPause) {
             const frame = document.getElementById('videoFrame');
             if (!frame) return;
-            const wantPause = !isPaused;
             try {
                 const win = frame.contentWindow;
                 win.postMessage(JSON.stringify({ event: 'command', func: wantPause ? 'pauseVideo' : 'playVideo', args: '' }), '*');
                 win.postMessage({ cmd: wantPause ? 'pause' : 'play' }, '*');
                 win.postMessage(wantPause ? 'pause' : 'play', '*');
             } catch (err) {}
+        }
+
+        function togglePlayPause() {
+            const wantPause = !isPaused;
+            sendPlayerCommand(wantPause);
             isPaused = wantPause;
             handleUserActivity(); 
         }
@@ -584,62 +587,56 @@
         window.addEventListener('keydown', function(e) {
             if (document.getElementById('playerContainer').style.display !== 'block' || document.getElementById('startOverlay').style.display !== 'none') return;
             if (e.repeat) return; 
-            if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(e); } 
-            else if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); togglePlayPause(); }
+            if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleFullscreen(e);
+            } else if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                const modal = document.getElementById('saveModal');
+                if (modal.classList.contains('open')) {
+                    resumeFullscreen(e);
+                } else {
+                    togglePlayPause();
+                }
+            }
         });
 
         document.addEventListener('fullscreenchange', exitHandler);
         document.addEventListener('webkitfullscreenchange', exitHandler);
 
         function exitHandler() {
-            updateFullscreenButtonUI();
-            const isFullscreen = isCurrentlyFullscreen();
-            if (!isFullscreen && isTogglingFs) { isTogglingFs = false; return; }
-            
             if (document.getElementById('startOverlay').style.display !== 'none') return;
 
             const modal = document.getElementById('saveModal');
-            const modalBox = document.getElementById('modalBox');
+            const isFullscreen = isCurrentlyFullscreen();
 
             if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
+                // Qualsiasi uscita dal fullscreen (ESC, F, o pulsante in basso a destra) apre il modale in modo affidabile
                 document.getElementById('btnModalSave').href = getBotSaveLink();
-                modal.style.display = 'flex';
-                const iframeWin = document.getElementById('videoFrame').contentWindow;
-                try {
-                    iframeWin.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); 
-                    iframeWin.postMessage({cmd: 'pause'}, '*'); 
-                    iframeWin.postMessage('pause', '*'); 
-                } catch(err) {}
-                isPaused = true; updateUI();
-                setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'translateY(0)'; }, 10);
+                sendPlayerCommand(true);
+                isPaused = true;
+                updateUI();
+                modal.classList.add('open');
+                window.focus();
+            } else if (isFullscreen) {
+                // Se l'utente rientra in fullscreen, chiude sempre il modale e mostra la UI
+                modal.classList.remove('open');
+                handleUserActivity();
             }
         }
 
         function resumeFullscreen(e) {
             if(e) { e.preventDefault(); e.stopPropagation(); }
-            const docElm = document.documentElement;
             const modal = document.getElementById('saveModal');
-            const modalBox = document.getElementById('modalBox');
-            
-            modal.style.opacity = '0';
-            modalBox.style.transform = 'translateY(20px)';
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
+            modal.classList.remove('open');
 
-            if (docElm.requestFullscreen) docElm.requestFullscreen();
-            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
-            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+            enterFullscreen();
+            sendPlayerCommand(false);
+            isPaused = false;
+            handleUserActivity();
 
-            const oldIframe = document.getElementById('videoFrame');
-            if (oldIframe) {
-                const iframeWin = oldIframe.contentWindow;
-                try {
-                    iframeWin.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                    iframeWin.postMessage({cmd: 'play'}, '*');
-                    iframeWin.postMessage('play', '*');
-                } catch(err) {}
-                oldIframe.focus();
-            }
-            isPaused = false; handleUserActivity();
+            const frame = document.getElementById('videoFrame');
+            if (frame) frame.focus();
         }
 
         const topBar = document.getElementById('topBar');
@@ -653,7 +650,7 @@
             if (!isMovie && btnNextLabel) {
                 btnNextLabel.innerText = (currentEp === totalEps) ? "Prossima Stagione" : "Prossimo Ep.";
             }
-            if (isPaused || isMouseActive) {
+            if (isPaused || isMouseActive || !isCurrentlyFullscreen()) {
                 showTopBar = true;
                 if (!isMovie && currentEp > 1) showPrev = true;
                 if (!isMovie) showNext = true; 
