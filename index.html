@@ -10,63 +10,122 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
+        :root {
+            --brand-red: #E50914;
+            --brand-red-hover: #f6121d;
+            --accent-green: #2ecc71;
+            --glass-bg: rgba(18, 18, 22, 0.72);
+            --glass-border: rgba(255, 255, 255, 0.12);
+        }
+
         /* --- STILI GENERALI --- */
         body { 
-            background-color: #0f0f0f; color: #e0e0e0; 
+            background-color: #08080a;
+            background-image: radial-gradient(circle at 50% 20%, rgba(229, 9, 20, 0.12) 0%, rgba(8, 8, 10, 1) 70%);
+            color: #e0e0e0; 
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             height: 100vh; margin: 0; padding: 0; box-sizing: border-box; overflow: hidden;
             user-select: none; -webkit-user-select: none;
         }
         
-        .container { max-width: 480px; width: 100%; text-align: center; padding: 20px; z-index: 10; }
+        .container { max-width: 460px; width: 100%; text-align: center; padding: 20px; z-index: 10; box-sizing: border-box; }
 
+        /* --- CARD INIZIALE --- */
         .card { 
-            background: #1a1a1a; padding: 40px 30px; border-radius: 20px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 1px solid #333;
-            display: none; animation: fadeIn 0.4s ease-out;
+            background: rgba(20, 20, 24, 0.88);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 38px 30px; border-radius: 24px; 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.08);
+            display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        h2 { color: #fff; margin: 0 0 15px 0; font-weight: 600; font-size: 22px; }
-        p { color: #aaa; line-height: 1.6; margin-bottom: 30px; font-size: 14px; max-width: 95%; margin-left: auto; margin-right: auto; }
-        .highlight { color: #4caf50; font-weight: 600; } 
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .brand-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 5px 14px; border-radius: 30px; font-size: 11px; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; color: #ccc; margin-bottom: 18px;
+        }
 
-        .btn-group { display: flex; flex-direction: column; gap: 15px; }
+        h2 { color: #fff; margin: 0 0 12px 0; font-weight: 600; font-size: 22px; letter-spacing: -0.3px; }
+        p { color: #9a9aa6; line-height: 1.6; margin-bottom: 28px; font-size: 14px; max-width: 95%; margin-left: auto; margin-right: auto; }
+        .highlight { color: var(--accent-green); font-weight: 600; } 
+
+        .btn-group { display: flex; flex-direction: column; gap: 12px; }
         .btn { 
-            display: flex; align-items: center; justify-content: center; width: 100%; padding: 18px 0; 
-            text-decoration: none; border-radius: 12px; font-size: 15px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px 20px; 
+            text-decoration: none; border-radius: 14px; font-size: 15px; font-weight: 600; border: none; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); box-sizing: border-box; font-family: inherit;
         }
+        .btn svg { width: 18px; height: 18px; flex-shrink: 0; }
         .btn:active { transform: scale(0.98); }
-        .btn-install { background: #fff; color: #000; }
-        .btn-install:hover { background: #e0e0e0; }
-        .btn-confirm { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #444; }
-        .btn-confirm:hover { background: rgba(255, 255, 255, 0.2); border-color: #666; }
+        .btn-install { background: #ffffff; color: #09090b; box-shadow: 0 8px 20px rgba(255,255,255,0.12); }
+        .btn-install:hover { background: #e8e8ec; transform: translateY(-1px); }
+        .btn-confirm { background: rgba(255, 255, 255, 0.07); color: #fff; border: 1px solid rgba(255, 255, 255, 0.12); font-weight: 500; }
+        .btn-confirm:hover { background: rgba(255, 255, 255, 0.13); border-color: rgba(255, 255, 255, 0.25); }
 
-        .skip-link { color: #666; font-size: 13px; text-decoration: underline; margin-top: 25px; display: inline-block; cursor: pointer; transition: color 0.2s; }
-        .skip-link:hover { color: #999; }
-        #penaltyView { display: none; margin-top: 20px; }
-        .timer-bar { width: 100%; height: 6px; background: #000; margin-top: 15px; border-radius: 3px; overflow: hidden; }
-        .timer-fill { height: 100%; background: #2d9cdb; width: 0%; transition: width 0.1s linear; }
+        .skip-link { color: #686873; font-size: 12.5px; text-decoration: none; border-bottom: 1px dashed #444; padding-bottom: 2px; margin-top: 24px; display: inline-block; cursor: pointer; transition: all 0.2s; }
+        .skip-link:hover { color: #aaa; border-bottom-color: #888; }
+        
+        #penaltyView { display: none; margin-top: 15px; }
+        .timer-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.06); margin-top: 15px; border-radius: 6px; overflow: hidden; }
+        .timer-fill { height: 100%; background: linear-gradient(90deg, #E50914, #ff5f6d); width: 0%; transition: width 0.1s linear; border-radius: 6px; }
 
-        .loader { border: 3px solid #222; border-top: 3px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto 20px auto; }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #fff; border-radius: 50%; width: 38px; height: 38px; animation: spin 0.75s linear infinite; margin: 0 auto 18px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* --- STILI PLAYER IMMERSIVO --- */
+        /* --- OVERLAY PRE-PLAY CINEMATOGRAFICO --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at center, #141414 0%, #000000 100%);
+            background: radial-gradient(circle at center, #15151a 0%, #050507 100%);
             z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; box-sizing: border-box;
+        }
+
+        #mediaTypeBadge {
+            font-size: 11px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase;
+            color: #bbb; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            padding: 6px 14px; border-radius: 20px; margin-bottom: 14px;
+        }
+
+        #showTitleOverlay {
+            color: #ffffff; margin: 0 0 42px 0; font-weight: 700;
+            font-size: clamp(20px, 4vw, 32px); text-align: center;
+            max-width: 680px; letter-spacing: -0.4px; line-height: 1.25;
+            text-shadow: 0 8px 25px rgba(0,0,0,0.8);
         }
         
         #startBtn {
-            background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(255, 255, 255, 0.5); color: white; 
-            width: 94px; height: 94px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 30px rgba(76, 175, 80, 0.15); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); outline: none; font-size: 35px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.04); border: 2px solid rgba(255, 255, 255, 0.25); color: white; 
+            width: 96px; height: 96px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); outline: none;
         }
-        #startBtn:hover { transform: scale(1.1); background: rgba(76, 175, 80, 0.15); border-color: #4caf50; box-shadow: 0 0 40px rgba(76, 175, 80, 0.4); }
+        #startBtn.ready {
+            border-color: var(--accent-green);
+            background: rgba(46, 204, 113, 0.12);
+            box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.5), 0 15px 35px rgba(0, 0, 0, 0.7);
+            animation: pulseRing 2s infinite;
+        }
+        @keyframes pulseRing {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.45), 0 15px 35px rgba(0, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 22px rgba(46, 204, 113, 0), 0 15px 35px rgba(0, 0, 0, 0.7); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0), 0 15px 35px rgba(0, 0, 0, 0.7); }
+        }
+        #startBtn:hover { transform: scale(1.08); background: rgba(46, 204, 113, 0.22); }
         #startBtn:active { transform: scale(0.95); }
         #startBtn svg { width: 42px; height: 42px; margin-left: 5px; fill: currentColor; }
 
+        .status-pill {
+            margin-top: 32px; padding: 10px 20px; border-radius: 30px;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 13.5px; font-weight: 500; text-align: center; line-height: 1.5;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* --- CONTAINER PLAYER E TOP BAR FLEXBOX --- */
         #playerContainer {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
         }
@@ -76,55 +135,85 @@
         #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
         #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
 
-        /* --- GRADIENTE SUPERIORE, TITOLO E PULSANTI --- */
-        #topGradient {
-            position: absolute; top: 0; left: 0; width: 100%; height: 110px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
-            opacity: 0; pointer-events: none; transition: opacity 0.4s ease; z-index: 90;
+        /* Barra superiore responsive */
+        #topBar {
+            position: absolute; top: 0; left: 0; width: 100%;
+            padding: 24px 36px 40px 36px; box-sizing: border-box;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 55%, transparent 100%);
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            opacity: 0; transform: translateY(-8px); pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s ease; z-index: 100;
         }
-        #topGradient.visible { opacity: 1; }
+        #topBar.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .title-group {
+            display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;
+        }
+
+        #epBadge {
+            background: var(--brand-red); color: #fff; font-size: 12px; font-weight: 700;
+            padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(229, 9, 20, 0.4); display: none;
+        }
 
         #playerTitle {
-            position: absolute; top: 28px; left: 40px; color: #fff; font-size: 22px; font-weight: 600;
-            letter-spacing: 0.4px; text-shadow: 0 2px 10px rgba(0,0,0,0.9);
-            opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 100;
-            max-width: 55vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            color: #fff; font-size: 20px; font-weight: 600;
+            letter-spacing: 0.2px; text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
+        .top-actions {
+            display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+        }
+
+        /* Pulsanti HUD */
         .overlay-btn {
-            position: absolute; background: rgba(25, 25, 25, 0.55); color: #f0f0f0; 
-            text-decoration: none; padding: 10px 22px; border-radius: 30px; 
-            font-size: 14px; font-weight: 500; letter-spacing: 0.5px; border: 1px solid rgba(255, 255, 255, 0.14); 
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
-            opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
-            z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.4); font-family: 'Poppins', sans-serif; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--glass-bg); color: #f2f2f2; 
+            text-decoration: none; padding: 10px 20px; border-radius: 30px; 
+            font-size: 13.5px; font-weight: 500; letter-spacing: 0.3px; border: 1px solid var(--glass-border); 
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); 
+            transition: all 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.45); font-family: 'Poppins', sans-serif; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
         }
-        
-        #playerTitle.visible, .overlay-btn.visible { opacity: 1; pointer-events: auto; }
-        .overlay-btn:hover { background: rgba(229, 9, 20, 0.85); border-color: rgba(255, 255, 255, 0.3); transform: scale(1.04); color: #fff; }
+        .overlay-btn svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+        .overlay-btn:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.35); transform: translateY(-1px); color: #fff; }
+        .overlay-btn:active { transform: scale(0.97); }
 
-        #btnPrev { top: 85%; left: 40px; transform: translateY(-50%); }
-        #btnPrev:hover { transform: translateY(-50%) scale(1.04); }
-        #btnNext { top: 85%; right: 40px; transform: translateY(-50%); }
-        #btnNext:hover { transform: translateY(-50%) scale(1.04); }
-        
-        #btnFs { top: 26px; right: 205px; }
         .key-hint {
-            font-size: 11px; background: rgba(255,255,255,0.15); padding: 2px 6px;
-            border-radius: 5px; font-weight: 600; color: #ddd;
+            font-size: 10.5px; background: rgba(255,255,255,0.14); padding: 2px 6px;
+            border-radius: 5px; font-weight: 600; color: #ddd; border: 1px solid rgba(255,255,255,0.1);
         }
 
-        #btnBot { top: 26px; right: 40px; background: rgba(229, 9, 20, 0.75); border-color: rgba(229, 9, 20, 0.5); font-weight: 600; } 
-        #btnBot:hover { background: rgba(229, 9, 20, 1); }
+        #btnBot {
+            background: rgba(229, 9, 20, 0.82); border-color: rgba(255, 255, 255, 0.2); font-weight: 600;
+        } 
+        #btnBot:hover { background: var(--brand-red-hover); box-shadow: 0 6px 22px rgba(229, 9, 20, 0.5); }
 
-        /* --- TOAST DI NOTIFICA --- */
+        /* Pulsanti Episodio Precedente / Successivo */
+        .bottom-nav-btn {
+            position: absolute; bottom: 88px; z-index: 100;
+            opacity: 0; pointer-events: none; transform: translateY(8px);
+        }
+        .bottom-nav-btn.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        
+        #btnPrev { left: 36px; }
+        #btnNext { right: 36px; }
+
+        /* Stile Netflix ad alto contrasto negli ultimi 30 secondi */
+        #btnNext.up-next-glow {
+            background: #ffffff; color: #0a0a0c; border-color: #ffffff; font-weight: 600;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.45);
+        }
+        #btnNext.up-next-glow:hover { background: #e6e6e6; color: #000; }
+
+        /* --- TOAST DI STATO --- */
         #statusToast {
-            position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%) translateY(15px);
-            background: rgba(20, 20, 20, 0.85); color: #fff; padding: 10px 22px; border-radius: 30px;
-            font-size: 13px; font-weight: 500; border: 1px solid rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6); z-index: 120; opacity: 0; pointer-events: none;
+            position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%) translateY(15px);
+            background: rgba(18, 18, 22, 0.88); color: #fff; padding: 10px 22px; border-radius: 30px;
+            font-size: 13px; font-weight: 500; border: 1px solid rgba(255,255,255,0.14);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.65); z-index: 120; opacity: 0; pointer-events: none;
             transition: opacity 0.3s ease, transform 0.3s ease; white-space: nowrap;
         }
         #statusToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -132,98 +221,143 @@
         /* --- MODAL DI SALVATAGGIO --- */
         #saveModal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             z-index: 1000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
         }
         .modal-box {
-            background: rgba(22, 22, 22, 0.92); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.12);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9); max-width: 420px; width: 90%; transform: translateY(30px); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: rgba(22, 22, 26, 0.94); padding: 38px 32px; border-radius: 26px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.08);
+            max-width: 410px; width: 90%; transform: translateY(25px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
         }
-        .modal-box h3 { margin: 0 0 10px 0; font-size: 24px; color: #fff; }
-        .modal-box p { color: #bbb; margin-bottom: 25px; font-size: 15px; }
-        .modal-btns { display: flex; flex-direction: column; gap: 12px; }
-        .modal-btns .btn { padding: 16px; font-size: 16px; border-radius: 14px; }
+        .modal-icon-badge {
+            width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 16px auto;
+            background: rgba(229, 9, 20, 0.14); border: 1px solid rgba(229, 9, 20, 0.35);
+            display: flex; align-items: center; justify-content: center; color: var(--brand-red);
+        }
+        .modal-icon-badge svg { width: 24px; height: 24px; fill: currentColor; }
+        .modal-box h3 { margin: 0 0 8px 0; font-size: 22px; color: #fff; font-weight: 600; }
+        .modal-box p { color: #a5a5b0; margin-bottom: 26px; font-size: 14.5px; }
+        .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+        .modal-btns .btn { padding: 15px; font-size: 15px; border-radius: 14px; }
 
+        /* --- RESPONSIVE MOBILE & LANDSCAPE --- */
         @media (max-width: 768px), (max-height: 500px) {
             #mouseCatcher { cursor: auto; }
-            #playerTitle { top: 16px; left: 15px; font-size: 14px; max-width: 45vw; }
-            .overlay-btn { padding: 6px 13px; font-size: 11px; border-radius: 20px; letter-spacing: 0.4px; }
-            #btnPrev { top: auto; bottom: 85px; left: 15px; transform: none; }
-            #btnPrev:hover { transform: scale(1.03); }
-            #btnNext { top: auto; bottom: 85px; right: 15px; transform: none; }
-            #btnNext:hover { transform: scale(1.03); }
-            #btnBot  { top: 14px; right: 15px; }
-            #btnFs   { top: 14px; right: 135px; }
+            #topBar { padding: 14px 16px 26px 16px; }
+            #playerTitle { font-size: 14px; }
+            #epBadge { font-size: 10.5px; padding: 3px 7px; }
+            .overlay-btn { padding: 7px 13px; font-size: 11.5px; border-radius: 20px; gap: 6px; }
+            .overlay-btn svg { width: 14px; height: 14px; }
             .key-hint { display: none; }
+            #btnPrev { left: 16px; bottom: 75px; }
+            #btnNext { right: 16px; bottom: 75px; }
+            #statusToast { bottom: 75px; font-size: 12px; padding: 8px 16px; }
             #fullscreenTrigger { bottom: 0px; right: 0px; width: 65px; height: 65px; }
-            .modal-box { padding: 25px 15px; }
-            .modal-box h3 { font-size: 20px; }
+            .modal-box { padding: 28px 20px; }
+            .modal-box h3 { font-size: 19px; }
             .modal-box p { font-size: 13px; }
-            .modal-btns .btn { padding: 12px; font-size: 14px; }
+            .modal-btns .btn { padding: 13px; font-size: 14px; }
         }
     </style>
 </head>
 <body>
 
     <div class="container" id="authContainer">
-        <div id="loaderView"><div class="loader"></div><p style="font-size: 12px; color: #555;">Verifica sicurezza...</p></div>
+        <div id="loaderView">
+            <div class="loader"></div>
+            <p style="font-size: 12.5px; color: #666;">Verifica sicurezza...</p>
+        </div>
         <div id="mainView" class="card">
             <div id="choiceContent">
+                <div class="brand-pill">🍿 Pop Corn Player</div>
                 <h2 id="titleText">Visione senza interruzioni</h2>
                 <p id="descText">Il video contiene finestre popup. Installa la protezione consigliata per guardare con <span class="highlight">zero pubblicità</span>.</p>
                 <div class="btn-group">
-                    <a href="#" id="btnInstall" target="_blank" class="btn btn-install">Installa Protezione</a>
-                    <button onclick="setProtectedAndGo()" class="btn btn-confirm">Ho già la protezione</button>
+                    <a href="#" id="btnInstall" target="_blank" class="btn btn-install">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                        <span>Installa Protezione</span>
+                    </a>
+                    <button onclick="setProtectedAndGo()" class="btn btn-confirm">Ho già la protezione attiva</button>
                 </div>
-                <a onclick="triggerPenalty()" class="skip-link">Non installare e continua con le pubblicità &rarr;</a>
+                <a onclick="triggerPenalty()" class="skip-link">Continua senza protezione (con pubblicità) &rarr;</a>
             </div>
             <div id="penaltyView">
                 <div class="loader" style="width:30px; height:30px; border-width:2px;"></div>
-                <p style="margin-bottom: 10px;">Attendi il caricamento del video...</p>
+                <p style="margin-bottom: 10px;">Preparazione del flusso video in corso...</p>
                 <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
             </div>
         </div>
     </div>
 
-    <!-- OVERLAY DI AVVIO -->
+    <!-- OVERLAY DI AVVIO CINEMATOGRAFICO -->
     <div id="startOverlay">
-        <h3 id="showTitleOverlay" style="color:white; margin-bottom: 35px; font-weight: 600; text-align:center; padding: 0 20px;"></h3>
+        <div id="mediaTypeBadge">🎬 STREAMING</div>
+        <h3 id="showTitleOverlay"></h3>
         
         <button id="startBtn" onclick="startImmersiveExperience()">
-            <div class="loader" style="margin: 0; width: 36px; height: 36px; border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid #fff;"></div>
+            <div class="loader" style="margin: 0; width: 34px; height: 34px; border: 3px solid rgba(255,255,255,0.2); border-top: 3px solid #fff;"></div>
         </button>
         
-        <p id="startHelpText" style="color: #ff9800; margin-top: 25px; font-size: 15px; font-weight: 500; text-align:center;">
-            Connessione sicura al server... <br><span style="font-size:12px; font-weight:normal; color:#aaa;">Attendere prego</span>
-        </p>
+        <div id="startHelpText" class="status-pill" style="color: #ffb74d;">
+            Connessione sicura al server... <br><span style="font-size:12px; font-weight:normal; color:#8e8e99;">Attendere prego</span>
+        </div>
     </div>
 
+    <!-- CONTAINER PLAYER -->
     <div id="playerContainer">
-        <div id="topGradient"></div>
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
         
         <iframe id="videoFrame" allow="fullscreen; encrypted-media" allowfullscreen referrerpolicy="origin"></iframe>
         
-        <div id="playerTitle"></div>
+        <!-- BARRA SUPERIORE FLEXBOX -->
+        <div id="topBar">
+            <div class="title-group">
+                <span id="epBadge">S1:E1</span>
+                <div id="playerTitle"></div>
+            </div>
+            <div class="top-actions">
+                <button id="btnFs" class="overlay-btn" onclick="toggleFullscreen(event)">
+                    <svg id="fsSvg" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                    <span id="fsText">Schermo Intero</span>
+                    <span class="key-hint">F</span>
+                </button>
+                <a href="#" id="btnBot" class="overlay-btn" onclick="saveAndExit(event)">
+                    <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                    <span>Salva ed Esci</span>
+                </a>
+            </div>
+        </div>
 
-        <button id="btnFs" class="overlay-btn" onclick="toggleFullscreen(event)">
-            <span id="fsIcon">⛶</span> <span id="fsText">Schermo Intero</span> <span class="key-hint">F</span>
-        </button>
-        <a href="#" id="btnBot" class="overlay-btn" onclick="saveAndExit(event)">💾 Salva ed Esci</a>
-        <a href="#" id="btnPrev" class="overlay-btn" onclick="changeEpisode(-1, event)">⏮️ Ep. Precedente</a>
-        <a href="#" id="btnNext" class="overlay-btn" onclick="changeEpisode(1, event)">Prossimo Ep. ⏭️</a>
+        <!-- PULSANTI EPISODI IN BASSO -->
+        <a href="#" id="btnPrev" class="overlay-btn bottom-nav-btn" onclick="changeEpisode(-1, event)">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            <span>Ep. Precedente</span>
+        </a>
+        <a href="#" id="btnNext" class="overlay-btn bottom-nav-btn" onclick="changeEpisode(1, event)">
+            <span id="btnNextLabel">Prossimo Ep.</span>
+            <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </a>
 
         <div id="statusToast"></div>
     </div>
 
+    <!-- MODAL DI SALVATAGGIO -->
     <div id="saveModal">
         <div class="modal-box" id="modalBox">
-            <h3>Sei uscito dal player</h3>
-            <p id="modalDescText">Vuoi salvare i progressi dell' <span id="modalEpText" style="color:white; font-weight:bold;">Episodio</span> prima di chiudere?</p>
+            <div class="modal-icon-badge">
+                <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+            </div>
+            <h3>Pausa visione</h3>
+            <p id="modalDescText">Vuoi salvare i progressi di <span id="modalEpText" style="color:white; font-weight:600;">Episodio</span> sul bot Telegram prima di uscire?</p>
             <div class="modal-btns">
-                <a href="#" id="btnModalSave" class="btn" style="background: #E50914; color: white;" onclick="setExitingFlag()">💾 Salva sul Bot</a>
-                <button onclick="resumeFullscreen(event)" class="btn btn-confirm">Annulla e Continua</button>
+                <a href="#" id="btnModalSave" class="btn" style="background: var(--brand-red); color: white; box-shadow: 0 8px 20px rgba(229, 9, 20, 0.35);" onclick="setExitingFlag()">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+                    <span>Salva sul Bot Telegram</span>
+                </a>
+                <button onclick="resumeFullscreen(event)" class="btn btn-confirm">Torna al Video</button>
             </div>
         </div>
     </div>
@@ -309,15 +443,26 @@
         }
 
         function setupTitles() {
-            let displayTitle = showTitle;
-            if (!isMovie) displayTitle += ` • S${currentSeason}:E${currentEp}`;
+            let fullTitle = showTitle;
+            if (!isMovie) fullTitle += ` • S${currentSeason}:E${currentEp}`;
             
-            document.getElementById('playerTitle').innerText = displayTitle;
-            document.getElementById('showTitleOverlay').innerText = displayTitle;
-            document.title = displayTitle;
-            
-            if (!isMovie) document.getElementById('modalEpText').innerText = `Episodio ${currentEp}`;
-            else document.getElementById('modalDescText').innerHTML = "Vuoi tornare al menu principale su Telegram?";
+            document.getElementById('playerTitle').innerText = showTitle;
+            document.getElementById('showTitleOverlay').innerText = showTitle;
+            document.title = fullTitle;
+
+            const epBadge = document.getElementById('epBadge');
+            const mediaTypeBadge = document.getElementById('mediaTypeBadge');
+
+            if (!isMovie) {
+                epBadge.style.display = 'inline-block';
+                epBadge.innerText = `S${currentSeason} • E${currentEp}`;
+                mediaTypeBadge.innerText = `📺 SERIE TV • STAGIONE ${currentSeason} • EP. ${currentEp}`;
+                document.getElementById('modalEpText').innerText = `Episodio ${currentEp}`;
+            } else {
+                epBadge.style.display = 'none';
+                mediaTypeBadge.innerText = `🎬 FILM`;
+                document.getElementById('modalDescText').innerHTML = "Vuoi salvare e tornare al menu principale su Telegram?";
+            }
         }
 
         // --- 3. REDIRECT E AUTENTICAZIONE ---
@@ -355,12 +500,12 @@
                 unlockStep = 2;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
-                btn.style.borderColor = '#4caf50';
+                btn.classList.add('ready');
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; 
                 
                 const savedSec = getSavedTime();
-                const resumeHint = savedSec > 0 ? `<br><span style="font-size:12px; color:#4caf50;">Riprenderà da ${formatSeconds(savedSec)}</span>` : '';
-                helpText.innerHTML = `<span style="color:#4caf50;">Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>${resumeHint}`;
+                const resumeHint = savedSec > 0 ? `<br><span style="font-size:12px; color:#2ecc71;">⏪ Riprenderà da ${formatSeconds(savedSec)}</span>` : '';
+                helpText.innerHTML = `<span style="color:#2ecc71; font-weight:600;">● Server Sbloccato</span><br><span style="font-size:12px; color:#ccc;">Tocca il pulsante per avviare</span>${resumeHint}`;
             }, 1500); 
         }
 
@@ -393,8 +538,8 @@
             document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block';
             const btnInstall = document.getElementById('btnInstall');
             if (!mediaId) { document.getElementById('descText').innerHTML = "Errore: Dati mancanti."; document.querySelector('.btn-group').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; } 
-            else if (os === "Desktop") { const b = getBrowserType(); if (b === 'chrome') { btnInstall.href = LINKS.chrome; btnInstall.innerText = "Installa su Chrome"; } else if (b === 'edge') { btnInstall.href = LINKS.edge; btnInstall.innerText = "Installa su Edge"; } else if (b === 'firefox') { btnInstall.href = LINKS.firefox; btnInstall.innerText = "Installa su Firefox"; } else { btnInstall.href = LINKS.chromeDownload; btnInstall.innerText = "Scarica Google Chrome"; } } 
-            else { btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios; btnInstall.innerText = "Installa Aloha Browser"; }
+            else if (os === "Desktop") { const b = getBrowserType(); if (b === 'chrome') { btnInstall.href = LINKS.chrome; btnInstall.querySelector('span').innerText = "Installa su Chrome"; } else if (b === 'edge') { btnInstall.href = LINKS.edge; btnInstall.querySelector('span').innerText = "Installa su Edge"; } else if (b === 'firefox') { btnInstall.href = LINKS.firefox; btnInstall.querySelector('span').innerText = "Installa su Firefox"; } else { btnInstall.href = LINKS.chromeDownload; btnInstall.querySelector('span').innerText = "Scarica Google Chrome"; } } 
+            else { btnInstall.href = os === "Android" ? LINKS.android : LINKS.ios; btnInstall.querySelector('span').innerText = "Installa Aloha Browser"; }
         };
 
         // --- BINGE-WATCHING & SALVATAGGIO ---
@@ -422,7 +567,6 @@
                 isPaused = false; lastTime = 0; lastDuration = 0;
                 setupTitles();
 
-                // Sincronizza l'URL nella barra indirizzi per mantenere l'episodio corrente in caso di F5
                 try {
                     const updatedUrl = new URL(window.location.href);
                     updatedUrl.searchParams.set('e', currentEp);
@@ -445,8 +589,14 @@
 
         function updateFullscreenButtonUI() {
             const fsText = document.getElementById('fsText');
-            if (!fsText) return;
-            fsText.innerText = isCurrentlyFullscreen() ? "Finestra" : "Schermo Intero";
+            const fsSvg = document.getElementById('fsSvg');
+            const isFs = isCurrentlyFullscreen();
+            if (fsText) fsText.innerText = isFs ? "Finestra" : "Schermo Intero";
+            if (fsSvg) {
+                fsSvg.innerHTML = isFs 
+                    ? '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'
+                    : '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+            }
         }
 
         function toggleFullscreen(e) {
@@ -468,8 +618,6 @@
             window.focus();
         }
 
-        // Restituisce il focus della tastiera alla finestra principale dopo un clic dentro l'iframe
-        // così il tasto 'F' e la 'Barra Spaziatrice' funzionano sempre
         window.addEventListener('blur', () => {
             if (document.getElementById('playerContainer').style.display === 'block' &&
                 document.getElementById('startOverlay').style.display === 'none') {
@@ -537,6 +685,9 @@
 
             if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
                 document.getElementById('btnModalSave').href = getBotSaveLink();
+                if (!isMovie && lastTime > 10) {
+                    document.getElementById('modalEpText').innerText = `Episodio ${currentEp} (${formatSeconds(lastTime)})`;
+                }
                 modal.style.display = 'flex';
                 const iframeWin = document.getElementById('videoFrame').contentWindow;
                 try {
@@ -576,18 +727,18 @@
             window.focus();
         }
 
+        const topBar = document.getElementById('topBar');
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
-        const btnBot = document.getElementById('btnBot');
-        const btnFs = document.getElementById('btnFs');
-        const playerTitle = document.getElementById('playerTitle');
-        const topGradient = document.getElementById('topGradient');
+        const btnNextLabel = document.getElementById('btnNextLabel');
         let isMouseActive = false; let mouseHideTimeout;
 
         function updateUI() {
             let showPrev = false, showNext = false, showTopBar = false;
-            if (!isMovie) {
-                btnNext.innerHTML = (currentEp === totalEps) ? "Prossima Stagione ⏭️" : "Prossimo Ep. ⏭️";
+            const isEndingSoon = (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30));
+
+            if (!isMovie && btnNextLabel) {
+                btnNextLabel.innerText = (currentEp === totalEps) ? "Prossima Stagione" : "Prossimo Ep.";
             }
             if (isPaused || isMouseActive) {
                 showTopBar = true;
@@ -595,14 +746,14 @@
                 if (!isMovie) showNext = true; 
             } else {
                 if (!isMovie && currentEp > 1 && lastDuration > 0 && lastTime <= 5) showPrev = true;
-                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
+                if (isEndingSoon) showNext = true;
             }
-            showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
-            showTopBar ? btnFs.classList.add('visible') : btnFs.classList.remove('visible');
-            showTopBar ? playerTitle.classList.add('visible') : playerTitle.classList.remove('visible');
-            showTopBar ? topGradient.classList.add('visible') : topGradient.classList.remove('visible');
+            
+            showTopBar ? topBar.classList.add('visible') : topBar.classList.remove('visible');
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
+            isEndingSoon ? btnNext.classList.add('up-next-glow') : btnNext.classList.remove('up-next-glow');
+
             if (DEBUG) renderDebug();
         }
 
@@ -620,7 +771,7 @@
 
         if (mouseCatcher) mouseCatcher.addEventListener('mousemove', handleUserActivity);
         if (mouseCatcher) mouseCatcher.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserActivity(); }, { passive: false });
-        [btnPrev, btnNext, btnBot, btnFs, playerTitle].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
+        [topBar, btnPrev, btnNext].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
 
@@ -647,7 +798,6 @@
                     if (payload.event === 'timeupdate') {
                         lastTime = payload.currentTime;
                         lastDuration = payload.duration;
-                        // Salva il secondo corrente ogni 3 secondi per la ripresa automatica (startAt)
                         if (lastTime > 15 && Math.abs(lastTime - lastSavedSecond) >= 3) {
                             lastSavedSecond = lastTime;
                             if (lastDuration > 0 && (lastDuration - lastTime <= 45)) {
@@ -662,9 +812,11 @@
                     else if (payload.event === 'play') { isPaused = false; updateUI(); }
                     else if (payload.event === 'ended') { 
                         localStorage.removeItem(getProgressKey());
-                        if (!isMovie) btnNext.classList.add('visible'); 
-                        btnBot.classList.add('visible'); btnFs.classList.add('visible');
-                        playerTitle.classList.add('visible'); topGradient.classList.add('visible');
+                        if (!isMovie) {
+                            btnNext.classList.add('visible');
+                            btnNext.classList.add('up-next-glow');
+                        }
+                        topBar.classList.add('visible');
                     }
                 }
             } catch (e) {}
