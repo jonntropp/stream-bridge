@@ -16,6 +16,7 @@
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             height: 100vh; margin: 0; padding: 0; box-sizing: border-box; overflow: hidden;
+            user-select: none; -webkit-user-select: none;
         }
         
         .container { max-width: 480px; width: 100%; text-align: center; padding: 20px; z-index: 10; }
@@ -53,60 +54,89 @@
         /* --- STILI PLAYER IMMERSIVO --- */
         #startOverlay {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #000000;
+            background: radial-gradient(circle at center, #141414 0%, #000000 100%);
             z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
         }
         
         #startBtn {
-            background: transparent; border: 2px solid rgba(255, 255, 255, 0.5); color: white; 
-            width: 90px; height: 90px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; outline: none; font-size: 35px;
+            background: rgba(255, 255, 255, 0.03); border: 2px solid rgba(255, 255, 255, 0.5); color: white; 
+            width: 94px; height: 94px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.15); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); outline: none; font-size: 35px;
         }
-        #startBtn:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.1); border-color: #4caf50; }
+        #startBtn:hover { transform: scale(1.1); background: rgba(76, 175, 80, 0.15); border-color: #4caf50; box-shadow: 0 0 40px rgba(76, 175, 80, 0.4); }
         #startBtn:active { transform: scale(0.95); }
-        #startBtn svg { width: 40px; height: 40px; margin-left: 6px; fill: currentColor; }
+        #startBtn svg { width: 42px; height: 42px; margin-left: 5px; fill: currentColor; }
 
         #playerContainer {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
         }
         
-        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; transition: width 0.1s, height 0.1s; }
+        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; }
 
         #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
         #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
 
-        /* --- TITOLO E PULSANTI --- */
-        #playerTitle {
-            position: absolute; top: 30px; left: 40px; color: #fff; font-size: 24px; font-weight: 600;
-            letter-spacing: 0.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-            opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 100;
+        /* --- GRADIENTE SUPERIORE, TITOLO E PULSANTI --- */
+        #topGradient {
+            position: absolute; top: 0; left: 0; width: 100%; height: 110px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease; z-index: 90;
         }
+        #topGradient.visible { opacity: 1; }
+
+        #playerTitle {
+            position: absolute; top: 28px; left: 40px; color: #fff; font-size: 22px; font-weight: 600;
+            letter-spacing: 0.4px; text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+            opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 100;
+            max-width: 55vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
         .overlay-btn {
-            position: absolute; background: rgba(20, 20, 20, 0.4); color: #eaeaea; 
-            text-decoration: none; padding: 10px 24px; border-radius: 30px; 
-            font-size: 14px; font-weight: 500; letter-spacing: 0.8px; border: 1px solid rgba(255, 255, 255, 0.08); 
+            position: absolute; background: rgba(25, 25, 25, 0.55); color: #f0f0f0; 
+            text-decoration: none; padding: 10px 22px; border-radius: 30px; 
+            font-size: 14px; font-weight: 500; letter-spacing: 0.5px; border: 1px solid rgba(255, 255, 255, 0.14); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
             opacity: 0; pointer-events: none; transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
-            z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-family: 'Poppins', sans-serif;
+            z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.4); font-family: 'Poppins', sans-serif; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
         }
         
         #playerTitle.visible, .overlay-btn.visible { opacity: 1; pointer-events: auto; }
-        .overlay-btn:hover { background: rgba(160, 20, 30, 0.85); border-color: rgba(255, 255, 255, 0.2); transform: scale(1.03); color: #fff; }
+        .overlay-btn:hover { background: rgba(229, 9, 20, 0.85); border-color: rgba(255, 255, 255, 0.3); transform: scale(1.04); color: #fff; }
 
         #btnPrev { top: 85%; left: 40px; transform: translateY(-50%); }
+        #btnPrev:hover { transform: translateY(-50%) scale(1.04); }
         #btnNext { top: 85%; right: 40px; transform: translateY(-50%); }
+        #btnNext:hover { transform: translateY(-50%) scale(1.04); }
         
-        #btnBot  { top: 30px; right: 40px; background: rgba(229, 9, 20, 0.7); border-color: rgba(229, 9, 20, 0.5); font-weight: 600;} 
+        #btnFs { top: 26px; right: 205px; }
+        .key-hint {
+            font-size: 11px; background: rgba(255,255,255,0.15); padding: 2px 6px;
+            border-radius: 5px; font-weight: 600; color: #ddd;
+        }
+
+        #btnBot { top: 26px; right: 40px; background: rgba(229, 9, 20, 0.75); border-color: rgba(229, 9, 20, 0.5); font-weight: 600; } 
         #btnBot:hover { background: rgba(229, 9, 20, 1); }
+
+        /* --- TOAST DI NOTIFICA --- */
+        #statusToast {
+            position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%) translateY(15px);
+            background: rgba(20, 20, 20, 0.85); color: #fff; padding: 10px 22px; border-radius: 30px;
+            font-size: 13px; font-weight: 500; border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6); z-index: 120; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease; white-space: nowrap;
+        }
+        #statusToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* --- MODAL DI SALVATAGGIO --- */
         #saveModal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             z-index: 1000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
         }
         .modal-box {
-            background: rgba(20, 20, 20, 0.85); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(22, 22, 22, 0.92); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid rgba(255,255,255,0.12);
             box-shadow: 0 20px 50px rgba(0,0,0,0.9); max-width: 420px; width: 90%; transform: translateY(30px); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .modal-box h3 { margin: 0 0 10px 0; font-size: 24px; color: #fff; }
@@ -116,11 +146,15 @@
 
         @media (max-width: 768px), (max-height: 500px) {
             #mouseCatcher { cursor: auto; }
-            #playerTitle { top: 15px; left: 15px; font-size: 14px; }
-            .overlay-btn { padding: 6px 14px; font-size: 11px; border-radius: 20px; letter-spacing: 0.5px; }
+            #playerTitle { top: 16px; left: 15px; font-size: 14px; max-width: 45vw; }
+            .overlay-btn { padding: 6px 13px; font-size: 11px; border-radius: 20px; letter-spacing: 0.4px; }
             #btnPrev { top: auto; bottom: 85px; left: 15px; transform: none; }
+            #btnPrev:hover { transform: scale(1.03); }
             #btnNext { top: auto; bottom: 85px; right: 15px; transform: none; }
-            #btnBot  { top: 15px; right: 15px; }
+            #btnNext:hover { transform: scale(1.03); }
+            #btnBot  { top: 14px; right: 15px; }
+            #btnFs   { top: 14px; right: 135px; }
+            .key-hint { display: none; }
             #fullscreenTrigger { bottom: 0px; right: 0px; width: 65px; height: 65px; }
             .modal-box { padding: 25px 15px; }
             .modal-box h3 { font-size: 20px; }
@@ -151,8 +185,9 @@
         </div>
     </div>
 
+    <!-- OVERLAY DI AVVIO -->
     <div id="startOverlay">
-        <h3 id="showTitleOverlay" style="color:white; margin-bottom: 40px; font-weight: 600; text-align:center;"></h3>
+        <h3 id="showTitleOverlay" style="color:white; margin-bottom: 35px; font-weight: 600; text-align:center; padding: 0 20px;"></h3>
         
         <button id="startBtn" onclick="startImmersiveExperience()">
             <div class="loader" style="margin: 0; width: 36px; height: 36px; border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid #fff;"></div>
@@ -164,6 +199,7 @@
     </div>
 
     <div id="playerContainer">
+        <div id="topGradient"></div>
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
         
@@ -171,9 +207,14 @@
         
         <div id="playerTitle"></div>
 
+        <button id="btnFs" class="overlay-btn" onclick="toggleFullscreen(event)">
+            <span id="fsIcon">⛶</span> <span id="fsText">Schermo Intero</span> <span class="key-hint">F</span>
+        </button>
         <a href="#" id="btnBot" class="overlay-btn" onclick="saveAndExit(event)">💾 Salva ed Esci</a>
-        <a href="#" id="btnPrev" class="overlay-btn" onclick="changeEpisode(-1, event)">Ep. Precedente</a>
-        <a href="#" id="btnNext" class="overlay-btn" onclick="changeEpisode(1, event)">Prossimo Ep.</a>
+        <a href="#" id="btnPrev" class="overlay-btn" onclick="changeEpisode(-1, event)">⏮️ Ep. Precedente</a>
+        <a href="#" id="btnNext" class="overlay-btn" onclick="changeEpisode(1, event)">Prossimo Ep. ⏭️</a>
+
+        <div id="statusToast"></div>
     </div>
 
     <div id="saveModal">
@@ -212,22 +253,58 @@
         let isIntentionalExit = false;
         let isTogglingFs = false; 
         let isPaused = false; let lastTime = 0; let lastDuration = 0;
+        let lastSavedSecond = 0;
         function setExitingFlag() { isIntentionalExit = true; }
 
         const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
         let unlockStep = 0; 
 
-        // --- 2. GENERAZIONE URL DINAMICA (ENDPOINT UFFICIALE VIXSRC) ---
+        // --- GESTIONE MEMORIA PROGRESSI (START_AT AUTOMATICO) ---
+        function getProgressKey() {
+            return isMovie ? `vix_time_movie_${mediaId}` : `vix_time_tv_${mediaId}_s${currentSeason}_e${currentEp}`;
+        }
+
+        function getSavedTime() {
+            const val = parseInt(localStorage.getItem(getProgressKey()), 10);
+            return (!isNaN(val) && val > 15) ? val : 0;
+        }
+
+        function formatSeconds(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        let toastTimeout;
+        function showToast(msg, duration = 2600) {
+            const t = document.getElementById('statusToast');
+            if (!t) return;
+            t.innerText = msg;
+            t.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => t.classList.remove('show'), duration);
+        }
+
+        // --- 2. GENERAZIONE URL DINAMICA ---
         function getBaseUrl() {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             return src;
         }
 
+        function getPreloadUrl() {
+            return getBaseUrl() + `?autoplay=false`;
+        }
+
         function getFullUrl() {
             let src = getBaseUrl();
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
-            if (contentLang) urlParams += `&lang=${contentLang}`; 
+            if (contentLang) urlParams += `&lang=${contentLang}`;
+            const savedSec = getSavedTime();
+            if (savedSec > 0) {
+                urlParams += `&startAt=${savedSec}`;
+                setTimeout(() => showToast(`⏪ Ripreso da ${formatSeconds(savedSec)}`, 3500), 1200);
+            }
             return src + urlParams;
         }
 
@@ -266,16 +343,25 @@
             btn.style.opacity = '0.5';
             btn.style.pointerEvents = 'none';
 
-            // Non carichiamo più l'URL esca interrotto a 1.5s per evitare blocchi rate-limit/WAF di Cloudflare
+            const frame = document.getElementById('videoFrame');
+            frame.setAttribute('allow', 'fullscreen; encrypted-media');
+            frame.referrerPolicy = "origin";
+            frame.src = getPreloadUrl();
+
             setTimeout(() => {
                 const helpText = document.getElementById('startHelpText');
+                frame.src = 'about:blank';
+
                 unlockStep = 2;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
                 btn.style.borderColor = '#4caf50';
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; 
-                helpText.innerHTML = '<span style="color:#4caf50;">Server Pronto!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
-            }, 600); 
+                
+                const savedSec = getSavedTime();
+                const resumeHint = savedSec > 0 ? `<br><span style="font-size:12px; color:#4caf50;">Riprenderà da ${formatSeconds(savedSec)}</span>` : '';
+                helpText.innerHTML = `<span style="color:#4caf50;">Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>${resumeHint}`;
+            }, 1500); 
         }
 
         function setProtectedAndGo() { 
@@ -335,31 +421,65 @@
                 isIntentionalExit = false; 
                 isPaused = false; lastTime = 0; lastDuration = 0;
                 setupTitles();
+
+                // Sincronizza l'URL nella barra indirizzi per mantenere l'episodio corrente in caso di F5
+                try {
+                    const updatedUrl = new URL(window.location.href);
+                    updatedUrl.searchParams.set('e', currentEp);
+                    window.history.replaceState(null, '', updatedUrl.toString());
+                } catch (_) {}
                 
                 const frame = document.getElementById('videoFrame');
                 frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
                 frame.referrerPolicy = "origin";
                 frame.src = getFullUrl();
+                showToast(`🎬 Episodio ${currentEp}`);
+                window.focus();
             }
         }
 
-        // --- FULLSCREEN & UI (LOGICA PLAY FINALE) ---
+        // --- FULLSCREEN, FOCUS LOCK PER IL TASTO 'F' & UI ---
+        function isCurrentlyFullscreen() {
+            return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+        }
+
+        function updateFullscreenButtonUI() {
+            const fsText = document.getElementById('fsText');
+            if (!fsText) return;
+            fsText.innerText = isCurrentlyFullscreen() ? "Finestra" : "Schermo Intero";
+        }
+
         function toggleFullscreen(e) {
-            if(e) e.stopPropagation(); 
+            if(e) { e.preventDefault(); e.stopPropagation(); }
             const docElm = document.documentElement;
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-            if (!isFullscreen) {
+            if (!isCurrentlyFullscreen()) {
                 if (docElm.requestFullscreen) docElm.requestFullscreen();
                 else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
                 else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
+                showToast("⛶ Schermo Intero attivato");
             } else {
                 isTogglingFs = true; 
                 if (document.exitFullscreen) document.exitFullscreen();
                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
                 else if (document.msExitFullscreen) document.msExitFullscreen();
+                showToast("🗗 Modalità Finestra (premi F per Schermo Intero)");
                 setTimeout(() => { isTogglingFs = false; }, 1500); 
             }
+            window.focus();
         }
+
+        // Restituisce il focus della tastiera alla finestra principale dopo un clic dentro l'iframe
+        // così il tasto 'F' e la 'Barra Spaziatrice' funzionano sempre
+        window.addEventListener('blur', () => {
+            if (document.getElementById('playerContainer').style.display === 'block' &&
+                document.getElementById('startOverlay').style.display === 'none') {
+                setTimeout(() => {
+                    if (document.activeElement === document.getElementById('videoFrame')) {
+                        window.focus();
+                    }
+                }, 250);
+            }
+        });
 
         function startImmersiveExperience() {
             if (unlockStep !== 2) return;
@@ -372,6 +492,7 @@
             toggleFullscreen();
             document.getElementById('startOverlay').style.display = 'none';
             handleUserActivity();
+            window.focus();
         }
 
         function togglePlayPause() {
@@ -385,21 +506,28 @@
                 win.postMessage(wantPause ? 'pause' : 'play', '*');
             } catch (err) {}
             isPaused = wantPause;
+            showToast(wantPause ? "⏸️ Pausa" : "▶️ Riproduzione", 1200);
             handleUserActivity(); 
         }
 
         window.addEventListener('keydown', function(e) {
             if (document.getElementById('playerContainer').style.display !== 'block' || document.getElementById('startOverlay').style.display !== 'none') return;
             if (e.repeat) return; 
-            if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(e); } 
-            else if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); togglePlayPause(); }
+            if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleFullscreen(e);
+            } else if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                togglePlayPause();
+            }
         });
 
         document.addEventListener('fullscreenchange', exitHandler);
         document.addEventListener('webkitfullscreenchange', exitHandler);
 
         function exitHandler() {
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            updateFullscreenButtonUI();
+            const isFullscreen = isCurrentlyFullscreen();
             if (!isFullscreen && isTogglingFs) { isTogglingFs = false; return; }
             
             if (document.getElementById('startOverlay').style.display !== 'none') return;
@@ -445,12 +573,15 @@
                 } catch(err) {}
             }
             isPaused = false; handleUserActivity();
+            window.focus();
         }
 
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
         const btnBot = document.getElementById('btnBot');
+        const btnFs = document.getElementById('btnFs');
         const playerTitle = document.getElementById('playerTitle');
+        const topGradient = document.getElementById('topGradient');
         let isMouseActive = false; let mouseHideTimeout;
 
         function updateUI() {
@@ -467,7 +598,9 @@
                 if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
             showTopBar ? btnBot.classList.add('visible') : btnBot.classList.remove('visible');
+            showTopBar ? btnFs.classList.add('visible') : btnFs.classList.remove('visible');
             showTopBar ? playerTitle.classList.add('visible') : playerTitle.classList.remove('visible');
+            showTopBar ? topGradient.classList.add('visible') : topGradient.classList.remove('visible');
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
             if (DEBUG) renderDebug();
@@ -481,12 +614,13 @@
             mouseHideTimeout = setTimeout(() => {
                 isMouseActive = false; updateUI();
                 if (mouseCatcher) mouseCatcher.style.pointerEvents = 'auto';
+                window.focus();
             }, 3500);
         }
 
         if (mouseCatcher) mouseCatcher.addEventListener('mousemove', handleUserActivity);
         if (mouseCatcher) mouseCatcher.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserActivity(); }, { passive: false });
-        [btnPrev, btnNext, btnBot, playerTitle].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
+        [btnPrev, btnNext, btnBot, btnFs, playerTitle].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', handleUserActivity);
 
@@ -510,12 +644,27 @@
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 if (data && data.type === 'PLAYER_EVENT' && data.data) {
                     const payload = data.data;
-                    if (payload.event === 'timeupdate') { lastTime = payload.currentTime; lastDuration = payload.duration; updateUI(); } 
+                    if (payload.event === 'timeupdate') {
+                        lastTime = payload.currentTime;
+                        lastDuration = payload.duration;
+                        // Salva il secondo corrente ogni 3 secondi per la ripresa automatica (startAt)
+                        if (lastTime > 15 && Math.abs(lastTime - lastSavedSecond) >= 3) {
+                            lastSavedSecond = lastTime;
+                            if (lastDuration > 0 && (lastDuration - lastTime <= 45)) {
+                                localStorage.removeItem(getProgressKey());
+                            } else {
+                                localStorage.setItem(getProgressKey(), Math.floor(lastTime));
+                            }
+                        }
+                        updateUI();
+                    } 
                     else if (payload.event === 'pause') { isPaused = true; updateUI(); } 
                     else if (payload.event === 'play') { isPaused = false; updateUI(); }
                     else if (payload.event === 'ended') { 
+                        localStorage.removeItem(getProgressKey());
                         if (!isMovie) btnNext.classList.add('visible'); 
-                        btnBot.classList.add('visible'); playerTitle.classList.add('visible'); 
+                        btnBot.classList.add('visible'); btnFs.classList.add('visible');
+                        playerTitle.classList.add('visible'); topGradient.classList.add('visible');
                     }
                 }
             } catch (e) {}
