@@ -130,12 +130,11 @@
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
         }
         
-        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; }
+        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; transition: width 0.1s, height 0.1s; }
 
         #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
         #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
 
-        /* Barra superiore responsive */
         #topBar {
             position: absolute; top: 0; left: 0; width: 100%;
             padding: 24px 36px 40px 36px; box-sizing: border-box;
@@ -166,7 +165,6 @@
             display: flex; align-items: center; gap: 10px; flex-shrink: 0;
         }
 
-        /* Pulsanti HUD */
         .overlay-btn {
             background: var(--glass-bg); color: #f2f2f2; 
             text-decoration: none; padding: 10px 20px; border-radius: 30px; 
@@ -199,24 +197,6 @@
         
         #btnPrev { left: 36px; }
         #btnNext { right: 36px; }
-
-        /* Stile Netflix ad alto contrasto negli ultimi 30 secondi */
-        #btnNext.up-next-glow {
-            background: #ffffff; color: #0a0a0c; border-color: #ffffff; font-weight: 600;
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.45);
-        }
-        #btnNext.up-next-glow:hover { background: #e6e6e6; color: #000; }
-
-        /* --- TOAST DI STATO --- */
-        #statusToast {
-            position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%) translateY(15px);
-            background: rgba(18, 18, 22, 0.88); color: #fff; padding: 10px 22px; border-radius: 30px;
-            font-size: 13px; font-weight: 500; border: 1px solid rgba(255,255,255,0.14);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.65); z-index: 120; opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease, transform 0.3s ease; white-space: nowrap;
-        }
-        #statusToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* --- MODAL DI SALVATAGGIO --- */
         #saveModal {
@@ -253,7 +233,6 @@
             .key-hint { display: none; }
             #btnPrev { left: 16px; bottom: 75px; }
             #btnNext { right: 16px; bottom: 75px; }
-            #statusToast { bottom: 75px; font-size: 12px; padding: 8px 16px; }
             #fullscreenTrigger { bottom: 0px; right: 0px; width: 65px; height: 65px; }
             .modal-box { padding: 28px 20px; }
             .modal-box h3 { font-size: 19px; }
@@ -279,19 +258,19 @@
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
                         <span>Installa Protezione</span>
                     </a>
-                    <button onclick="setProtectedAndGo()" class="btn btn-confirm">Ho già la protezione attiva</button>
+                    <button onclick="setProtectedAndGo()" class="btn btn-confirm">Ho già la protezione</button>
                 </div>
-                <a onclick="triggerPenalty()" class="skip-link">Continua senza protezione (con pubblicità) &rarr;</a>
+                <a onclick="triggerPenalty()" class="skip-link">Non installare e continua con le pubblicità &rarr;</a>
             </div>
             <div id="penaltyView">
                 <div class="loader" style="width:30px; height:30px; border-width:2px;"></div>
-                <p style="margin-bottom: 10px;">Preparazione del flusso video in corso...</p>
+                <p style="margin-bottom: 10px;">Attendi il caricamento del video...</p>
                 <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
             </div>
         </div>
     </div>
 
-    <!-- OVERLAY DI AVVIO CINEMATOGRAFICO -->
+    <!-- OVERLAY DI AVVIO -->
     <div id="startOverlay">
         <div id="mediaTypeBadge">🎬 STREAMING</div>
         <h3 id="showTitleOverlay"></h3>
@@ -300,8 +279,8 @@
             <div class="loader" style="margin: 0; width: 34px; height: 34px; border: 3px solid rgba(255,255,255,0.2); border-top: 3px solid #fff;"></div>
         </button>
         
-        <div id="startHelpText" class="status-pill" style="color: #ffb74d;">
-            Connessione sicura al server... <br><span style="font-size:12px; font-weight:normal; color:#8e8e99;">Attendere prego</span>
+        <div id="startHelpText" class="status-pill" style="color: #ff9800;">
+            Connessione sicura al server... <br><span style="font-size:12px; font-weight:normal; color:#aaa;">Attendere prego</span>
         </div>
     </div>
 
@@ -340,8 +319,6 @@
             <span id="btnNextLabel">Prossimo Ep.</span>
             <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
         </a>
-
-        <div id="statusToast"></div>
     </div>
 
     <!-- MODAL DI SALVATAGGIO -->
@@ -350,14 +327,14 @@
             <div class="modal-icon-badge">
                 <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
             </div>
-            <h3>Pausa visione</h3>
-            <p id="modalDescText">Vuoi salvare i progressi di <span id="modalEpText" style="color:white; font-weight:600;">Episodio</span> sul bot Telegram prima di uscire?</p>
+            <h3>Sei uscito dal player</h3>
+            <p id="modalDescText">Vuoi salvare i progressi dell' <span id="modalEpText" style="color:white; font-weight:bold;">Episodio</span> prima di chiudere?</p>
             <div class="modal-btns">
                 <a href="#" id="btnModalSave" class="btn" style="background: var(--brand-red); color: white; box-shadow: 0 8px 20px rgba(229, 9, 20, 0.35);" onclick="setExitingFlag()">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
-                    <span>Salva sul Bot Telegram</span>
+                    <span>Salva sul Bot</span>
                 </a>
-                <button onclick="resumeFullscreen(event)" class="btn btn-confirm">Torna al Video</button>
+                <button onclick="resumeFullscreen(event)" class="btn btn-confirm">Annulla e Continua</button>
             </div>
         </div>
     </div>
@@ -386,38 +363,11 @@
 
         let isIntentionalExit = false;
         let isTogglingFs = false; 
-        let isPaused = false; let lastTime = 0; let lastDuration = 0;
-        let lastSavedSecond = 0;
+        let isPaused = false;
         function setExitingFlag() { isIntentionalExit = true; }
 
         const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
         let unlockStep = 0; 
-
-        // --- GESTIONE MEMORIA PROGRESSI (START_AT AUTOMATICO) ---
-        function getProgressKey() {
-            return isMovie ? `vix_time_movie_${mediaId}` : `vix_time_tv_${mediaId}_s${currentSeason}_e${currentEp}`;
-        }
-
-        function getSavedTime() {
-            const val = parseInt(localStorage.getItem(getProgressKey()), 10);
-            return (!isNaN(val) && val > 15) ? val : 0;
-        }
-
-        function formatSeconds(sec) {
-            const m = Math.floor(sec / 60);
-            const s = Math.floor(sec % 60);
-            return `${m}:${s < 10 ? '0' : ''}${s}`;
-        }
-
-        let toastTimeout;
-        function showToast(msg, duration = 2600) {
-            const t = document.getElementById('statusToast');
-            if (!t) return;
-            t.innerText = msg;
-            t.classList.add('show');
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => t.classList.remove('show'), duration);
-        }
 
         // --- 2. GENERAZIONE URL DINAMICA ---
         function getBaseUrl() {
@@ -426,29 +376,20 @@
             return src;
         }
 
-        function getPreloadUrl() {
-            return getBaseUrl() + `?autoplay=false`;
-        }
-
         function getFullUrl() {
             let src = getBaseUrl();
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
-            if (contentLang) urlParams += `&lang=${contentLang}`;
-            const savedSec = getSavedTime();
-            if (savedSec > 0) {
-                urlParams += `&startAt=${savedSec}`;
-                setTimeout(() => showToast(`⏪ Ripreso da ${formatSeconds(savedSec)}`, 3500), 1200);
-            }
+            if (contentLang) urlParams += `&lang=${contentLang}`; 
             return src + urlParams;
         }
 
         function setupTitles() {
-            let fullTitle = showTitle;
-            if (!isMovie) fullTitle += ` • S${currentSeason}:E${currentEp}`;
+            let displayTitle = showTitle;
+            if (!isMovie) displayTitle += ` • S${currentSeason}:E${currentEp}`;
             
             document.getElementById('playerTitle').innerText = showTitle;
-            document.getElementById('showTitleOverlay').innerText = showTitle;
-            document.title = fullTitle;
+            document.getElementById('showTitleOverlay').innerText = displayTitle;
+            document.title = displayTitle;
 
             const epBadge = document.getElementById('epBadge');
             const mediaTypeBadge = document.getElementById('mediaTypeBadge');
@@ -461,7 +402,7 @@
             } else {
                 epBadge.style.display = 'none';
                 mediaTypeBadge.innerText = `🎬 FILM`;
-                document.getElementById('modalDescText').innerHTML = "Vuoi salvare e tornare al menu principale su Telegram?";
+                document.getElementById('modalDescText').innerHTML = "Vuoi tornare al menu principale su Telegram?";
             }
         }
 
@@ -488,25 +429,21 @@
             btn.style.opacity = '0.5';
             btn.style.pointerEvents = 'none';
 
-            const frame = document.getElementById('videoFrame');
-            frame.setAttribute('allow', 'fullscreen; encrypted-media');
-            frame.referrerPolicy = "origin";
-            frame.src = getPreloadUrl();
-
+            // Nessuna richiesta preliminare interrotta: sblocchiamo il pulsante Play
+            // ed effettuiamo una singola chiamata pulita quando l'utente clicca.
             setTimeout(() => {
                 const helpText = document.getElementById('startHelpText');
-                frame.src = 'about:blank';
 
                 unlockStep = 2;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
                 btn.classList.add('ready');
+                
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; 
                 
-                const savedSec = getSavedTime();
-                const resumeHint = savedSec > 0 ? `<br><span style="font-size:12px; color:#2ecc71;">⏪ Riprenderà da ${formatSeconds(savedSec)}</span>` : '';
-                helpText.innerHTML = `<span style="color:#2ecc71; font-weight:600;">● Server Sbloccato</span><br><span style="font-size:12px; color:#ccc;">Tocca il pulsante per avviare</span>${resumeHint}`;
-            }, 1500); 
+                helpText.innerHTML = '<span style="color:#2ecc71; font-weight:600;">● Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
+                
+            }, 800); 
         }
 
         function setProtectedAndGo() { 
@@ -564,7 +501,7 @@
             } else if (newEp > 0) {
                 currentEp = newEp;
                 isIntentionalExit = false; 
-                isPaused = false; lastTime = 0; lastDuration = 0;
+                isPaused = false;
                 setupTitles();
 
                 try {
@@ -577,12 +514,11 @@
                 frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
                 frame.referrerPolicy = "origin";
                 frame.src = getFullUrl();
-                showToast(`🎬 Episodio ${currentEp}`);
-                window.focus();
+                frame.focus();
             }
         }
 
-        // --- FULLSCREEN, FOCUS LOCK PER IL TASTO 'F' & UI ---
+        // --- FULLSCREEN & UI (LOGICA PLAY FINALE) ---
         function isCurrentlyFullscreen() {
             return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
         }
@@ -606,28 +542,16 @@
                 if (docElm.requestFullscreen) docElm.requestFullscreen();
                 else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
                 else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-                showToast("⛶ Schermo Intero attivato");
             } else {
                 isTogglingFs = true; 
                 if (document.exitFullscreen) document.exitFullscreen();
                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
                 else if (document.msExitFullscreen) document.msExitFullscreen();
-                showToast("🗗 Modalità Finestra (premi F per Schermo Intero)");
                 setTimeout(() => { isTogglingFs = false; }, 1500); 
             }
-            window.focus();
+            const frame = document.getElementById('videoFrame');
+            if (frame) frame.focus();
         }
-
-        window.addEventListener('blur', () => {
-            if (document.getElementById('playerContainer').style.display === 'block' &&
-                document.getElementById('startOverlay').style.display === 'none') {
-                setTimeout(() => {
-                    if (document.activeElement === document.getElementById('videoFrame')) {
-                        window.focus();
-                    }
-                }, 250);
-            }
-        });
 
         function startImmersiveExperience() {
             if (unlockStep !== 2) return;
@@ -640,7 +564,7 @@
             toggleFullscreen();
             document.getElementById('startOverlay').style.display = 'none';
             handleUserActivity();
-            window.focus();
+            frame.focus();
         }
 
         function togglePlayPause() {
@@ -654,20 +578,14 @@
                 win.postMessage(wantPause ? 'pause' : 'play', '*');
             } catch (err) {}
             isPaused = wantPause;
-            showToast(wantPause ? "⏸️ Pausa" : "▶️ Riproduzione", 1200);
             handleUserActivity(); 
         }
 
         window.addEventListener('keydown', function(e) {
             if (document.getElementById('playerContainer').style.display !== 'block' || document.getElementById('startOverlay').style.display !== 'none') return;
             if (e.repeat) return; 
-            if (e.key === 'f' || e.key === 'F') {
-                e.preventDefault();
-                toggleFullscreen(e);
-            } else if (e.code === 'Space' || e.key === ' ') {
-                e.preventDefault();
-                togglePlayPause();
-            }
+            if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(e); } 
+            else if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); togglePlayPause(); }
         });
 
         document.addEventListener('fullscreenchange', exitHandler);
@@ -685,9 +603,6 @@
 
             if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
                 document.getElementById('btnModalSave').href = getBotSaveLink();
-                if (!isMovie && lastTime > 10) {
-                    document.getElementById('modalEpText').innerText = `Episodio ${currentEp} (${formatSeconds(lastTime)})`;
-                }
                 modal.style.display = 'flex';
                 const iframeWin = document.getElementById('videoFrame').contentWindow;
                 try {
@@ -722,9 +637,9 @@
                     iframeWin.postMessage({cmd: 'play'}, '*');
                     iframeWin.postMessage('play', '*');
                 } catch(err) {}
+                oldIframe.focus();
             }
             isPaused = false; handleUserActivity();
-            window.focus();
         }
 
         const topBar = document.getElementById('topBar');
@@ -735,8 +650,6 @@
 
         function updateUI() {
             let showPrev = false, showNext = false, showTopBar = false;
-            const isEndingSoon = (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30));
-
             if (!isMovie && btnNextLabel) {
                 btnNextLabel.innerText = (currentEp === totalEps) ? "Prossima Stagione" : "Prossimo Ep.";
             }
@@ -744,16 +657,10 @@
                 showTopBar = true;
                 if (!isMovie && currentEp > 1) showPrev = true;
                 if (!isMovie) showNext = true; 
-            } else {
-                if (!isMovie && currentEp > 1 && lastDuration > 0 && lastTime <= 5) showPrev = true;
-                if (isEndingSoon) showNext = true;
             }
-            
             showTopBar ? topBar.classList.add('visible') : topBar.classList.remove('visible');
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
             showNext ? btnNext.classList.add('visible') : btnNext.classList.remove('visible');
-            isEndingSoon ? btnNext.classList.add('up-next-glow') : btnNext.classList.remove('up-next-glow');
-
             if (DEBUG) renderDebug();
         }
 
@@ -765,7 +672,6 @@
             mouseHideTimeout = setTimeout(() => {
                 isMouseActive = false; updateUI();
                 if (mouseCatcher) mouseCatcher.style.pointerEvents = 'auto';
-                window.focus();
             }, 3500);
         }
 
@@ -778,7 +684,7 @@
         let debugBox = null, debugMsg = '(nessun messaggio da vixsrc)';
         function renderDebug() {
             if (!debugBox) return;
-            debugBox.textContent = `movie: ${isMovie}    ep: ${currentEp}/${totalEps}\nactive: ${isMouseActive}    paused: ${isPaused}\nt: ${lastTime.toFixed(1)}s    dur: ${lastDuration.toFixed(1)}s\nmsg: ${debugMsg}`;
+            debugBox.textContent = `movie: ${isMovie}    ep: ${currentEp}/${totalEps}\nactive: ${isMouseActive}    paused: ${isPaused}\nmsg: ${debugMsg}`;
         }
         if (DEBUG) {
             debugBox = document.createElement('div');
@@ -795,28 +701,11 @@
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 if (data && data.type === 'PLAYER_EVENT' && data.data) {
                     const payload = data.data;
-                    if (payload.event === 'timeupdate') {
-                        lastTime = payload.currentTime;
-                        lastDuration = payload.duration;
-                        if (lastTime > 15 && Math.abs(lastTime - lastSavedSecond) >= 3) {
-                            lastSavedSecond = lastTime;
-                            if (lastDuration > 0 && (lastDuration - lastTime <= 45)) {
-                                localStorage.removeItem(getProgressKey());
-                            } else {
-                                localStorage.setItem(getProgressKey(), Math.floor(lastTime));
-                            }
-                        }
-                        updateUI();
-                    } 
-                    else if (payload.event === 'pause') { isPaused = true; updateUI(); } 
+                    if (payload.event === 'pause') { isPaused = true; updateUI(); } 
                     else if (payload.event === 'play') { isPaused = false; updateUI(); }
                     else if (payload.event === 'ended') { 
-                        localStorage.removeItem(getProgressKey());
-                        if (!isMovie) {
-                            btnNext.classList.add('visible');
-                            btnNext.classList.add('up-next-glow');
-                        }
-                        topBar.classList.add('visible');
+                        if (!isMovie) btnNext.classList.add('visible'); 
+                        topBar.classList.add('visible'); 
                     }
                 }
             } catch (e) {}
