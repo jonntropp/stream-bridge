@@ -293,7 +293,6 @@
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
         
-        <!-- Di base NON diamo allowfullscreen all'iframe per impedire ad Aloha di agganciare il player nativo -->
         <iframe id="videoFrame" allow="autoplay; encrypted-media" referrerpolicy="origin"></iframe>
         
         <!-- BARRA SUPERIORE FLEXBOX -->
@@ -366,17 +365,19 @@
 
         let isIntentionalExit = false;
         let isPaused = false;
-        let isExitingFromIframeFs = false;
+        let isHandlingIframeFsToggle = false;
         let unlockStep = 0;
         let hasStartedPlayback = false;
 
-        // Tracciamento secondo corrente per riprendere dopo lo smontaggio anti-Aloha
+        // Tracciamento continuo del secondo esatto (tramite PLAYER_EVENT + fallback timer)
         let trackedSeconds = 0;
         let savedResumeSeconds = 0;
+
         setInterval(() => {
             const modal = document.getElementById('saveModal');
             if (hasStartedPlayback && !isPaused && (!modal || !modal.classList.contains('open'))) {
                 trackedSeconds++;
+                if (trackedSeconds >= 1) savedResumeSeconds = trackedSeconds;
             }
         }, 1000);
 
@@ -384,7 +385,6 @@
 
         const videoFrame = document.getElementById('videoFrame');
 
-        // Passiamo il focus all'iframe SOLO su Desktop (su Aloha causerebbe l'apertura del player nativo)
         function focusPlayerDesktop() {
             if (!isDesktop) return;
             const modal = document.getElementById('saveModal');
@@ -398,19 +398,11 @@
                 videoFrame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
                 videoFrame.setAttribute('allowfullscreen', '');
             } else {
-                // Su Mobile / Aloha rimuoviamo qualsiasi permesso fullscreen dall'iframe
                 videoFrame.setAttribute('allow', 'autoplay; encrypted-media');
                 videoFrame.removeAttribute('allowfullscreen');
             }
             videoFrame.referrerPolicy = "origin";
         }
-
-        videoFrame.addEventListener('load', () => {
-            if (isDesktop && document.getElementById('startOverlay').style.display === 'none') {
-                setTimeout(focusPlayerDesktop, 200);
-                setTimeout(focusPlayerDesktop, 1000);
-            }
-        });
 
         // --- 2. GENERAZIONE URL DINAMICA ---
         function getBaseUrl() {
@@ -423,7 +415,8 @@
             let src = getBaseUrl();
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`;
-            if (startAtSec > 5) urlParams += `&startAt=${Math.floor(startAtSec)}`;
+            const resumePoint = Math.floor(Number(startAtSec) || 0);
+            if (resumePoint >= 1) urlParams += `&startAt=${resumePoint}`;
             return src + urlParams;
         }
 
@@ -557,11 +550,10 @@
                 
                 configureIframePermissions();
                 videoFrame.src = getFullUrl(0);
-                setTimeout(focusPlayerDesktop, 250);
             }
         }
 
-        // --- FULLSCREEN & GESTIONE ANTI-HIJACK ALOHA ---
+        // --- FULLSCREEN, PONTE DESKTOP 'F'/SPAZIO & RIPRESA ALOHA ---
         function getFullscreenElement() {
             return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
         }
@@ -573,15 +565,9 @@
         function enterFullscreen() {
             const docElm = document.documentElement;
             if (!isCurrentlyFullscreen()) {
-                if (docElm.requestFullscreen) {
-                    docElm.requestFullscreen().then(() => setTimeout(focusPlayerDesktop, 150)).catch(() => {});
-                } else if (docElm.webkitRequestFullscreen) {
-                    docElm.webkitRequestFullscreen();
-                    setTimeout(focusPlayerDesktop, 150);
-                } else if (docElm.msRequestFullscreen) {
-                    docElm.msRequestFullscreen();
-                    setTimeout(focusPlayerDesktop, 150);
-                }
+                if (docElm.requestFullscreen) docElm.requestFullscreen().catch(() => {});
+                else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+                else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
             }
         }
 
@@ -593,11 +579,9 @@
             }
         }
 
-        // Smonta il video su Mobile/Aloha quando si esce dal fullscreen o si cambia app,
-        // così Aloha non trova mai un tag <video> attivo da dirottare sul suo player nativo.
         function unmountForAlohaIfNeeded() {
             if (!isDesktop && hasStartedPlayback) {
-                if (trackedSeconds > 5) savedResumeSeconds = trackedSeconds;
+                if (trackedSeconds >= 1) savedResumeSeconds = trackedSeconds;
                 if (videoFrame.src && videoFrame.src !== 'about:blank') {
                     videoFrame.src = 'about:blank';
                 }
@@ -606,10 +590,10 @@
 
         function openSaveModal() {
             const modal = document.getElementById('saveModal');
+            if (modal.classList.contains('open')) return;
+
             document.getElementById('btnModalSave').href = getBotSaveLink();
-            if (isDesktop) {
-                sendPlayerCommand(true);
-            } else {
+            if (!isDesktop) {
                 unmountForAlohaIfNeeded();
             }
             isPaused = true;
@@ -624,14 +608,12 @@
             const modal = document.getElementById('saveModal');
             if (modal.classList.contains('open')) {
                 resumeFullscreen(e);
-            } else if (!isCurrentlyFullscreen()) {
-                if (!isDesktop && hasStartedPlayback) {
-                    resumeFullscreen(e);
-                } else {
-                    enterFullscreen();
-                }
-            } else {
+            } else if (isCurrentlyFullscreen()) {
                 exitFullscreenMode();
+            } else if (!isDesktop && hasStartedPlayback) {
+                openSaveModal();
+            } else {
+                enterFullscreen();
             }
         }
 
@@ -648,25 +630,6 @@
 
             document.getElementById('startOverlay').style.display = 'none';
             handleUserActivity();
-            setTimeout(focusPlayerDesktop, 300);
-        }
-
-        function sendPlayerCommand(wantPause) {
-            if (!videoFrame) return;
-            try {
-                const win = videoFrame.contentWindow;
-                win.postMessage(JSON.stringify({ event: 'command', func: wantPause ? 'pauseVideo' : 'playVideo', args: '' }), '*');
-                win.postMessage({ cmd: wantPause ? 'pause' : 'play' }, '*');
-                win.postMessage(wantPause ? 'pause' : 'play', '*');
-            } catch (err) {}
-        }
-
-        function togglePlayPause() {
-            const wantPause = !isPaused;
-            sendPlayerCommand(wantPause);
-            isPaused = wantPause;
-            handleUserActivity();
-            focusPlayerDesktop();
         }
 
         window.addEventListener('keydown', function(e) {
@@ -676,12 +639,12 @@
                 e.preventDefault();
                 toggleFullscreen(e);
             } else if (e.code === 'Space' || e.key === ' ') {
-                e.preventDefault();
                 const modal = document.getElementById('saveModal');
                 if (modal.classList.contains('open')) {
+                    e.preventDefault();
                     resumeFullscreen(e);
                 } else {
-                    togglePlayPause();
+                    focusPlayerDesktop();
                 }
             }
         });
@@ -689,8 +652,6 @@
         document.addEventListener('fullscreenchange', exitHandler);
         document.addEventListener('webkitfullscreenchange', exitHandler);
 
-        // Se l'utente su Aloha/Mobile esce dall'app (es. passa a Telegram o blocca lo schermo) e rientra,
-        // smontiamo subito l'iframe in modo che al rientro non parta il player nativo di Aloha.
         document.addEventListener('visibilitychange', () => {
             if (!isDesktop && document.hidden && hasStartedPlayback && !isIntentionalExit) {
                 openSaveModal();
@@ -703,20 +664,20 @@
             const fsEl = getFullscreenElement();
             const modal = document.getElementById('saveModal');
 
-            // Solo su Desktop: intercetta il tasto 'F' premuto dentro l'iframe
+            // Su Desktop: quando l'utente preme 'F' dentro il player VixSrc, l'iframe diventa fsEl.
+            // Intercettiamo subito l'evento, apriamo il modale e usciamo completamente dal fullscreen.
             if (isDesktop && fsEl === videoFrame) {
-                isExitingFromIframeFs = true;
+                isHandlingIframeFsToggle = true;
+                openSaveModal();
                 exitFullscreenMode();
+                setTimeout(() => {
+                    if (isCurrentlyFullscreen()) exitFullscreenMode();
+                    isHandlingIframeFsToggle = false;
+                }, 100);
                 return;
             }
 
-            if (isDesktop && isExitingFromIframeFs && fsEl === document.documentElement) {
-                isExitingFromIframeFs = false;
-                exitFullscreenMode();
-                return;
-            }
-
-            isExitingFromIframeFs = false;
+            if (isHandlingIframeFsToggle) return;
 
             if (!fsEl && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
                 openSaveModal();
@@ -732,15 +693,14 @@
             const modal = document.getElementById('saveModal');
             modal.classList.remove('open');
 
-            // 1. Entriamo PRIMA in fullscreen sulla pagina principale (mentre su Aloha l'iframe è about:blank)
             enterFullscreen();
 
-            // 2. Su Mobile/Aloha ricarichiamo il flusso dal secondo salvato; su Desktop inviamo play
             if (!isDesktop) {
+                const resumeSec = savedResumeSeconds >= 1 ? savedResumeSeconds : trackedSeconds;
+                trackedSeconds = resumeSec;
                 configureIframePermissions();
-                videoFrame.src = getFullUrl(savedResumeSeconds);
+                videoFrame.src = getFullUrl(resumeSec);
             } else {
-                sendPlayerCommand(false);
                 setTimeout(focusPlayerDesktop, 150);
             }
 
@@ -781,8 +741,14 @@
             }, 3500);
         }
 
-        if (mouseCatcher) mouseCatcher.addEventListener('mousemove', handleUserActivity);
-        if (mouseCatcher) mouseCatcher.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserActivity(); }, { passive: false });
+        if (mouseCatcher) {
+            mouseCatcher.addEventListener('mousemove', handleUserActivity);
+            mouseCatcher.addEventListener('mousedown', () => {
+                handleUserActivity();
+                setTimeout(focusPlayerDesktop, 50);
+            });
+            mouseCatcher.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserActivity(); }, { passive: false });
+        }
         [topBar, btnPrev, btnNext].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
         window.addEventListener('touchstart', handleUserActivity);
         window.addEventListener('click', () => {
@@ -793,7 +759,7 @@
         let debugBox = null, debugMsg = '(nessun messaggio da vixsrc)';
         function renderDebug() {
             if (!debugBox) return;
-            debugBox.textContent = `movie: ${isMovie}    ep: ${currentEp}/${totalEps}\nactive: ${isMouseActive}    paused: ${isPaused}    t: ${trackedSeconds}s\nmsg: ${debugMsg}`;
+            debugBox.textContent = `movie: ${isMovie}    ep: ${currentEp}/${totalEps}\nactive: ${isMouseActive}    paused: ${isPaused}    t: ${savedResumeSeconds}s\nmsg: ${debugMsg}`;
         }
         if (DEBUG) {
             debugBox = document.createElement('div');
@@ -808,19 +774,32 @@
             }
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                if (data && data.type === 'PLAYER_EVENT' && data.data) {
-                    const payload = data.data;
-                    if (payload.event === 'timeupdate' && payload.currentTime > 0) {
-                        trackedSeconds = Math.floor(payload.currentTime);
-                    } else if (payload.event === 'pause') {
-                        isPaused = true; updateUI();
-                    } else if (payload.event === 'play') {
-                        isPaused = false; updateUI();
-                    } else if (payload.event === 'ended') { 
-                        savedResumeSeconds = 0;
-                        if (!isMovie) btnNext.classList.add('visible'); 
-                        topBar.classList.add('visible'); 
-                    }
+                if (!data) return;
+
+                const payload = (data.type === 'PLAYER_EVENT' && data.data) ? data.data : data;
+                if (!payload || !payload.event) return;
+
+                // Salva sempre il timestamp su play, pause, seeked e timeupdate
+                if (typeof payload.currentTime === 'number' && !isNaN(payload.currentTime) && payload.currentTime >= 1) {
+                    trackedSeconds = Math.floor(payload.currentTime);
+                    savedResumeSeconds = trackedSeconds;
+                }
+
+                if (payload.event === 'play') {
+                    isPaused = false;
+                    updateUI();
+                    // Il player dentro VixSrc è ora montato: passiamo il focus su Desktop per la barra spaziatrice
+                    focusPlayerDesktop();
+                } else if (payload.event === 'pause') {
+                    isPaused = true;
+                    updateUI();
+                } else if (payload.event === 'seeked' || payload.event === 'timeupdate') {
+                    updateUI();
+                } else if (payload.event === 'ended') { 
+                    trackedSeconds = 0;
+                    savedResumeSeconds = 0;
+                    if (!isMovie) btnNext.classList.add('visible'); 
+                    topBar.classList.add('visible'); 
                 }
             } catch (e) {}
         });
