@@ -65,7 +65,7 @@
         .btn-install { background: #ffffff; color: #09090b; box-shadow: 0 8px 20px rgba(255,255,255,0.12); }
         .btn-install:hover { background: #e8e8ec; transform: translateY(-1px); }
         .btn-confirm { background: rgba(255, 255, 255, 0.07); color: #fff; border: 1px solid rgba(255, 255, 255, 0.12); font-weight: 500; }
-        .btn-confirm:hover, .btn-confirm:focus { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.35); }
+        .btn-confirm:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.35); }
 
         .skip-link { color: #686873; font-size: 12.5px; text-decoration: none; border-bottom: 1px dashed #444; padding-bottom: 2px; margin-top: 24px; display: inline-block; cursor: pointer; transition: all 0.2s; }
         .skip-link:hover { color: #aaa; border-bottom-color: #888; }
@@ -131,10 +131,10 @@
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
         }
         
-        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; }
+        iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; transition: width 0.1s, height 0.1s; }
 
         #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
-        #fullscreenTrigger { position: absolute; bottom: 0px; right: 0px; width: 75px; height: 70px; z-index: 150; cursor: pointer; background: transparent; }
+        #fullscreenTrigger { position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px; z-index: 110; cursor: pointer; background: transparent; }
 
         #topBar {
             position: absolute; top: 0; left: 0; width: 100%;
@@ -197,24 +197,16 @@
         /* --- MODAL DI SALVATAGGIO --- */
         #saveModal {
             position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.86); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            z-index: 1000; display: flex; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; pointer-events: none;
-            transition: opacity 0.25s ease, visibility 0.25s ease;
-        }
-        #saveModal.open {
-            opacity: 1; visibility: visible; pointer-events: auto;
+            background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            z-index: 1000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
         }
         .modal-box {
             background: rgba(22, 22, 26, 0.94); padding: 38px 32px; border-radius: 26px; text-align: center;
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 25px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.08);
-            max-width: 410px; width: 90%; transform: translateY(20px);
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 410px; width: 90%; transform: translateY(30px);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             box-sizing: border-box;
-        }
-        #saveModal.open .modal-box {
-            transform: translateY(0);
         }
         .modal-icon-badge {
             width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 16px auto;
@@ -237,7 +229,7 @@
             .overlay-btn svg { width: 14px; height: 14px; }
             #btnPrev { left: 16px; bottom: 75px; }
             #btnNext { right: 16px; bottom: 75px; }
-            #fullscreenTrigger { bottom: 0px; right: 0px; width: 80px; height: 75px; }
+            #fullscreenTrigger { bottom: 0px; right: 0px; width: 65px; height: 65px; }
             .modal-box { padding: 28px 20px; }
             .modal-box h3 { font-size: 19px; }
             .modal-box p { font-size: 13px; }
@@ -274,7 +266,7 @@
         </div>
     </div>
 
-    <!-- OVERLAY DI AVVIO -->
+    <!-- OVERLAY DI AVVIO MULTI-STEP -->
     <div id="startOverlay">
         <div id="mediaTypeBadge">🎬 STREAMING</div>
         <h3 id="showTitleOverlay"></h3>
@@ -293,7 +285,8 @@
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
         
-        <iframe id="videoFrame" allow="autoplay; encrypted-media" referrerpolicy="origin"></iframe>
+        <!-- Stessa configurazione attributi della vecchia versione + referrerpolicy="origin" per il dominio -->
+        <iframe id="videoFrame" allow="fullscreen; encrypted-media" allowfullscreen referrerpolicy="origin"></iframe>
         
         <!-- BARRA SUPERIORE FLEXBOX -->
         <div id="topBar">
@@ -333,7 +326,7 @@
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
                     <span>Salva sul Bot</span>
                 </a>
-                <button id="btnResume" onclick="resumeFullscreen(event)" class="btn btn-confirm">Annulla e Continua</button>
+                <button onclick="resumeFullscreen(event)" class="btn btn-confirm">Annulla e Continua</button>
             </div>
         </div>
     </div>
@@ -360,63 +353,31 @@
         function getBrowserType() { const ua = navigator.userAgent; if (ua.indexOf("Firefox") > -1) return "firefox"; if (ua.indexOf("Edg") > -1) return "edge"; if (ua.indexOf("Chrome") > -1) return "chrome"; return "unknown"; }
         const os = getOS();
 
-        const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
-        const isDesktop = (os === "Desktop" && !isAlohaBrowser);
-
         let isIntentionalExit = false;
-        let isPaused = false;
-        let isHandlingIframeFsToggle = false;
-        let unlockStep = 0;
-        let hasStartedPlayback = false;
-
-        // Tracciamento continuo del secondo esatto (tramite PLAYER_EVENT + fallback timer)
-        let trackedSeconds = 0;
-        let savedResumeSeconds = 0;
-
-        setInterval(() => {
-            const modal = document.getElementById('saveModal');
-            if (hasStartedPlayback && !isPaused && (!modal || !modal.classList.contains('open'))) {
-                trackedSeconds++;
-                if (trackedSeconds >= 1) savedResumeSeconds = trackedSeconds;
-            }
-        }, 1000);
-
+        let isTogglingFs = false; 
+        let isPaused = false; let lastTime = 0; let lastDuration = 0;
         function setExitingFlag() { isIntentionalExit = true; }
 
-        const videoFrame = document.getElementById('videoFrame');
+        const isAlohaBrowser = window.location.href.includes('aloha=1') || navigator.userAgent.includes('Aloha');
+        let unlockStep = 0; 
 
-        function focusPlayerDesktop() {
-            if (!isDesktop) return;
-            const modal = document.getElementById('saveModal');
-            if (videoFrame && (!modal || !modal.classList.contains('open'))) {
-                videoFrame.focus();
-            }
-        }
-
-        function configureIframePermissions() {
-            if (isDesktop) {
-                videoFrame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
-                videoFrame.setAttribute('allowfullscreen', '');
-            } else {
-                videoFrame.setAttribute('allow', 'autoplay; encrypted-media');
-                videoFrame.removeAttribute('allowfullscreen');
-            }
-            videoFrame.referrerPolicy = "origin";
-        }
-
-        // --- 2. GENERAZIONE URL DINAMICA ---
+        // --- 2. GENERAZIONE URL DINAMICA (LOGICA BASE vs FULL) ---
         function getBaseUrl() {
             let src = `https://vixsrc.to/${isMovie ? 'movie' : 'tv'}/${mediaId}`;
             if (!isMovie) src += `/${currentSeason}/${currentEp}`;
             return src;
         }
 
+        function getPreloadUrl() {
+            return getBaseUrl() + `?autoplay=false`;
+        }
+
         function getFullUrl(startAtSec = 0) {
             let src = getBaseUrl();
             let urlParams = `?primaryColor=E50914&autoplay=true&secondaryColor=111111`;
             if (contentLang) urlParams += `&lang=${contentLang}`;
-            const resumePoint = Math.floor(Number(startAtSec) || 0);
-            if (resumePoint >= 1) urlParams += `&startAt=${resumePoint}`;
+            const resumeSec = Math.floor(Number(startAtSec) || 0);
+            if (resumeSec > 0) urlParams += `&startAt=${resumeSec}`;
             return src + urlParams;
         }
 
@@ -427,7 +388,7 @@
             document.getElementById('playerTitle').innerText = showTitle;
             document.getElementById('showTitleOverlay').innerText = displayTitle;
             document.title = displayTitle;
-
+            
             const epBadge = document.getElementById('epBadge');
             const mediaTypeBadge = document.getElementById('mediaTypeBadge');
 
@@ -461,14 +422,21 @@
             document.getElementById('startOverlay').style.display = 'flex'; 
             
             setupTitles();
-            configureIframePermissions();
             
             const btn = document.getElementById('startBtn');
             btn.style.opacity = '0.5';
             btn.style.pointerEvents = 'none';
 
+            const frame = document.getElementById('videoFrame');
+            frame.setAttribute('allow', 'fullscreen; encrypted-media');
+            frame.referrerPolicy = "origin";
+            frame.src = getPreloadUrl();
+
             setTimeout(() => {
                 const helpText = document.getElementById('startHelpText');
+
+                // Smontiamo solo l'esca iniziale come nella vecchia versione
+                frame.src = 'about:blank';
 
                 unlockStep = 2;
                 btn.style.opacity = '1';
@@ -479,7 +447,7 @@
                 
                 helpText.innerHTML = '<span style="color:#2ecc71; font-weight:600;">● Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
                 
-            }, 800); 
+            }, 1500); 
         }
 
         function setProtectedAndGo() { 
@@ -537,175 +505,123 @@
             } else if (newEp > 0) {
                 currentEp = newEp;
                 isIntentionalExit = false; 
-                isPaused = false;
-                trackedSeconds = 0;
-                savedResumeSeconds = 0;
+                isPaused = false; lastTime = 0; lastDuration = 0;
                 setupTitles();
-
-                try {
-                    const updatedUrl = new URL(window.location.href);
-                    updatedUrl.searchParams.set('e', currentEp);
-                    window.history.replaceState(null, '', updatedUrl.toString());
-                } catch (_) {}
                 
-                configureIframePermissions();
-                videoFrame.src = getFullUrl(0);
+                const frame = document.getElementById('videoFrame');
+                frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+                frame.referrerPolicy = "origin";
+                frame.src = getFullUrl();
             }
         }
 
-        // --- FULLSCREEN, PONTE DESKTOP 'F'/SPAZIO & RIPRESA ALOHA ---
-        function getFullscreenElement() {
-            return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
-        }
-
-        function isCurrentlyFullscreen() {
-            return !!getFullscreenElement();
-        }
-
-        function enterFullscreen() {
+        // --- FULLSCREEN & UI (IDENTICO ALLA VECCHIA VERSIONE) ---
+        function toggleFullscreen(e) {
+            if(e) e.stopPropagation(); 
             const docElm = document.documentElement;
-            if (!isCurrentlyFullscreen()) {
-                if (docElm.requestFullscreen) docElm.requestFullscreen().catch(() => {});
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            if (!isFullscreen) {
+                if (docElm.requestFullscreen) docElm.requestFullscreen();
                 else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
                 else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
-            }
-        }
-
-        function exitFullscreenMode() {
-            if (isCurrentlyFullscreen()) {
-                if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+            } else {
+                isTogglingFs = true; 
+                if (document.exitFullscreen) document.exitFullscreen();
                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
                 else if (document.msExitFullscreen) document.msExitFullscreen();
-            }
-        }
-
-        function unmountForAlohaIfNeeded() {
-            if (!isDesktop && hasStartedPlayback) {
-                if (trackedSeconds >= 1) savedResumeSeconds = trackedSeconds;
-                if (videoFrame.src && videoFrame.src !== 'about:blank') {
-                    videoFrame.src = 'about:blank';
-                }
-            }
-        }
-
-        function openSaveModal() {
-            const modal = document.getElementById('saveModal');
-            if (modal.classList.contains('open')) return;
-
-            document.getElementById('btnModalSave').href = getBotSaveLink();
-            if (!isDesktop) {
-                unmountForAlohaIfNeeded();
-            }
-            isPaused = true;
-            updateUI();
-            modal.classList.add('open');
-            const btnResume = document.getElementById('btnResume');
-            if (btnResume && isDesktop) setTimeout(() => btnResume.focus(), 50);
-        }
-
-        function toggleFullscreen(e) {
-            if(e) { e.preventDefault(); e.stopPropagation(); }
-            const modal = document.getElementById('saveModal');
-            if (modal.classList.contains('open')) {
-                resumeFullscreen(e);
-            } else if (isCurrentlyFullscreen()) {
-                exitFullscreenMode();
-            } else if (!isDesktop && hasStartedPlayback) {
-                openSaveModal();
-            } else {
-                enterFullscreen();
+                setTimeout(() => { isTogglingFs = false; }, 1500); 
             }
         }
 
         function startImmersiveExperience() {
             if (unlockStep !== 2) return;
             
-            hasStartedPlayback = true;
-            trackedSeconds = 0;
-            savedResumeSeconds = 0;
+            const frame = document.getElementById('videoFrame');
+            frame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+            frame.referrerPolicy = "origin";
+            frame.src = getFullUrl();
 
-            configureIframePermissions();
-            enterFullscreen();
-            videoFrame.src = getFullUrl(0);
-
+            toggleFullscreen();
             document.getElementById('startOverlay').style.display = 'none';
             handleUserActivity();
+        }
+
+        function togglePlayPause() {
+            const frame = document.getElementById('videoFrame');
+            if (!frame) return;
+            const wantPause = !isPaused;
+            try {
+                const win = frame.contentWindow;
+                win.postMessage(JSON.stringify({ event: 'command', func: wantPause ? 'pauseVideo' : 'playVideo', args: '' }), '*');
+                win.postMessage({ cmd: wantPause ? 'pause' : 'play' }, '*');
+                win.postMessage(wantPause ? 'pause' : 'play', '*');
+            } catch (err) {}
+            isPaused = wantPause;
+            handleUserActivity(); 
         }
 
         window.addEventListener('keydown', function(e) {
             if (document.getElementById('playerContainer').style.display !== 'block' || document.getElementById('startOverlay').style.display !== 'none') return;
             if (e.repeat) return; 
-            if (e.key === 'f' || e.key === 'F') {
-                e.preventDefault();
-                toggleFullscreen(e);
-            } else if (e.code === 'Space' || e.key === ' ') {
-                const modal = document.getElementById('saveModal');
-                if (modal.classList.contains('open')) {
-                    e.preventDefault();
-                    resumeFullscreen(e);
-                } else {
-                    focusPlayerDesktop();
-                }
-            }
+            if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(e); } 
+            else if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); togglePlayPause(); }
         });
 
         document.addEventListener('fullscreenchange', exitHandler);
         document.addEventListener('webkitfullscreenchange', exitHandler);
 
-        document.addEventListener('visibilitychange', () => {
-            if (!isDesktop && document.hidden && hasStartedPlayback && !isIntentionalExit) {
-                openSaveModal();
-            }
-        });
-
         function exitHandler() {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            if (!isFullscreen && isTogglingFs) { isTogglingFs = false; return; }
+            
             if (document.getElementById('startOverlay').style.display !== 'none') return;
 
-            const fsEl = getFullscreenElement();
             const modal = document.getElementById('saveModal');
+            const modalBox = document.getElementById('modalBox');
 
-            // Su Desktop: quando l'utente preme 'F' dentro il player VixSrc, l'iframe diventa fsEl.
-            // Intercettiamo subito l'evento, apriamo il modale e usciamo completamente dal fullscreen.
-            if (isDesktop && fsEl === videoFrame) {
-                isHandlingIframeFsToggle = true;
-                openSaveModal();
-                exitFullscreenMode();
-                setTimeout(() => {
-                    if (isCurrentlyFullscreen()) exitFullscreenMode();
-                    isHandlingIframeFsToggle = false;
-                }, 100);
-                return;
-            }
-
-            if (isHandlingIframeFsToggle) return;
-
-            if (!fsEl && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
-                openSaveModal();
-            } else if (fsEl === document.documentElement) {
-                modal.classList.remove('open');
-                handleUserActivity();
-                setTimeout(focusPlayerDesktop, 150);
+            if (!isFullscreen && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
+                document.getElementById('btnModalSave').href = getBotSaveLink();
+                modal.style.display = 'flex';
+                const iframeWin = document.getElementById('videoFrame').contentWindow;
+                try {
+                    iframeWin.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); 
+                    iframeWin.postMessage({cmd: 'pause'}, '*'); 
+                    iframeWin.postMessage('pause', '*'); 
+                } catch(err) {}
+                isPaused = true; updateUI();
+                setTimeout(() => { modal.style.opacity = '1'; modalBox.style.transform = 'translateY(0)'; }, 10);
             }
         }
 
         function resumeFullscreen(e) {
             if(e) { e.preventDefault(); e.stopPropagation(); }
+            const docElm = document.documentElement;
             const modal = document.getElementById('saveModal');
-            modal.classList.remove('open');
+            const modalBox = document.getElementById('modalBox');
+            
+            modal.style.opacity = '0';
+            modalBox.style.transform = 'translateY(20px)';
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
 
-            enterFullscreen();
+            if (docElm.requestFullscreen) docElm.requestFullscreen();
+            else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+            else if (docElm.msRequestFullscreen) docElm.msRequestFullscreen();
 
-            if (!isDesktop) {
-                const resumeSec = savedResumeSeconds >= 1 ? savedResumeSeconds : trackedSeconds;
-                trackedSeconds = resumeSec;
-                configureIframePermissions();
-                videoFrame.src = getFullUrl(resumeSec);
-            } else {
-                setTimeout(focusPlayerDesktop, 150);
+            const oldIframe = document.getElementById('videoFrame');
+            if (oldIframe) {
+                // Se per qualsiasi motivo il browser mobile avesse scaricato l'iframe, riparte da lastTime via startAt
+                if (!oldIframe.src || oldIframe.src === 'about:blank') {
+                    oldIframe.src = getFullUrl(lastTime);
+                } else {
+                    const iframeWin = oldIframe.contentWindow;
+                    try {
+                        iframeWin.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                        iframeWin.postMessage({cmd: 'play'}, '*');
+                        iframeWin.postMessage('play', '*');
+                    } catch(err) {}
+                }
             }
-
-            isPaused = false;
-            handleUserActivity();
+            isPaused = false; handleUserActivity();
         }
 
         const topBar = document.getElementById('topBar');
@@ -719,10 +635,13 @@
             if (!isMovie && btnNextLabel) {
                 btnNextLabel.innerText = (currentEp === totalEps) ? "Prossima Stagione" : "Prossimo Ep.";
             }
-            if (isPaused || isMouseActive || !isCurrentlyFullscreen()) {
+            if (isPaused || isMouseActive) {
                 showTopBar = true;
                 if (!isMovie && currentEp > 1) showPrev = true;
                 if (!isMovie) showNext = true; 
+            } else {
+                if (!isMovie && currentEp > 1 && lastDuration > 0 && lastTime <= 5) showPrev = true;
+                if (!isMovie && lastDuration > 0 && (lastDuration - lastTime <= 30)) showNext = true;
             }
             showTopBar ? topBar.classList.add('visible') : topBar.classList.remove('visible');
             showPrev ? btnPrev.classList.add('visible') : btnPrev.classList.remove('visible');
@@ -741,25 +660,16 @@
             }, 3500);
         }
 
-        if (mouseCatcher) {
-            mouseCatcher.addEventListener('mousemove', handleUserActivity);
-            mouseCatcher.addEventListener('mousedown', () => {
-                handleUserActivity();
-                setTimeout(focusPlayerDesktop, 50);
-            });
-            mouseCatcher.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserActivity(); }, { passive: false });
-        }
+        if (mouseCatcher) mouseCatcher.addEventListener('mousemove', handleUserActivity);
+        if (mouseCatcher) mouseCatcher.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserActivity(); }, { passive: false });
         [topBar, btnPrev, btnNext].forEach(el => el && el.addEventListener('mousemove', handleUserActivity));
         window.addEventListener('touchstart', handleUserActivity);
-        window.addEventListener('click', () => {
-            handleUserActivity();
-            focusPlayerDesktop();
-        });
+        window.addEventListener('click', handleUserActivity);
 
         let debugBox = null, debugMsg = '(nessun messaggio da vixsrc)';
         function renderDebug() {
             if (!debugBox) return;
-            debugBox.textContent = `movie: ${isMovie}    ep: ${currentEp}/${totalEps}\nactive: ${isMouseActive}    paused: ${isPaused}    t: ${savedResumeSeconds}s\nmsg: ${debugMsg}`;
+            debugBox.textContent = `movie: ${isMovie}    ep: ${currentEp}/${totalEps}\nactive: ${isMouseActive}    paused: ${isPaused}\nt: ${lastTime.toFixed(1)}s    dur: ${lastDuration.toFixed(1)}s\nmsg: ${debugMsg}`;
         }
         if (DEBUG) {
             debugBox = document.createElement('div');
@@ -774,32 +684,18 @@
             }
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                if (!data) return;
+                if (data && data.type === 'PLAYER_EVENT' && data.data) {
+                    const payload = data.data;
+                    if (typeof payload.currentTime === 'number') lastTime = payload.currentTime;
+                    if (typeof payload.duration === 'number') lastDuration = payload.duration;
 
-                const payload = (data.type === 'PLAYER_EVENT' && data.data) ? data.data : data;
-                if (!payload || !payload.event) return;
-
-                // Salva sempre il timestamp su play, pause, seeked e timeupdate
-                if (typeof payload.currentTime === 'number' && !isNaN(payload.currentTime) && payload.currentTime >= 1) {
-                    trackedSeconds = Math.floor(payload.currentTime);
-                    savedResumeSeconds = trackedSeconds;
-                }
-
-                if (payload.event === 'play') {
-                    isPaused = false;
-                    updateUI();
-                    // Il player dentro VixSrc è ora montato: passiamo il focus su Desktop per la barra spaziatrice
-                    focusPlayerDesktop();
-                } else if (payload.event === 'pause') {
-                    isPaused = true;
-                    updateUI();
-                } else if (payload.event === 'seeked' || payload.event === 'timeupdate') {
-                    updateUI();
-                } else if (payload.event === 'ended') { 
-                    trackedSeconds = 0;
-                    savedResumeSeconds = 0;
-                    if (!isMovie) btnNext.classList.add('visible'); 
-                    topBar.classList.add('visible'); 
+                    if (payload.event === 'timeupdate' || payload.event === 'seeked') { updateUI(); } 
+                    else if (payload.event === 'pause') { isPaused = true; updateUI(); } 
+                    else if (payload.event === 'play') { isPaused = false; updateUI(); }
+                    else if (payload.event === 'ended') { 
+                        if (!isMovie) btnNext.classList.add('visible'); 
+                        topBar.classList.add('visible'); 
+                    }
                 }
             } catch (e) {}
         });
