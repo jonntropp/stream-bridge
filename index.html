@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="referrer" content="origin">
     <title>Pop Corn Bot</title>
-    
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍿</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --brand-red: #E50914;
@@ -25,10 +25,10 @@
             color: #e0e0e0; 
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; margin: 0; padding: 0; box-sizing: border-box; overflow: hidden;
+            height: 100vh; height: 100dvh; margin: 0; padding: 0; box-sizing: border-box; overflow: hidden;
             user-select: none; -webkit-user-select: none;
         }
-        
+
         .container { max-width: 460px; width: 100%; text-align: center; padding: 20px; z-index: 10; box-sizing: border-box; }
 
         /* --- CARD INIZIALE --- */
@@ -41,7 +41,7 @@
             display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        
+
         .brand-pill {
             display: inline-flex; align-items: center; gap: 6px;
             background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
@@ -69,7 +69,7 @@
 
         .skip-link { color: #686873; font-size: 12.5px; text-decoration: none; border-bottom: 1px dashed #444; padding-bottom: 2px; margin-top: 24px; display: inline-block; cursor: pointer; transition: all 0.2s; }
         .skip-link:hover { color: #aaa; border-bottom-color: #888; }
-        
+
         #penaltyView { display: none; margin-top: 15px; }
         .timer-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.06); margin-top: 15px; border-radius: 6px; overflow: hidden; }
         .timer-fill { height: 100%; background: linear-gradient(90deg, #E50914, #ff5f6d); width: 0%; transition: width 0.1s linear; border-radius: 6px; }
@@ -79,7 +79,7 @@
 
         /* --- OVERLAY PRE-PLAY CINEMATOGRAFICO --- */
         #startOverlay {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; inset: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #15151a 0%, #050507 100%);
             z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;
             padding: 20px; box-sizing: border-box;
@@ -97,7 +97,7 @@
             max-width: 680px; letter-spacing: -0.4px; line-height: 1.25;
             text-shadow: 0 8px 25px rgba(0,0,0,0.8);
         }
-        
+
         #startBtn {
             position: relative;
             background: rgba(255, 255, 255, 0.04); border: 2px solid rgba(255, 255, 255, 0.25); color: white; 
@@ -128,13 +128,17 @@
 
         /* --- CONTAINER PLAYER E TOP BAR FLEXBOX --- */
         #playerContainer {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: none; background: #000; z-index: 50;
+            position: fixed; inset: 0; width: 100%; height: 100%; display: none; background: #000; z-index: 50;
         }
-        
+
         iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10; }
 
         #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
-        #fullscreenTrigger { position: absolute; bottom: 0px; right: 0px; width: 75px; height: 70px; z-index: 150; cursor: pointer; background: transparent; }
+        #fullscreenTrigger {
+            position: absolute; bottom: 0px; right: 0px; width: 85px; height: 80px;
+            z-index: 150; cursor: pointer; background: transparent;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        }
 
         #topBar {
             position: absolute; top: 0; left: 0; width: 100%;
@@ -190,13 +194,13 @@
             opacity: 0; pointer-events: none; transform: translateY(8px);
         }
         .bottom-nav-btn.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
-        
+
         #btnPrev { left: 36px; }
         #btnNext { right: 36px; }
 
         /* --- MODAL DI SALVATAGGIO --- */
         #saveModal {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; inset: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.86); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             z-index: 1000; display: flex; align-items: center; justify-content: center;
             opacity: 0; visibility: hidden; pointer-events: none;
@@ -237,7 +241,7 @@
             .overlay-btn svg { width: 14px; height: 14px; }
             #btnPrev { left: 16px; bottom: 75px; }
             #btnNext { right: 16px; bottom: 75px; }
-            #fullscreenTrigger { bottom: 0px; right: 0px; width: 80px; height: 75px; }
+            #fullscreenTrigger { bottom: 0px; right: 0px; width: 90px; height: 85px; }
             .modal-box { padding: 28px 20px; }
             .modal-box h3 { font-size: 19px; }
             .modal-box p { font-size: 13px; }
@@ -278,11 +282,11 @@
     <div id="startOverlay">
         <div id="mediaTypeBadge">🎬 STREAMING</div>
         <h3 id="showTitleOverlay"></h3>
-        
+
         <button id="startBtn" onclick="startImmersiveExperience()">
             <div class="loader" style="margin: 0; width: 34px; height: 34px; border: 3px solid rgba(255,255,255,0.2); border-top: 3px solid #fff;"></div>
         </button>
-        
+
         <div id="startHelpText" class="status-pill" style="color: #ff9800;">
             Connessione sicura al server... <br><span style="font-size:12px; font-weight:normal; color:#aaa;">Attendere prego</span>
         </div>
@@ -292,9 +296,9 @@
     <div id="playerContainer">
         <div id="mouseCatcher"></div>
         <div id="fullscreenTrigger" onclick="toggleFullscreen(event)"></div>
-        
+
         <iframe id="videoFrame" allow="autoplay; encrypted-media" referrerpolicy="origin"></iframe>
-        
+
         <!-- BARRA SUPERIORE FLEXBOX -->
         <div id="topBar">
             <div class="title-group">
@@ -342,20 +346,20 @@
         // --- 1. LETTURA DATI SMART ---
         const params = new URLSearchParams(window.location.search);
         const DEBUG = params.get('debug') === '1';
-        
+
         const mediaId = params.get('id');
         const showTitle = params.get('title') ? decodeURIComponent(params.get('title')) : 'Streaming';
         const isMovie = params.get('type') === 'movie';
         const contentLang = params.get('lang');
-        
+
         let currentSeason = parseInt(params.get('s')) || 1;
         let currentEp = parseInt(params.get('e')) || 1;
         let totalEps = parseInt(params.get('tot')) || 1;
-        
+
         const botUsername = "PopCorn04bot"; 
         const STORAGE_KEY = 'stream_bridge_consent_v3'; 
         const LINKS = { chrome: "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh", edge: "https://microsoftedge.microsoft.com/addons/detail/ublock-origin-lite/fkfhgkbmjkgjlipdkhlmhgdjcofaaecp", firefox: "https://addons.mozilla.org/it/firefox/addon/ublock-origin/", chromeDownload: "https://www.google.com/chrome/", android: "https://play.google.com/store/apps/details?id=com.alohamobile.browser", ios: "https://apps.apple.com/it/app/aloha-browser-private-vpn/id1105317682" };
-        
+
         function getOS() { const ua = navigator.userAgent || navigator.vendor || window.opera; if (/android/i.test(ua)) return "Android"; if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS"; return "Desktop"; }
         function getBrowserType() { const ua = navigator.userAgent; if (ua.indexOf("Firefox") > -1) return "firefox"; if (ua.indexOf("Edg") > -1) return "edge"; if (ua.indexOf("Chrome") > -1) return "chrome"; return "unknown"; }
         const os = getOS();
@@ -369,21 +373,31 @@
         let unlockStep = 0;
         let hasStartedPlayback = false;
 
-        // Tracciamento continuo del secondo esatto (tramite PLAYER_EVENT + fallback timer)
+        // Tracciamento del secondo esatto (tramite PLAYER_EVENT + fallback timer)
+        // pendingStartAt evita che durante il ricaricamento dell'iframe gli eventi iniziali a 0-2s sovrascrivano il punto salvato
         let trackedSeconds = 0;
         let savedResumeSeconds = 0;
+        let pendingStartAt = 0;
 
         setInterval(() => {
             const modal = document.getElementById('saveModal');
             if (hasStartedPlayback && !isPaused && (!modal || !modal.classList.contains('open'))) {
                 trackedSeconds++;
-                if (trackedSeconds >= 1) savedResumeSeconds = trackedSeconds;
+                if (trackedSeconds >= 1 && trackedSeconds >= pendingStartAt) {
+                    savedResumeSeconds = trackedSeconds;
+                }
             }
         }, 1000);
 
         function setExitingFlag() { isIntentionalExit = true; }
 
         const videoFrame = document.getElementById('videoFrame');
+        const fullscreenTriggerEl = document.getElementById('fullscreenTrigger');
+        if (fullscreenTriggerEl) {
+            fullscreenTriggerEl.addEventListener('touchend', function(e) {
+                toggleFullscreen(e);
+            }, { passive: false });
+        }
 
         function focusPlayerDesktop() {
             if (!isDesktop) return;
@@ -398,7 +412,6 @@
                 videoFrame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
                 videoFrame.setAttribute('allowfullscreen', '');
             } else {
-                // Su Mobile / Aloha rimuoviamo qualsiasi permesso fullscreen dall'iframe
                 videoFrame.setAttribute('allow', 'autoplay; encrypted-media');
                 videoFrame.removeAttribute('allowfullscreen');
             }
@@ -428,7 +441,7 @@
         function setupTitles() {
             let displayTitle = showTitle;
             if (!isMovie) displayTitle += ` • S${currentSeason}:E${currentEp}`;
-            
+
             document.getElementById('playerTitle').innerText = showTitle;
             document.getElementById('showTitleOverlay').innerText = displayTitle;
             document.title = displayTitle;
@@ -461,17 +474,17 @@
         function preparePlayerScreen() {
             if (!mediaId) return;
             document.getElementById('authContainer').style.display = 'none';
-            
+
             document.getElementById('playerContainer').style.display = 'block';
             document.getElementById('startOverlay').style.display = 'flex'; 
-            
+
             setupTitles();
-            
+
             const btn = document.getElementById('startBtn');
             btn.style.opacity = '0.5';
             btn.style.pointerEvents = 'none';
 
-            // FASE 1 (Accorgimento Aloha): Caricamento esca senza autoplay e smontaggio su about:blank
+            // Preload esca + smontaggio su about:blank per evitare l'aggancio anticipato di Aloha
             videoFrame.setAttribute('allow', 'encrypted-media');
             videoFrame.removeAttribute('allowfullscreen');
             videoFrame.referrerPolicy = "origin";
@@ -480,18 +493,17 @@
             setTimeout(() => {
                 const helpText = document.getElementById('startHelpText');
 
-                // Smontiamo subito l'esca per impedire ad Aloha di agganciare il <video> prima del Play
                 videoFrame.src = 'about:blank';
 
                 unlockStep = 2;
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
                 btn.classList.add('ready');
-                
+
                 btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; 
-                
+
                 helpText.innerHTML = '<span style="color:#2ecc71; font-weight:600;">● Server Sbloccato!</span><br><span style="font-size:12px; color:#ccc;">Tocca per avviare il player</span>';
-                
+
             }, 1500); 
         }
 
@@ -513,14 +525,14 @@
 
         window.onload = function() {
             if (params.get('reset') === 'true') { localStorage.removeItem(STORAGE_KEY); document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block'; document.getElementById('titleText').innerText = "Configurazione"; document.getElementById('descText').innerHTML = "Chiudi questa pagina dopo l'installazione."; document.querySelector('.btn-confirm').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; return; }
-            
+
             const isProtected = localStorage.getItem(STORAGE_KEY) === 'true';
             if (isProtected && mediaId) {
                 if (os !== "Desktop" && !isAlohaBrowser) window.location.href = getAlohaRedirectUrl();
                 else preparePlayerScreen();
                 return;
             }
-            
+
             document.getElementById('loaderView').style.display = 'none'; document.getElementById('mainView').style.display = 'block';
             const btnInstall = document.getElementById('btnInstall');
             if (!mediaId) { document.getElementById('descText').innerHTML = "Errore: Dati mancanti."; document.querySelector('.btn-group').style.display = 'none'; document.querySelector('.skip-link').style.display = 'none'; } 
@@ -533,7 +545,7 @@
             if (isMovie) return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_0_0_1`;
             return `tg://resolve?domain=${botUsername}&start=save_${mediaId}_${currentSeason}_${currentEp}_${totalEps}`;
         }
-        
+
         function saveAndExit(e) {
             if(e) e.preventDefault();
             isIntentionalExit = true; 
@@ -553,6 +565,7 @@
                 isPaused = false;
                 trackedSeconds = 0;
                 savedResumeSeconds = 0;
+                pendingStartAt = 0;
                 setupTitles();
 
                 try {
@@ -560,13 +573,13 @@
                     updatedUrl.searchParams.set('e', currentEp);
                     window.history.replaceState(null, '', updatedUrl.toString());
                 } catch (_) {}
-                
+
                 configureIframePermissions();
                 videoFrame.src = getFullUrl(0);
             }
         }
 
-        // --- FULLSCREEN, PONTE DESKTOP 'F'/SPAZIO & RIPRESA ALOHA SENZA RESET ---
+        // --- FULLSCREEN, PONTE DESKTOP 'F'/SPAZIO & DISTRUZIONE/STARTAT ALOHA ---
         function getFullscreenElement() {
             return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
         }
@@ -602,17 +615,30 @@
             } catch (err) {}
         }
 
+        // Distrugge l'iframe su Mobile/Aloha salvando il timestamp corrente
+        function unmountForAlohaIfNeeded() {
+            if (!isDesktop && hasStartedPlayback) {
+                const bestSec = Math.max(savedResumeSeconds, trackedSeconds, pendingStartAt);
+                if (bestSec >= 1) {
+                    savedResumeSeconds = bestSec;
+                    trackedSeconds = bestSec;
+                }
+                if (videoFrame.src && videoFrame.src !== 'about:blank') {
+                    videoFrame.src = 'about:blank';
+                }
+            }
+        }
+
         function openSaveModal() {
             const modal = document.getElementById('saveModal');
             if (modal.classList.contains('open')) return;
 
-            if (trackedSeconds >= 1) savedResumeSeconds = trackedSeconds;
             document.getElementById('btnModalSave').href = getBotSaveLink();
-
-            // Mettiamo in pausa l'iframe SENZA distruggerlo con about:blank,
-            // così su Aloha non perde il punto raggiunto quando si rientra in fullscreen
-            sendPlayerCommand(true);
-
+            if (!isDesktop) {
+                unmountForAlohaIfNeeded();
+            } else {
+                sendPlayerCommand(true);
+            }
             isPaused = true;
             updateUI();
             modal.classList.add('open');
@@ -620,26 +646,25 @@
             if (btnResume && isDesktop) setTimeout(() => btnResume.focus(), 50);
         }
 
+        // Identico tra Mobile e Desktop: premere il tasto di riduzione apre SEMPRE il modale ed esce dal fullscreen
         function toggleFullscreen(e) {
-            if(e) { e.preventDefault(); e.stopPropagation(); }
+            if (e) { e.preventDefault(); e.stopPropagation(); }
             const modal = document.getElementById('saveModal');
             if (modal.classList.contains('open')) {
                 resumeFullscreen(e);
-            } else if (isCurrentlyFullscreen()) {
-                exitFullscreenMode();
-            } else if (!isDesktop && hasStartedPlayback) {
-                openSaveModal();
             } else {
-                enterFullscreen();
+                openSaveModal();
+                exitFullscreenMode();
             }
         }
 
         function startImmersiveExperience() {
             if (unlockStep !== 2) return;
-            
+
             hasStartedPlayback = true;
             trackedSeconds = 0;
             savedResumeSeconds = 0;
+            pendingStartAt = 0;
 
             configureIframePermissions();
             enterFullscreen();
@@ -647,14 +672,6 @@
 
             document.getElementById('startOverlay').style.display = 'none';
             handleUserActivity();
-        }
-
-        function togglePlayPause() {
-            const wantPause = !isPaused;
-            sendPlayerCommand(wantPause);
-            isPaused = wantPause;
-            handleUserActivity();
-            focusPlayerDesktop();
         }
 
         window.addEventListener('keydown', function(e) {
@@ -669,7 +686,7 @@
                     e.preventDefault();
                     resumeFullscreen(e);
                 } else {
-                    togglePlayPause();
+                    focusPlayerDesktop();
                 }
             }
         });
@@ -677,15 +694,20 @@
         document.addEventListener('fullscreenchange', exitHandler);
         document.addEventListener('webkitfullscreenchange', exitHandler);
 
+        document.addEventListener('visibilitychange', () => {
+            if (!isDesktop && document.hidden && hasStartedPlayback && !isIntentionalExit) {
+                openSaveModal();
+            }
+        });
+
         function exitHandler() {
             if (document.getElementById('startOverlay').style.display !== 'none') return;
 
             const fsEl = getFullscreenElement();
             const modal = document.getElementById('saveModal');
 
-            // Su Desktop: quando l'utente preme 'F' dentro il player VixSrc, l'iframe diventa fsEl.
-            // Intercettiamo subito l'evento, apriamo il modale e usciamo completamente dal fullscreen.
-            if (isDesktop && fsEl === videoFrame) {
+            // Se l'iframe stesso è andato in fullscreen (es. tasto 'F' dentro il player), apriamo il modale e usciamo
+            if (fsEl === videoFrame) {
                 isHandlingIframeFsToggle = true;
                 openSaveModal();
                 exitFullscreenMode();
@@ -700,31 +722,31 @@
 
             if (!fsEl && document.getElementById('playerContainer').style.display === 'block' && !isIntentionalExit) {
                 openSaveModal();
-            } else if (fsEl === document.documentElement) {
-                modal.classList.remove('open');
+            } else if (fsEl === document.documentElement && !modal.classList.contains('open')) {
                 handleUserActivity();
                 setTimeout(focusPlayerDesktop, 150);
             }
         }
 
         function resumeFullscreen(e) {
-            if(e) { e.preventDefault(); e.stopPropagation(); }
+            if (e) { e.preventDefault(); e.stopPropagation(); }
             const modal = document.getElementById('saveModal');
             modal.classList.remove('open');
 
             enterFullscreen();
 
-            // Se l'iframe è ancora montato riprendiamo direttamente senza ricaricare da zero;
-            // se il browser mobile lo avesse scaricato, usiamo startAt col secondo salvato.
-            if (!videoFrame.src || videoFrame.src === 'about:blank' || videoFrame.src === window.location.href) {
-                const resumeSec = savedResumeSeconds >= 1 ? savedResumeSeconds : trackedSeconds;
+            if (!isDesktop) {
+                const resumeSec = Math.max(savedResumeSeconds, trackedSeconds, pendingStartAt);
+                trackedSeconds = resumeSec;
+                savedResumeSeconds = resumeSec;
+                pendingStartAt = resumeSec;
                 configureIframePermissions();
-                videoFrame.src = getFullUrl(resumeSec);
+                // Piccolo ritardo per permettere ad Aloha di entrare in fullscreen prima di montare il nuovo iframe col video
+                setTimeout(() => {
+                    videoFrame.src = getFullUrl(resumeSec);
+                }, 100);
             } else {
                 sendPlayerCommand(false);
-            }
-
-            if (isDesktop) {
                 setTimeout(focusPlayerDesktop, 150);
             }
 
@@ -805,8 +827,17 @@
 
                 const currentSec = Number(payload.currentTime);
                 if (!isNaN(currentSec) && currentSec >= 1) {
-                    trackedSeconds = Math.floor(currentSec);
-                    savedResumeSeconds = trackedSeconds;
+                    const flooredSec = Math.floor(currentSec);
+                    // Evita che i primi istanti di caricamento dopo un resume sovrascrivano il punto startAt
+                    if (pendingStartAt > 0 && flooredSec < pendingStartAt - 5 && payload.event !== 'seeked') {
+                        // Attendiamo che il player raggiunga il punto startAt
+                    } else {
+                        if (pendingStartAt > 0 && flooredSec >= pendingStartAt - 5) {
+                            pendingStartAt = 0;
+                        }
+                        trackedSeconds = flooredSec;
+                        savedResumeSeconds = flooredSec;
+                    }
                 }
 
                 if (payload.event === 'play') {
@@ -816,11 +847,19 @@
                 } else if (payload.event === 'pause') {
                     isPaused = true;
                     updateUI();
-                } else if (payload.event === 'seeked' || payload.event === 'timeupdate') {
+                } else if (payload.event === 'seeked') {
+                    if (!isNaN(currentSec) && currentSec >= 0) {
+                        pendingStartAt = 0;
+                        trackedSeconds = Math.floor(currentSec);
+                        savedResumeSeconds = trackedSeconds;
+                    }
+                    updateUI();
+                } else if (payload.event === 'timeupdate') {
                     updateUI();
                 } else if (payload.event === 'ended') { 
                     trackedSeconds = 0;
                     savedResumeSeconds = 0;
+                    pendingStartAt = 0;
                     if (!isMovie) btnNext.classList.add('visible'); 
                     topBar.classList.add('visible'); 
                 }
