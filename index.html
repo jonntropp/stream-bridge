@@ -133,10 +133,8 @@
 
         iframe {
             width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 10;
-            transition: opacity 0.15s ease;
         }
 
-        /* Nasconde visivamente l'iframe ad Aloha durante il modale senza distruggere il punto del video */
         iframe.aloha-cloaked {
             opacity: 0 !important;
             visibility: hidden !important;
@@ -211,7 +209,7 @@
         /* --- MODAL DI SALVATAGGIO --- */
         #saveModal {
             position: fixed; inset: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             z-index: 1000; display: flex; align-items: center; justify-content: center;
             opacity: 0; visibility: hidden; pointer-events: none;
             transition: opacity 0.25s ease, visibility 0.25s ease;
@@ -382,8 +380,13 @@
         let isHandlingIframeFsToggle = false;
         let unlockStep = 0;
         let hasStartedPlayback = false;
+
+        // Valori aggiornati esclusivamente tramite PLAYER_EVENT di vixsrc.to
+        let lastTime = 0;
+        let lastDuration = 0;
         let savedResumeSeconds = 0;
-        let uncloakTimeout;
+        let pendingStartAt = 0;
+        let unmountTimeout = null;
 
         function setExitingFlag() { isIntentionalExit = true; }
 
@@ -410,7 +413,6 @@
                 videoFrame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
                 videoFrame.setAttribute('allowfullscreen', '');
             } else {
-                // Su Mobile/Aloha rimuoviamo sempre fullscreen dall'iframe
                 videoFrame.setAttribute('allow', 'autoplay; encrypted-media');
                 videoFrame.removeAttribute('allowfullscreen');
             }
@@ -551,7 +553,10 @@
                 currentEp = newEp;
                 isIntentionalExit = false; 
                 isPaused = false;
+                lastTime = 0;
+                lastDuration = 0;
                 savedResumeSeconds = 0;
+                pendingStartAt = 0;
                 setupTitles();
 
                 try {
@@ -567,7 +572,7 @@
             }
         }
 
-        // --- FULLSCREEN, PONTE DESKTOP 'F'/SPAZIO & CLOAKING ANTI-ALOHA ---
+        // --- FULLSCREEN, LETTURA PLAYER_EVENT E SMONTAGGIO RITARDATO ALOHA ---
         function getFullscreenElement() {
             return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
         }
@@ -598,6 +603,8 @@
             try {
                 const win = videoFrame.contentWindow;
                 win.postMessage(JSON.stringify({ event: 'command', func: wantPause ? 'pauseVideo' : 'playVideo', args: '' }), '*');
+                win.postMessage({ command: wantPause ? 'pause' : 'play' }, '*');
+                win.postMessage({ action: wantPause ? 'pause' : 'play' }, '*');
                 win.postMessage({ cmd: wantPause ? 'pause' : 'play' }, '*');
                 win.postMessage(wantPause ? 'pause' : 'play', '*');
             } catch (err) {}
@@ -607,14 +614,22 @@
             const modal = document.getElementById('saveModal');
             if (modal.classList.contains('open')) return;
 
-            clearTimeout(uncloakTimeout);
             document.getElementById('btnModalSave').href = getBotSaveLink();
 
-            // Mettiamo in pausa e su Mobile/Aloha nascondiamo visivamente l'iframe SENZA distruggerlo con about:blank:
-            // così il video mantiene il minuto esatto (es. min 47) e Aloha non aggancia il tag <video>
+            // 1. Invia subito il comando di pausa per far emettere al player l'ultimo PLAYER_EVENT con currentTime
             sendPlayerCommand(true);
-            if (!isDesktop) {
+
+            if (!isDesktop && hasStartedPlayback) {
+                // 2. Nasconde subito l'iframe e dopo 150ms (appena ricevuto il postMessage) lo smonta con about:blank
+                // per impedire ad Aloha Browser di inglobare il video nel suo player nativo
                 videoFrame.classList.add('aloha-cloaked');
+                clearTimeout(unmountTimeout);
+                unmountTimeout = setTimeout(() => {
+                    if (lastTime >= 1) savedResumeSeconds = Math.floor(lastTime);
+                    if (videoFrame.src && videoFrame.src !== 'about:blank') {
+                        videoFrame.src = 'about:blank';
+                    }
+                }, 150);
             }
 
             isPaused = true;
@@ -624,7 +639,6 @@
             if (btnResume && isDesktop) setTimeout(() => btnResume.focus(), 50);
         }
 
-        // Identico tra Mobile e Desktop: premere il tasto di riduzione apre SEMPRE il modale ed esce dal fullscreen
         function toggleFullscreen(e) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
             const modal = document.getElementById('saveModal');
@@ -641,7 +655,10 @@
 
             hasStartedPlayback = true;
             isPaused = false;
+            lastTime = 0;
+            lastDuration = 0;
             savedResumeSeconds = 0;
+            pendingStartAt = 0;
 
             configureIframePermissions();
             videoFrame.classList.remove('aloha-cloaked');
@@ -707,27 +724,24 @@
 
         function resumeFullscreen(e) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
+            clearTimeout(unmountTimeout);
+
             const modal = document.getElementById('saveModal');
             modal.classList.remove('open');
+            videoFrame.classList.remove('aloha-cloaked');
 
             isPaused = false;
 
-            // 1. Entriamo PRIMA in fullscreen mentre su Aloha l'iframe è ancora nascosto (aloha-cloaked)
-            enterFullscreen();
-
             if (!isDesktop) {
-                // 2. Mostriamo nuovamente l'iframe già caricato al minuto esatto dopo l'ingresso in fullscreen
-                clearTimeout(uncloakTimeout);
-                uncloakTimeout = setTimeout(() => {
-                    videoFrame.classList.remove('aloha-cloaked');
-                    if (!videoFrame.src || videoFrame.src === 'about:blank') {
-                        videoFrame.src = getFullUrl(savedResumeSeconds);
-                    } else {
-                        sendPlayerCommand(false);
-                    }
-                }, 250);
+                const resumeSec = Math.max(savedResumeSeconds, Math.floor(lastTime), pendingStartAt);
+                savedResumeSeconds = resumeSec;
+                lastTime = resumeSec;
+                pendingStartAt = resumeSec;
+                configureIframePermissions();
+                videoFrame.src = getFullUrl(resumeSec);
+                enterFullscreen();
             } else {
-                videoFrame.classList.remove('aloha-cloaked');
+                enterFullscreen();
                 sendPlayerCommand(false);
                 setTimeout(focusPlayerDesktop, 150);
             }
@@ -794,38 +808,68 @@
             renderDebug();
         }
 
+        // Listener PLAYER_EVENT ufficiale di VixSrc:
+        // { type: "PLAYER_EVENT", data: { event: "play"|"pause"|"seeked"|"ended"|"timeupdate", currentTime: number, duration: number, video_id: number } }
         window.addEventListener('message', (event) => {
             if (DEBUG && debugBox) {
                 try { const raw = typeof event.data === 'string' ? event.data : JSON.stringify(event.data); debugMsg = event.origin + ' → ' + String(raw).slice(0, 150); renderDebug(); } catch (_) {}
             }
             try {
-                const modal = document.getElementById('saveModal');
-                if (modal && modal.classList.contains('open')) return;
-
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 if (!data) return;
 
                 const payload = (data.type === 'PLAYER_EVENT' && data.data) ? data.data : (data.data ? data.data : data);
                 if (!payload) return;
 
+                const evtName = payload.event || data.event;
                 const currentSec = Number(payload.currentTime ?? data.currentTime);
-                if (!isNaN(currentSec) && currentSec >= 1) {
-                    savedResumeSeconds = Math.floor(currentSec);
+                const durSec = Number(payload.duration ?? data.duration);
+
+                if (!isNaN(durSec) && durSec > 0) {
+                    lastDuration = durSec;
                 }
 
-                const evtName = payload.event || data.event;
+                // Registra currentTime da qualsiasi evento PLAYER_EVENT (timeupdate, seeked, pause, play)
+                if (!isNaN(currentSec) && currentSec >= 1) {
+                    const flooredSec = Math.floor(currentSec);
+                    // Evita che durante il ricaricamento dell'iframe con startAt i primi istanti a 0s sovrascrivano il minuto salvato
+                    if (pendingStartAt > 0 && flooredSec < pendingStartAt - 5 && evtName !== 'seeked') {
+                        // Attende che il player salti a startAt
+                    } else {
+                        if (pendingStartAt > 0 && flooredSec >= pendingStartAt - 5) {
+                            pendingStartAt = 0;
+                        }
+                        lastTime = currentSec;
+                        savedResumeSeconds = flooredSec;
+                    }
+                }
+
+                const modal = document.getElementById('saveModal');
+                const isModalOpen = modal && modal.classList.contains('open');
+
                 if (evtName === 'play') {
-                    isPaused = false;
-                    updateUI();
-                    focusPlayerDesktop();
+                    if (!isModalOpen) {
+                        isPaused = false;
+                        updateUI();
+                        focusPlayerDesktop();
+                    }
                 } else if (evtName === 'pause') {
                     isPaused = true;
                     updateUI();
-                } else if (evtName === 'seeked' || evtName === 'timeupdate') {
-                    isPaused = false;
+                } else if (evtName === 'seeked') {
+                    if (!isNaN(currentSec) && currentSec >= 0) {
+                        pendingStartAt = 0;
+                        lastTime = currentSec;
+                        savedResumeSeconds = Math.floor(currentSec);
+                    }
+                    updateUI();
+                } else if (evtName === 'timeupdate') {
+                    if (!isModalOpen) isPaused = false;
                     updateUI();
                 } else if (evtName === 'ended') { 
+                    lastTime = 0;
                     savedResumeSeconds = 0;
+                    pendingStartAt = 0;
                     if (!isMovie) btnNext.classList.add('visible'); 
                     topBar.classList.add('visible'); 
                 }
