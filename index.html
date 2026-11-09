@@ -135,7 +135,7 @@
 
         #mouseCatcher { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; background: transparent; cursor: none; }
         #fullscreenTrigger {
-            position: absolute; bottom: 0px; right: 10px; width: 65px; height: 65px;
+            position: absolute; bottom: 0px; right: 0px; width: 75px; height: 70px;
             z-index: 150; cursor: pointer; background: transparent;
             touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         }
@@ -241,7 +241,7 @@
             .overlay-btn svg { width: 14px; height: 14px; }
             #btnPrev { left: 16px; bottom: 75px; }
             #btnNext { right: 16px; bottom: 75px; }
-            #fullscreenTrigger { bottom: 0px; right: 0px; width: 65px; height: 65px; }
+            #fullscreenTrigger { bottom: 0px; right: 0px; width: 75px; height: 70px; }
             .modal-box { padding: 28px 20px; }
             .modal-box h3 { font-size: 19px; }
             .modal-box p { font-size: 13px; }
@@ -368,11 +368,12 @@
         const isDesktop = (os === "Desktop" && !isAlohaBrowser);
 
         let isIntentionalExit = false;
-        let isPaused = true; // Parte a true finché il player non emette effettivamente 'play'
+        let isPaused = false;
         let isHandlingIframeFsToggle = false;
         let unlockStep = 0;
         let hasStartedPlayback = false;
 
+        // Tracciamento continuo del secondo esatto (PLAYER_EVENT + timer)
         let trackedSeconds = 0;
         let savedResumeSeconds = 0;
         let pendingStartAt = 0;
@@ -411,6 +412,9 @@
             if (isDesktop) {
                 videoFrame.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
                 videoFrame.setAttribute('allowfullscreen', '');
+            } else {
+                videoFrame.setAttribute('allow', 'autoplay; encrypted-media');
+                videoFrame.removeAttribute('allowfullscreen');
             }
             videoFrame.referrerPolicy = "origin";
         }
@@ -548,7 +552,7 @@
             } else if (newEp > 0) {
                 currentEp = newEp;
                 isIntentionalExit = false; 
-                isPaused = true;
+                isPaused = false;
                 trackedSeconds = 0;
                 savedResumeSeconds = 0;
                 pendingStartAt = 0;
@@ -560,10 +564,9 @@
                     window.history.replaceState(null, '', updatedUrl.toString());
                 } catch (_) {}
 
-                if (mouseCatcher) mouseCatcher.style.pointerEvents = 'none';
-                clearTimeout(mouseHideTimeout);
+                configureIframePermissions();
                 videoFrame.src = getFullUrl(0);
-                updateUI();
+                handleUserActivity();
             }
         }
 
@@ -599,6 +602,7 @@
                 if (bestSec >= 1) {
                     savedResumeSeconds = bestSec;
                     trackedSeconds = bestSec;
+                    pendingStartAt = bestSec;
                 }
                 if (videoFrame.src && videoFrame.src !== 'about:blank') {
                     videoFrame.src = 'about:blank';
@@ -615,8 +619,6 @@
                 unmountForAlohaIfNeeded();
             }
             isPaused = true;
-            if (mouseCatcher) mouseCatcher.style.pointerEvents = 'none';
-            clearTimeout(mouseHideTimeout);
             updateUI();
             modal.classList.add('open');
             const btnResume = document.getElementById('btnResume');
@@ -639,20 +641,17 @@
             if (unlockStep !== 2) return;
 
             hasStartedPlayback = true;
-            isPaused = true;
+            isPaused = false;
             trackedSeconds = 0;
             savedResumeSeconds = 0;
             pendingStartAt = 0;
 
-            if (mouseCatcher) mouseCatcher.style.pointerEvents = 'none';
-            clearTimeout(mouseHideTimeout);
-
-            // Impostiamo videoFrame.src PRIMA di enterFullscreen() per non consumare il token di attivazione utente su mobile
-            videoFrame.src = getFullUrl(0);
+            configureIframePermissions();
             enterFullscreen();
+            videoFrame.src = getFullUrl(0);
 
             document.getElementById('startOverlay').style.display = 'none';
-            updateUI();
+            handleUserActivity();
         }
 
         window.addEventListener('keydown', function(e) {
@@ -713,25 +712,21 @@
             const modal = document.getElementById('saveModal');
             modal.classList.remove('open');
 
-            if (mouseCatcher) mouseCatcher.style.pointerEvents = 'none';
-            clearTimeout(mouseHideTimeout);
+            isPaused = false;
+            enterFullscreen();
 
             if (!isDesktop) {
                 const resumeSec = Math.max(savedResumeSeconds, trackedSeconds, pendingStartAt);
                 trackedSeconds = resumeSec;
                 savedResumeSeconds = resumeSec;
                 pendingStartAt = resumeSec;
-                isPaused = true;
-                // Carichiamo sincronamente nel gesto del tocco prima di enterFullscreen()
+                configureIframePermissions();
                 videoFrame.src = getFullUrl(resumeSec);
-                enterFullscreen();
-                updateUI();
             } else {
-                isPaused = false;
-                enterFullscreen();
                 setTimeout(focusPlayerDesktop, 150);
-                handleUserActivity();
             }
+
+            handleUserActivity();
         }
 
         const topBar = document.getElementById('topBar');
@@ -745,7 +740,7 @@
             if (!isMovie && btnNextLabel) {
                 btnNextLabel.innerText = (currentEp === totalEps) ? "Prossima Stagione" : "Prossimo Ep.";
             }
-            if (isPaused || isMouseActive || !isCurrentlyFullscreen()) {
+            if (isPaused || isMouseActive) {
                 showTopBar = true;
                 if (!isMovie && currentEp > 1) showPrev = true;
                 if (!isMovie) showNext = true; 
@@ -762,10 +757,7 @@
             clearTimeout(mouseHideTimeout);
             mouseHideTimeout = setTimeout(() => {
                 isMouseActive = false; updateUI();
-                // Riattiviamo mouseCatcher SOLO se il video è effettivamente in riproduzione (!isPaused)
-                if (mouseCatcher && !isPaused) {
-                    mouseCatcher.style.pointerEvents = 'auto';
-                }
+                if (mouseCatcher) mouseCatcher.style.pointerEvents = 'auto';
             }, 3500);
         }
 
@@ -801,10 +793,14 @@
                 try { const raw = typeof event.data === 'string' ? event.data : JSON.stringify(event.data); debugMsg = event.origin + ' → ' + String(raw).slice(0, 150); renderDebug(); } catch (_) {}
             }
             try {
+                // Non sovrascrivere i dati mentre il modale è aperto e l'iframe è in smontaggio
+                const modal = document.getElementById('saveModal');
+                if (modal && modal.classList.contains('open')) return;
+
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                 if (!data) return;
 
-                const payload = (data.type === 'PLAYER_EVENT' && data.data) ? data.data : data;
+                const payload = (data.type === 'PLAYER_EVENT' && data.data) ? data.data : (data.data ? data.data : data);
                 if (!payload || !payload.event) return;
 
                 const currentSec = Number(payload.currentTime);
@@ -823,12 +819,10 @@
 
                 if (payload.event === 'play') {
                     isPaused = false;
-                    handleUserActivity();
+                    updateUI();
                     focusPlayerDesktop();
                 } else if (payload.event === 'pause') {
                     isPaused = true;
-                    if (mouseCatcher) mouseCatcher.style.pointerEvents = 'none';
-                    clearTimeout(mouseHideTimeout);
                     updateUI();
                 } else if (payload.event === 'seeked') {
                     if (!isNaN(currentSec) && currentSec >= 0) {
@@ -838,13 +832,12 @@
                     }
                     updateUI();
                 } else if (payload.event === 'timeupdate') {
+                    isPaused = false;
                     updateUI();
                 } else if (payload.event === 'ended') { 
-                    isPaused = true;
                     trackedSeconds = 0;
                     savedResumeSeconds = 0;
                     pendingStartAt = 0;
-                    if (mouseCatcher) mouseCatcher.style.pointerEvents = 'none';
                     if (!isMovie) btnNext.classList.add('visible'); 
                     topBar.classList.add('visible'); 
                 }
